@@ -1,0 +1,28 @@
+{
+  "template": "/home/tjs/git/cookiecutter-pypackage",
+  "commit": "f9235aec4e1a0ebdcd29e9e14ccb8538460c12db",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Trevor James Smith",
+      "email": "smith.trevorj@ouranos.ca",
+      "github_username": "Zeitsperre",
+      "project_name": "spirograph",
+      "project_slug": "spirograph",
+      "project_short_description": "Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
+      "pypi_username": "Zeitsperre",
+      "version": "0.1.0",
+      "use_pytest": "y",
+      "use_black": "y",
+      "use_pypi_deployment_with_travis": "n",
+      "add_pyup_badge": "n",
+      "make_docs": "y",
+      "command_line_interface": "Click",
+      "create_author_file": "y",
+      "open_source_license": "Apache Software License 2.0",
+      "generated_with_cruft": "y",
+      "_template": "/home/tjs/git/cookiecutter-pypackage"
+    }
+  },
+  "directory": null
+}

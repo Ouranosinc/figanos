@@ -1,0 +1,11 @@
+name: spirograph
+channels:
+- conda-forge
+- defaults
+dependencies:
+  - sphinx
+  - pandoc
+  - sphinx_rtd_theme
+  - sphinx-autoapi
+  - sphinxcontrib-napoleon- click
+  - sphinx-click
