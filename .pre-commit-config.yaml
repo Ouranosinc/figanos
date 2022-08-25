@@ -3,7 +3,7 @@ default_language_version:
 
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.0
+    rev: v2.31.1
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]
@@ -11,6 +11,7 @@ repos:
     rev: v4.1.0
     hooks:
       - id: trailing-whitespace
+        exclude: setup.cfg
       - id: end-of-file-fixer
       - id: check-yaml
         args: ['--allow-multiple-documents']
@@ -23,9 +24,10 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
+        additional_dependencies: [ 'flake8-rst-docstrings' ]
         args: ['--config=setup.cfg']
   - repo: https://github.com/ambv/black
-    rev: 22.1.0
+    rev: 22.3.0
     hooks:
       - id: black
         exclude: ^docs/
@@ -46,7 +48,7 @@ repos:
       - id: yamllint
         args: ['--config-file', '.yamllint.yaml']
   - repo: https://github.com/mgedmin/check-manifest
-    rev: "0.47"
+    rev: "0.48"
     hooks:
       - id: check-manifest
   - repo: meta

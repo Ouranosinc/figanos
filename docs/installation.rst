@@ -30,7 +30,7 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/Zeitsperre/spirograph
+    $ git clone git@github.com:Zeitsperre/spirograph
 
 Or download the `tarball`_:
 
