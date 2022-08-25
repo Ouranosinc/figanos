@@ -1,5 +1,5 @@
 {
-  "template": "/home/tjs/git/cookiecutter-pypackage",
+  "template": "https://github.com/Ouranosinc/cookiecutter-pypackage",
   "commit": "f9235aec4e1a0ebdcd29e9e14ccb8538460c12db",
   "checkout": null,
   "context": {
@@ -21,7 +21,7 @@
       "create_author_file": "y",
       "open_source_license": "Apache Software License 2.0",
       "generated_with_cruft": "y",
-      "_template": "/home/tjs/git/cookiecutter-pypackage"
+      "_template": "https://github.com/Ouranosinc/cookiecutter-pypackage"
     }
   },
   "directory": null
