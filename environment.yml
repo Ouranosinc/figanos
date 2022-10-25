@@ -1,0 +1,28 @@
+name: spiro
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python < 3.10
+  - yaml
+  - xarray
+  - pandas
+  - ipykernel
+  - h5py
+  - zarr
+  - netCDF4
+  - dask
+  - pandas
+  - numpy
+  - notebook
+  - geopandas
+  - xclim   #une fois que finit test sera pas necessaire
+  #visualisation
+  - hvplot 
+  - cartopy 
+  - matplotlib
+  - plotly
+  - bokeh
+  - holoviews
+  - geoviews
+  
