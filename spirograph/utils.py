@@ -5,45 +5,40 @@ import warnings
 from itertools import groupby
 import json
 from textwrap import wrap
-import tkinter as tk
+import tkinter
 from tkinter import font as tkfont
-def split_length_tile_v1(title, maxx):
-    return "\n".join(wrap(title, maxx))
 
 def wrap_title(font, font_size, txt, fig_size):
     ft = tkfont.Font(family=font, size=font_size, weight='bold')
-    wid = ft.measure(txt)
-    tit = txt
-    while wid > fig_size:
-        for val in tit.split('/n'):
-            sp = val.split(" ")
-            mid = round(len(sp)/2)
-            #ici check pour pas split sur un symbole (comme tmax = 0)
-            if sp[mid].isascii()==False and sp[mid+1].isascii()==False and sp[mid-1].isascii()==False:
-                val_sp = mid
-            elif sp[mid].isascii()==False and sp[mid+1].isascii()==False and sp[mid+2].isascii()==False:
-                val_sp = mid + 1
-            elif sp[mid].isascii()==False and sp[mid-1].isascii()==False and sp[mid-2].isascii()==False:
-                val_sp = mid - 1
-            tit2 = sp[0:val_sp] + '/n' + sp[val_sp:-1]
-            wid = ft.measure(tit2)
+    wid = [ft.measure(txt)]
+    tit = [txt]
+    while any(w > fig_size for w in wid) == True:
+        for v in range(0, len(wid)):
+            val = tit[v]
+            if ft.measure(val) > fig_size:
+                sp = val.split(" ")
+                mid = round(len(sp)/2)
 
-#wrap existe déjà dans matplotlib et fait appel à plusieurs fonctions
-#essayer de wrap autout de la fonction wrap title de matplotlib, sauf que pas capable sans ouvrir un plot
-#fonctionne pas aussi pcq donne la longueur du titre avec les options de maplotlib
-def wrap_plt(st, max_width):
-    fig, ax = plt.subplots()
-    ax.set_title(st, wrap=True)
-    ax.title._get_wrap_line_width = lambda : max_width
-    fig.canvas.draw()
-    return ax.title._get_wrapped_text()
+                #ici check pour pas split sur un symbole (comme tmax = 0
+                #ToDo: amériorer cette section
+                try:
+                    while all([sp[mid].isalpha(), sp[mid+1].isalpha(), sp[mid-1].isalpha()]) != True:
+                        mid += 1
+                except:
+                    mid = round(len(sp)/2)
+
+                tit[v:v] = [" ".join(sp[0:mid]), " ".join(sp[mid:])]
+                tit.pop(v+len([sp[0:mid], sp[mid:-1]]))
+                wid[v:v] = [ft.measure(" ".join(sp[0:mid])), ft.measure(" ".join(sp[mid:-1]))]
+                wid.pop(v + len([sp[0:mid], sp[mid:-1]]))
+
+    return "\n".join(tit)
 
 #pas certaine en fonction de quoi: variables, indicateurs (ex: delta et autre), est-ce que ca veut dire tous les noms
 #doivent etre dans le fichier json ou devrait laisser le choix à l'utilisateur dans les options args?
 def precision(data):
     with open("./spirograph/precision.json") as f:
         preci = json.load(f)
-
     dc = {}
     if 'delta' in data.name:
         dc = {"yformatter": f"%.{preci['variable']['delta']}f"}
@@ -56,7 +51,7 @@ def precision(data):
     return dc
 
 
-#ToDO
+#ToDO : est-ce que fait une fonction pour ça ou fait juste considérer que les gens vont l'avoir translate avec xclim avant
 def translate_xclim(data):
     with importlib.resources.open_text("xclim.data", "fr.json") as file:
         infer_translate = json.load(file)
