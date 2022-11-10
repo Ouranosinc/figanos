@@ -1,15 +1,17 @@
 import hvplot.xarray
+import hvplot.pandas
 import holoviews as hv
 from datetime import date
 import cartopy.crs as ccrs
 import geopandas as gpd
-from spirograph.utils import convert_dict_metadata, precision, colors_style, reverse_color
+from spirograph.utils import convert_dict_metadata, precision, colors_style, reverse_color, perc_min_max, ts_ens_title, ts_ens_label
 import json
+import pandas as pd
 import warnings
 
 # plotly a l'option de filigrane, donc utilise avec compatibilité bokeh et template (à définir)
 # hv.extension('plotly', compatibility= 'bokeh')
-def add_logo_date(plot):
+def add_logo_date(plot): #ToDo: doesnt work when saves directly from hvplot html
     jour = str(date.today())
     html_text = """
                     <figure>
@@ -20,8 +22,19 @@ def add_logo_date(plot):
     logo = hv.Div(html_text.replace('DATE', jour))
     return hv.Layout(plot + logo.opts(width=60, height=50)).cols(1)
 
-
 def da_ts(da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False):
+    """
+    da: DataArray
+    language: str
+        english or french
+    dic_metadata: dict
+        plot elements associated to Xarray attributes (da.attrs if ds_attrs=None)
+    hv_kwargs: dict
+        hvplot options
+    ds_attrs: dict
+        options if DataArray attributes doesn't have all information required -> can be a merge of attributes
+        ds_attrs = {**da.attrs, **ds.attrs}
+    """
     #fonction pour dataarray (UNE SEULE VARIABLE)
     if ds_attrs != None:
         full_attr = {**da.attrs, **ds_attrs}
@@ -39,6 +52,82 @@ def da_ts(da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False
     pl = da.hvplot(**args)
     if logo_date == True:
         pl = add_logo_date(pl)
+    return pl
+
+#ToDo: ajouter la fonction de lissage dans les options
+def da_ts_area(low_da, high_da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False):
+    """ Color are between two datasets
+        low_da: DataArray
+            lower bound data
+        high_da: DataArray
+            higher bound data
+        language: str
+            english or french
+        dic_metadata: dict
+            plot elements associated to Xarray attributes (da.attrs if ds_attrs=None)
+        hv_kwargs: dict
+            hvplot options
+        ds_attrs: dict
+            options if DataArray attributes doesn't have all information required -> can be a merge of attributes
+            ds_attrs = {**da.attrs, **ds.attrs}
+        """
+    low_df = low_da.to_dataframe().reset_index()
+    low_df.columns = [*low_df.columns[:-1], 'low']
+
+    high_df = high_da.to_dataframe().reset_index()
+    high_df.columns = [*high_df.columns[:-1], 'high']
+    df = pd.merge(low_df, high_df, on=["time", "lon", "lat"])
+
+    if ds_attrs != None:
+        full_attr = {**low_da.attrs, **ds_attrs}
+        args = {**hv_kwargs, **convert_dict_metadata(full_attr, dict_metadata, language),
+            **precision(low_da)}
+    else:
+        args = {**hv_kwargs, **convert_dict_metadata(low_da, dict_metadata, language),
+                **precision(low_da)}
+
+    if language == 'french':
+        args['xlabel'] = 'Temps'
+    elif language == 'english':
+        args['xlabel'] = 'Time'
+
+    pl = df.hvplot.area(x='time', y='low', y2='high', **args)
+    if logo_date == True:
+        pl = add_logo_date(pl)
+    return pl
+
+def ens_ts_area(xra, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False):
+    #to have ensemble x to y in title
+    if "title" in dict_metadata:
+        title = ts_ens_title(xra, dict_metadata, language)
+        dict_metadata.pop("title")
+        if "title" not in hv_kwargs:
+            hv_kwargs["title"] = title
+    labels = ts_ens_label(data, metadata, hv_kwargs, language)
+    if "percentiles" in xra.coords:
+        pmin, pmax = perc_min_max(xra)
+        hv_kwargs["label"] = labels[0]
+        pl_area =da_ts_area(xra.sel(percentiles=pmin), xra.sel(percentiles=pmax), language, dict_metadata, hv_kwargs,
+                       ds_attrs=ds_attrs, logo_date=logo_date)
+        if 50 in xra.percentiles:
+            hv_kwargs["label"] = labels[1]
+            pl_me = da_ts(xra.sel(percentiles=50), language, dict_metadata, hv_kwargs, ds_attrs=ds_attrs, logo_date=logo_date)
+            pl = pl_me * pl_area
+        else :
+            pl = pl_area
+    elif "Dataset" in str(type(xra)) and sum(['_min' in v or '_max' in v for v in list(xra.keys())]) == 2:
+        mmax = [a for a in list(xra.keys()) if "_max" in a]
+        mmin = [a for a in list(xra.keys()) if "_min" in a]
+        mmean = [a for a in list(xra.keys()) if "_mean" in a]
+        hv_kwargs["label"] = labels[0]
+        pl_area = da_ts_area(xra[mmax], xra[mmin], language, dict_metadata, hv_kwargs,
+                      ds_attrs=ds_attrs, logo_date=logo_date)
+        hv_kwargs["label"] = labels[1]
+        pl_me = da_ts(xra[mmean], language, dict_metadata, hv_kwargs, ds_attrs=ds_attrs, logo_date=logo_date)
+        pl = pl_me * pl_area
+    else:
+        warnings.error("Not an xclim ensemble statistics or percentiles")
+
     return pl
 
 def dict_ds_ts(data, language, dict_labels=None, logo_date=False):
@@ -72,7 +161,6 @@ def dict_ds_ts(data, language, dict_labels=None, logo_date=False):
             for var in v:
                 if '_min' or '_max' not in var and 'percentiles' not in data[k][var].coords:
                     if 'experiment' in list(legend_labels.values()):
-
 
 
 def dict_subplots(list, language, logo_date, common_infos):

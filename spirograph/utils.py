@@ -7,6 +7,7 @@ import json
 from textwrap import wrap
 import tkinter
 from tkinter import font as tkfont
+import numpy as np
 
 def wrap_title(font, font_size, txt, fig_size):
     ft = tkfont.Font(family=font, size=font_size, weight='bold')
@@ -19,8 +20,7 @@ def wrap_title(font, font_size, txt, fig_size):
                 sp = val.split(" ")
                 mid = round(len(sp)/2)
 
-                #ici check pour pas split sur un symbole (comme tmax = 0
-                #ToDo: amériorer cette section
+                #ici check pour pas split sur un symbole ou un nombre (comme tmax = 0)
                 try:
                     while all([sp[mid].isalpha(), sp[mid+1].isalpha(), sp[mid-1].isalpha()]) != True:
                         mid += 1
@@ -42,14 +42,18 @@ def precision(data):
     dc = {}
     if 'delta' in data.name:
         dc = {"yformatter": f"%.{preci['variable']['delta']}f"}
-    elif data.name in preci['variable'].keys() or data.name.split('_')[0] in preci['variable'].keys():
+    elif data.name in preci['variable'].keys():
         dc = {"yformatter": f"%.{preci['variable'][data.name]}f"}
+    elif data.name.split('_')[0] in preci['variable'].keys():
+        dc = {"yformatter": f"%.{preci['variable'][data.name.split('_')[0]]}f"}
     elif 'units' in data.attrs.keys() & data.attrs['units'] in preci['units'].keys():
         dc = {"yformatter": f"%.{preci['units'][data.attrs['units']]}f"}
     else:
         dc = {"yformatter": f"%.{preci['default']}f"}
-    return dc
 
+    if data.min() > 1000 or data.max() < 0.00001: # to use scientific notation or not #ToDo: check if works well or need improvement
+        dc["yformatter"] = dc["yformatter"] .replace("f", "e")
+    return dc
 
 #ToDO : est-ce que fait une fonction pour ça ou fait juste considérer que les gens vont l'avoir translate avec xclim avant
 def translate_xclim(data):
@@ -85,17 +89,19 @@ def convert_dict_metadata(data, metadata, language):
     if type(data) != dict:
         for k, v in metadata.items():
             if k == 'title':
-                dct[k] = wrap_plt(data.attrs[v], 400)
-            if k == 'ylabel' and "units" not in v and 'units' in data.attrs:
+                dct[k] = wrap_title('Arial', 12, data.attrs[v], 700) #ToDo: ajouter les infos du template pour les titres (soit dans les arguments ou direct dans la fonction)
+            elif k == 'ylabel' and "units" not in v and 'units' in data.attrs:
                 dct[k] = f"{data.attrs[v]} ({data.attrs['units']})"
-            dct[k] = data.attrs[v]  # ToDO: add translate option if not already done et sortir la fonction dans utils
+            else:
+                dct[k] = data.attrs[v]  # ToDO: add translate option if not already done et sortir la fonction dans utils
     else:
         for k, v in metadata.items():
             if k == 'title':
-                dct[k] = wrap_plt(data[v], 400)
-            if k == 'ylabel' and "units" not in v and 'units' in data:
+                dct[k] = wrap_title('Arial', 12, data[v], 700) #ToDo: ajouter les infos du template pour les titres (soit dans les arguments ou direct dans la fonction)
+            elif k == 'ylabel' and "units" not in v and 'units' in data:
                 dct[k] = f"{data[v]} ({data['units']})"
-            dct[k] = data[v]
+            else:
+                dct[k] = data[v]
 
     return dct
 
@@ -190,6 +196,54 @@ def colors_style(data, fig_type, id=0):
             dc_col_style['cmap'] = cmap[0]
 
     return dc_col_style
+
+def perc_min_max(xr):
+    return xr.coords["percentiles"].min().item(), xr.coords["percentiles"].max().item()
+
+def ts_ens_title(data, metadata, language):
+    tit1 = data.attrs[metadata["title"]]
+    if "percentiles" in data.coords:
+        pmin, pmax = perc_min_max(data)
+        if language == "english":
+            title = tit1+ f" {pmin} to {pmax}  percentile of ensemble."
+        elif language == "french":
+            title = tit1 + f" {pmin} à {pmax}  centiles de l'ensemble."
+    elif "Dataset" in str(type(data)) and sum(['_min' in v or '_max' in v for v in list(data.keys())]) == 2:
+        if language == "english":
+            title = tit1 + f" Minimum to maximum of ensemble."
+        elif language == "french":
+            title = tit1 + f" Minimum au maximum de l'ensemble."
+
+    return wrap_title('Arial', 12, title, 700)  # ToDo: ajouter les infos du template pour les titres (soit dans les arguments ou direct dans la fonction)
+
+def ts_ens_label(data, metadata, hv_kwargs, language):
+    if "label" in hv_kwargs:
+        lab = hv_kwargs["label"]
+    elif "label" in metadata:
+        lab = data.attrs[metadata["label"]]
+    else:
+        lab = ""
+    ls_lab = []
+    if "percentiles" in data.coords:
+        pmin, pmax = perc_min_max(data)
+        if language == "english":
+            ls_lab[0] = f"p{pmin}th - p{pmax}th percentile " + lab
+        elif language == "french":
+            ls_lab[0] = f"{pmin} - {pmax} centiles " + lab
+        if 50 in data.percentiles:
+            if language == "french":
+                ls_lab[1] = "median " + lab
+            elif language == "english":
+                ls_lab[1] = "médiane " + lab
+    elif "Dataset" in str(type(data)) and sum(['_min' in v or '_max' or "_mean" in v for v in list(data.keys())]) == 3:
+        if language == "english":
+            ls_lab[0] = "ensemble of " + lab
+            ls_lab[1] = "mean of " + lab
+        elif language == "french":
+            ls_lab[0] = "ensemble de " + lab
+            ls_lab[1] = "moyenne de " + lab
+    return ls_lab
+
 
 #ToDo:  fonction qui transforme lat/lon en systeme -90:90 & -180:180
 #est-ce que nécesaire ou xclim s'en occupe pas mal tout le temps?
