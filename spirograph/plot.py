@@ -4,10 +4,13 @@ import holoviews as hv
 from datetime import date
 import cartopy.crs as ccrs
 import geopandas as gpd
-from spirograph.utils import convert_dict_metadata, precision, colors_style, reverse_color, perc_min_max, ts_ens_title, ts_ens_label
+from spirograph.utils import convert_dict_metadata, precision, colors_style, reverse_color, perc_min_max, ts_ens_title, ts_ens_label, wrap_metdata
 import json
 import pandas as pd
 import warnings
+
+from bokeh.plotting import figure, output_notebook, reset_output, show
+from bokeh.models import ColumnDataSource, Arrow, OpenHead, NormalHead, TeeHead, BoxAnnotation, Label
 
 # plotly a l'option de filigrane, donc utilise avec compatibilité bokeh et template (à définir)
 # hv.extension('plotly', compatibility= 'bokeh')
@@ -36,14 +39,7 @@ def da_ts(da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False
         ds_attrs = {**da.attrs, **ds.attrs}
     """
     #fonction pour dataarray (UNE SEULE VARIABLE)
-    if ds_attrs != None:
-        full_attr = {**da.attrs, **ds_attrs}
-        args = {**hv_kwargs, **convert_dict_metadata(full_attr, dict_metadata, language),
-            **precision(da)}
-    else:
-        args = {**hv_kwargs, **convert_dict_metadata(da, dict_metadata, language),
-                **precision(da)}
-
+    args = wrap_metdata(da, language, dict_metadata, hv_kwargs, ds_attrs)
     if language == 'french':
         args['xlabel'] = 'Temps'
     elif language == 'english':
@@ -53,6 +49,62 @@ def da_ts(da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False
     if logo_date == True:
         pl = add_logo_date(pl)
     return pl
+
+def scatter(data, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False):
+    """
+    da: DataArray
+    language: str
+        english or french
+    dic_metadata: dict
+        plot elements associated to Xarray attributes (da.attrs if ds_attrs=None)
+    hv_kwargs: dict
+        hvplot options - MUST HAVE x AND y IN KEYS
+        exemples: {'x': 'time', 'y': 'tasmax'}
+                  {'x': 'lon', 'y': 'lat'}
+    ds_attrs: dict
+        options if DataArray attributes doesn't have all information required -> can be a merge of attributes
+        ds_attrs = {**da.attrs, **ds.attrs}
+    """
+    df = data.to_dataframe().reset_index()
+
+    if 'x' not in hv_kwargs.keys() or 'y' not in hv_kwargs.keys():
+        warnings.error("Missing 'x' or 'y' definition in hv_kwargs")
+
+    args = wrap_metdata(data, language, dict_metadata, hv_kwargs, ds_attrs)
+
+    pl = df.hvplot.scatter(**args)
+    if logo_date == True:
+        pl = add_logo_date(pl)
+    return pl
+
+def time_horizon_band(dict_info, plot):
+    """
+
+
+    inf = {'box': {'1950-1980': {'left': 4.5, 'right': 5, 'fill_color': 'black'},
+                   '2020-2050': {'left': 6.5, 'right': 7, 'fill_color': 'red'}},
+           'arr': {'1950-1980': {'x_start': 4.5, 'y_start': 2, 'x_end': 5, 'y_end': 2, "line_color": "black"},
+                   '2020-2050': {'x_start': 6.5, 'y_start': 4, 'x_end': 7, 'y_end': 4, "line_color": "red"}},
+           'label': {'1950-1980': {'x': 4.5, 'y': 2.5, 'text_color': 'black'},
+                     '2020-2050': {'x': 6.5, 'y': 4.25, 'text_color': 'red'}}}
+    """
+    p1 = hv.render(plot, backend="bokeh")
+
+    for k in inf.keys():
+        if k == 'arr':
+            for ann in inf[k].values():
+                p1.add_layout(Arrow(start=TeeHead(line_width=2, line_color=ann['line_color'], size=10),
+                                    end=TeeHead(line_width=2, line_color=ann['line_color'], size=10),
+                                    line_width=2, **ann))
+        elif k == 'box':
+            for ann in inf[k].values():
+                p1.add_layout(BoxAnnotation(fill_alpha=0.2, **ann))
+        elif k == 'label':
+            for j, v in inf[k].items():
+                p1.add_layout(Label(**v, text=j, text_font_size='8pt'))
+        else:
+            print('key not recognized')
+
 
 #ToDo: ajouter la fonction de lissage dans les options
 def da_ts_area(low_da, high_da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False):
@@ -78,13 +130,7 @@ def da_ts_area(low_da, high_da, language, dict_metadata, hv_kwargs, ds_attrs=Non
     high_df.columns = [*high_df.columns[:-1], 'high']
     df = pd.merge(low_df, high_df, on=["time", "lon", "lat"])
 
-    if ds_attrs != None:
-        full_attr = {**low_da.attrs, **ds_attrs}
-        args = {**hv_kwargs, **convert_dict_metadata(full_attr, dict_metadata, language),
-            **precision(low_da)}
-    else:
-        args = {**hv_kwargs, **convert_dict_metadata(low_da, dict_metadata, language),
-                **precision(low_da)}
+    args = wrap_metdata(low_df, language, dict_metadata, hv_kwargs, ds_attrs)
 
     if language == 'french':
         args['xlabel'] = 'Temps'
@@ -103,7 +149,7 @@ def ens_ts_area(xra, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_dat
         dict_metadata.pop("title")
         if "title" not in hv_kwargs:
             hv_kwargs["title"] = title
-    labels = ts_ens_label(data, metadata, hv_kwargs, language)
+    labels = ts_ens_label(xra, dict_metadata, hv_kwargs, language)
     if "percentiles" in xra.coords:
         pmin, pmax = perc_min_max(xra)
         hv_kwargs["label"] = labels[0]

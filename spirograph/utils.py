@@ -205,14 +205,14 @@ def ts_ens_title(data, metadata, language):
     if "percentiles" in data.coords:
         pmin, pmax = perc_min_max(data)
         if language == "english":
-            title = tit1+ f" {pmin} to {pmax}  percentile of ensemble."
+            title = tit1 + f" {pmin} to {pmax}  percentile of ensemble."
         elif language == "french":
             title = tit1 + f" {pmin} à {pmax}  centiles de l'ensemble."
     elif "Dataset" in str(type(data)) and sum(['_min' in v or '_max' in v for v in list(data.keys())]) == 2:
         if language == "english":
-            title = tit1 + f" Minimum to maximum of ensemble."
+            title = tit1 + f" Minimum - maximum of ensemble."
         elif language == "french":
-            title = tit1 + f" Minimum au maximum de l'ensemble."
+            title = tit1 + f" Minimum - maximum de l'ensemble."
 
     return wrap_title('Arial', 12, title, 700)  # ToDo: ajouter les infos du template pour les titres (soit dans les arguments ou direct dans la fonction)
 
@@ -221,8 +221,7 @@ def ts_ens_label(data, metadata, hv_kwargs, language):
         lab = hv_kwargs["label"]
     elif "label" in metadata:
         lab = data.attrs[metadata["label"]]
-    else:
-        lab = ""
+
     ls_lab = []
     if "percentiles" in data.coords:
         pmin, pmax = perc_min_max(data)
@@ -235,7 +234,7 @@ def ts_ens_label(data, metadata, hv_kwargs, language):
                 ls_lab[1] = "median " + lab
             elif language == "english":
                 ls_lab[1] = "médiane " + lab
-    elif "Dataset" in str(type(data)) and sum(['_min' in v or '_max' or "_mean" in v for v in list(data.keys())]) == 3:
+    elif "Dataset" in str(type(data)) and sum(['_min' in v or '_max' in v or "_mean" in v for v in list(data.keys())]) == 3:
         if language == "english":
             ls_lab[0] = "ensemble of " + lab
             ls_lab[1] = "mean of " + lab
@@ -244,7 +243,15 @@ def ts_ens_label(data, metadata, hv_kwargs, language):
             ls_lab[1] = "moyenne de " + lab
     return ls_lab
 
-
+def wrap_metdata(da, language, dict_metadata, hv_kwargs, ds_attrs):
+    if ds_attrs != None:
+        full_attr = {**da.attrs, **ds_attrs}
+        args = {**hv_kwargs, **convert_dict_metadata(full_attr, dict_metadata, language),
+            **precision(da)}
+    else:
+        args = {**hv_kwargs, **convert_dict_metadata(da, dict_metadata, language),
+                **precision(da)}
+    return args
 #ToDo:  fonction qui transforme lat/lon en systeme -90:90 & -180:180
 #est-ce que nécesaire ou xclim s'en occupe pas mal tout le temps?
 
