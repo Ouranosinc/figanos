@@ -7,12 +7,15 @@ from bokeh.models import ColumnDataSource, Label, LabelSet, Range1d
 import bokeh
 import glob
 import numpy as np
-
+from spirograph.plot import da_ts
 import xarray as xr
-ds = xr.open_dataset('/home/sarah/spir/dlyfrzthw_tx0_tn-1_ann_BCCAQ2v2+ANUSPLIN300_historical+ssp585_1950-2100_percentiles.nc')
+ds = xr.open_dataset('/home/sarah/spir/dlyfrzthw_tx0_tn-1_ann_BCCAQ2v2+ANUSPLIN300_historical+ssp585_1950-2100_percentiles.nc', decode_timedelta= False)
 pt = ds['dlyfrzthw_tx0_tn-1_p10'].isel(lat=150, lon=250)
 pl = pt.hvplot()
 hvplot.show(pl)
+da_ts_kwargs = {'metadata': {'title': 'description', 'ylabel': 'long_name'},
+                             'hv_kwargs': {'xlabel': 'time', 'grid': True}}
+pl = da_ts(pt, "english", da_ts_kwargs['metadata'], da_ts_kwargs['hv_kwargs'], ds_attrs=None, logo_date=True)
 
 def bokeh_title_hook(plot, element):
     plot.add_layout(Title(text='mon nom est', align='center', ), 'above')
