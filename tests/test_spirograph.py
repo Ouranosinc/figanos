@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 import spirograph.cli as cli
-from spirograph import spirograph
+from spirograph.hvplot import spirograph
 
 
 @pytest.fixture

@@ -1,0 +1,20 @@
+{
+  "variable":
+  {
+    "tas": 1,
+    "tasmin": 1,
+    "tasmax": 1,
+    "dlyfrzthw": 0,
+    "delta": 2
+  },
+
+  "units":
+  {
+    "degC": 1,
+    "degK": 0,
+    "km/h": 0
+
+  },
+
+  "default": 2
+}
