@@ -4,7 +4,7 @@ import holoviews as hv
 from datetime import date
 import cartopy.crs as ccrs
 import geopandas as gpd
-from spirograph.utils import convert_dict_metadata, precision, colors_style, reverse_color, perc_min_max, ts_ens_title, ts_ens_label, wrap_metdata
+from spirograph.hvplot.utils import convert_dict_metadata, precision, colors_style, reverse_color, perc_min_max, ts_ens_title, ts_ens_label, wrap_metdata
 import json
 import pandas as pd
 import warnings
@@ -24,6 +24,8 @@ def add_logo_date(plot): #ToDo: doesnt work when saves directly from hvplot html
                   """
     logo = hv.Div(html_text.replace('DATE', jour))
     return hv.Layout(plot + logo.opts(width=60, height=50)).cols(1)
+
+
 
 def da_ts(da, language, dict_metadata, hv_kwargs, ds_attrs=None, logo_date=False):
     """
@@ -256,7 +258,7 @@ def ds_dict_ts(dict_dataset, language, keys_vars, subplots=None, overlay=None, a
             da = dict_dataset[k][v]
 
             if experiment==True:
-                with open("./colors.json") as f:
+                with open("../data/colors.json") as f:
                     colors = json.load(f)
                 if "rcp" in dict_dataset[k].attrs["cat:experiment"]:
                     d = 'rcp'
@@ -376,7 +378,24 @@ def colormap(data, projection="PlateCarree", shapefile=None, logo_data=False, re
 
     return cplot
 
+def time_horizon_band():
+    ax.axvspan(np.array(['1965'], dtype='datetime64[ns]'), np.array(['1994'], dtype='datetime64[ns]'), color='m',
+               alpha=0.2, edgecolor="none", linewidth=0)
+    ax.annotate('Validation \n1965-1994', xy=(np.array(['1965'], dtype='datetime64[ns]'), 3100), color='m')
+    style = ArrowStyle.BarAB(widthA=1, angleA=0, widthB=1, angleB=0)
+    start = mdates.date2num(np.array(['1965'], dtype='datetime64[ns]'))
+    end = mdates.date2num(np.array(['1994'], dtype='datetime64[ns]'))
 
+    arrow = FancyArrowPatch(np.array([start.item(), 3000], dtype='float64'),
+                            np.array([end.item(), 3000], dtype='float64'),
+                            arrowstyle=style,
+                            mutation_scale=5,
+                            color='m',
+                            linewidth=3)
+    ax.add_patch(arrow)
+    ax.plot(np.array([start.item(), 3000], dtype='float64'),
+            np.array([end.item(), 3000], dtype='float64'),
+            "rx", markersize=0)
 
 
 #faire meme fonction que color map, mais pour contour (outlines) et contourf (contour) - ajouter l'option tiles

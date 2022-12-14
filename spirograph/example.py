@@ -7,7 +7,7 @@ from bokeh.models import ColumnDataSource, Label, LabelSet, Range1d
 import bokeh
 import glob
 import numpy as np
-from spirograph.plot import da_ts
+from spirograph.hvplot.plot import da_ts
 import xarray as xr
 ds = xr.open_dataset('/home/sarah/spir/dlyfrzthw_tx0_tn-1_ann_BCCAQ2v2+ANUSPLIN300_historical+ssp585_1950-2100_percentiles.nc', decode_timedelta= False)
 pt = ds['dlyfrzthw_tx0_tn-1_p10'].isel(lat=150, lon=250)
