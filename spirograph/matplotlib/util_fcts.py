@@ -1,28 +1,36 @@
 
-def empty_dic(kwargs):
+def empty_dict(kwargs):
+    """Returns empty dictionaries
+    """
     for k, v in kwargs.items():
         if not v:
             kwargs[k] = {}
     return kwargs
 
-def check_metadata(xr, str):
-    if str in xr.attrs:
-        return xr.attrs[str]
-    else:
-        print('Metadata "{0}" not found in "{1}"'.format(str, xr.name))
-    #if str in xr.coords: pas sur si peut vraiment faire de quoi si dans coords .... plutôt loop a l'extérieur
-    #ajouter message d'erreur si trouve pas le metadata et aussi voir comment ajouter les dimensions de façon intelligente
+def get_metadata(xr_obj, str):
+    """
+    Fetches attributes corresponding to their key from Xarray objects
 
-def ax_dict_metadata(ax, dict_metadata, xr, type):
-    if 'title' in dict_metadata:
-        ax.set_title(check_metadata(xr, dict_metadata['title']), wrap=True)
-    if 'label' in dict_metadata: #est-ce que retire et utilise uniquement dict?
-        eva = getattr(ax, type)
-        eva[-1].set_label('line 1')
-    if 'xlabel' in dict_metadata:
-        ax.set_xlabel(check_metadata(xr, dict_metadata['xlabel'])) #rotation?
-    if 'ylabel' in dict_metadata:
-        ax.set_ylabel(check_metadata(xr, dict_metadata['ylabel']))
+    Args:
+        xr: Xarray DataArray or Dataset
+        str: string corresponding to an attribute key
+
+    Returns:
+         Xarray attribute value as string
+    """
+    if str in xr_obj.attrs:
+        return xr_obj.attrs[str]
+    else:
+        raise Exception('Metadata "{0}" not found in "{1}"'.format(str, xr_obj.name))
+    #if str in xr.coords: pas sur si peut vraiment faire de quoi si dans coords .... plutôt loop a l'extérieur
+
+def ax_dict_metadata(ax, use_attrs, xr_obj):
+    if 'title' in use_attrs:
+        ax.set_title(get_metadata(xr_obj, use_attrs['title']), wrap=True)
+    if 'xlabel' in use_attrs:
+        ax.set_xlabel(get_metadata(xr_obj, use_attrs['xlabel'])) #rotation?
+    if 'ylabel' in use_attrs:
+        ax.set_ylabel(get_metadata(xr_obj, use_attrs['ylabel']))
     return ax
 
 #transform ds into df

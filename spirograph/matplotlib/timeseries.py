@@ -7,41 +7,47 @@ import matplotlib.pyplot as plt
 
 # To add
 #  language
+#  smoothing
+# m??anual mode: asks for input for title,
 
 
 ## idees pour labels: arg replace_label
 
 
-def line_ts(da, ax=None, dict_metadata=None, sub_kw=None, line_kw=None):
+def line_ts(da, ax=None, use_attrs=None, sub_kw=None, line_kw=None):
     """
-    plot unique time series from  dataframe
-    ax: user-specified matplotlib axis
-    data: dataset ou dataframe xarray
-    dict_metadata: join figure element to xarray dataset element
-    sub_kw: matplotlib subplot kwargs
-    line_kw : maplotlib or xarray line kwargs
+    Plots unique time series from dataframe
+
+    Args:
+        ax: user-specified matplotlib axis
+        data: Xarray DataArray containing the data to plot
+        dict_metadata: dict linking a plot element (key, e.g. 'title')
+            to a DataArray attribute (value, e.g. 'Description')
+        sub_kw: matplotlib subplot kwargs
+        line_kw : maplotlib or xarray line kwargs
+
+    Returns:
+        matplotlib axis
     """
     #return empty dicts if no kwargs
-    kwargs = empty_dic({'sub_kw': sub_kw, 'line_kw': line_kw})
+    kwargs = empty_dict({'sub_kw': sub_kw, 'line_kw': line_kw})
 
     #initialize fig, ax if ax not provided
     if not ax:
         fig, ax = plt.subplots(**kwargs['sub_kw'])
 
     #plot
-    da.plot.line(ax=ax, **kwargs['line_kw'])
+    line_1 = da.plot.line(ax=ax, **kwargs['line_kw'])
+    #line_1.set_label()
 
     #add/modify plot elements
-    if dict_metadata:
-        ax_dict_metadata(ax, dict_metadata, da, 'lines')
-    if 'label' in dict_metadata:
-        ax.legend()
+    if use_attrs:
+        ax_dict_metadata(ax, use_attrs, da)
+
     return ax
 
 
 
 #out of function
 
-da = da_pct
-dict_metadata = {'title':'my custom title'}
-da_pct.plot.line()
+line_ts(da_pct, use_attrs= {'title': 'ccdp_name'})
