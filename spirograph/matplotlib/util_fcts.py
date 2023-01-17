@@ -1,4 +1,8 @@
 
+import pandas as pd
+import xarray as xr
+
+
 def empty_dict(kwargs):
     """Returns empty dictionaries
     """
@@ -16,8 +20,8 @@ def get_attributes(xr_obj, str):
     Returns:
          Xarray attribute value as string
     """
-if str in xr_obj.attrs:
-        return xr_obj.attrs[str]
+    if str in xr_obj.attrs:
+            return xr_obj.attrs[str]
     else:
         raise Exception('Attribute "{0}" not found in "{1}"'.format(str, xr_obj.name))
 
@@ -40,6 +44,47 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
     return ax
 
 
+def sort_lines(array_dict):
+    """
+    Sorts same-length parallel (not crossing across x-y coordinates) arrays by y coordinates
+    Args:
+        array_dict: dict of arrays, must contain an odd number of arrays
+    Returns:
+        dict of names
+    To do: different lengths?, warning if even number
+    """
+    ref_values = {}
+    sorted_lines = {}
+    for name, xr in array_dict.items():
+        ref_values[name] = int(xr[int(len(xr)/2)])
+    sorted_series = pd.Series(ref_values).sort_values()
+    sorted_lines['upper'] = sorted_series.idxmax()
+    sorted_lines['lower'] = sorted_series.idxmin()
+
+    return sorted_lines
+
+
+
+
+
+
+
+
+
+
+# lnx = np.arange(1,10,1)
+# ln1 = lnx + 3 + 1*np.random.rand()
+# ln2 = lnx + 10 + 3*np.random.rand()
+# ln3 = lnx + 6 + 2*np.random.rand()
+#
+# fig, ax = plt.subplots(figsize = (4,3))
+# ax.plot(lnx, ln1)
+# ax.plot(lnx, ln2)
+# ax.plot(lnx, ln3)
+#
+# ax.fill_between(lnx, ln1,ln2, alpha = 0.2, color = 'red')
+# ax.fill_between(lnx, ln1,ln3, alpha = 0.2, color = 'blue')
+# plt.show()
 
 
 

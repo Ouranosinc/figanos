@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 ## idees pour labels: arg replace_label
 
 
-def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None):
+def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, ensemble = False):
     """
     Plots unique time series from dataframe
     Args:
@@ -37,23 +37,32 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None):
     #arrange data
     plot_dict = {}
     if str(type(data)) == "<class 'xarray.core.dataset.Dataset'>":
-        print('DATASET DETECTED')
         for k,v in data.data_vars.items():
             plot_dict[k] = v
     else:
         plot_dict[data.name] = data
 
-    print(plot_dict)
+    #set up for ensemble
+    sorted_line_y = []
+    sorted_line_x = []
 
     #plot
     for name, xr in plot_dict.items():
         #da.plot.line(ax=ax, **kwargs['line_kw']) # using xarray plotting
         ax.plot(xr[xr.dims[0]], xr.values, label = name) #assumes the only dim is time
 
+        if ensemble is True:
+            sorted_line_x.append(xr[xr.dims[0]])
+            sorted_line_y.append(xr.values)
+
+    if ensemble is True:
+        ax.fill_between()
 
     #add/modify plot elements
     if use_attrs:
         set_plot_attrs(use_attrs, data, ax)
+
+    ax.legend()
 
     return ax
 
