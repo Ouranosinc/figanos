@@ -13,7 +13,7 @@ def empty_dict(kwargs):
 
 def get_attributes(xr_obj, str):
     """
-    Fetches attributes corresponding to keys from Xarray objects
+    Fetches attributes or dims corresponding to keys from Xarray objects
     Args:
         xr_obj: Xarray DataArray or Dataset
         str: string corresponding to an attribute key
@@ -21,9 +21,30 @@ def get_attributes(xr_obj, str):
          Xarray attribute value as string
     """
     if str in xr_obj.attrs:
-            return xr_obj.attrs[str]
+        return xr_obj.attrs[str]
+    elif str in xr_obj.dims:
+        return str #special case because DataArray and Dataset dims are not the same types
     else:
         raise Exception('Attribute "{0}" not found in "{1}"'.format(str, xr_obj.name))
+
+def default_attrs(xr_obj):
+    """
+    Builds a dictionary of default Xarray object attributes to use as plot labels,
+    using similar behaviour to Xarray.DataArray.plot()
+
+    Args:
+        xr_obj: Xarray object (DataArray or Dataset)
+    Returns:
+        dict of key-value pairs of the format (plot_element:attribute_name)
+    """
+    default = {}
+    default['title'] = 'long_name'
+    default['xlabel'] = 'time'
+    default['ylabel'] = 'standard_name'
+    default['yunits'] = 'units'
+
+    return default
+
 
 def set_plot_attrs(attr_dict, xr_obj, ax):
     """
@@ -34,13 +55,15 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
         ax: matplotlib axis
     Returns:
         matplotlib axis
+    Todo: include lat,lon coordinates in title, add warning if input not in list (e.g. y_label)
     """
     if 'title' in attr_dict:
         ax.set_title(get_attributes(xr_obj, attr_dict['title']), wrap=True)
     if 'xlabel' in attr_dict:
         ax.set_xlabel(get_attributes(xr_obj, attr_dict['xlabel'])) #rotation?
     if 'ylabel' in attr_dict:
-        ax.set_ylabel(get_attributes(xr_obj, attr_dict['ylabel']))
+        ax.set_ylabel(get_attributes(xr_obj, attr_dict['ylabel'])+ ' [' +
+                      get_attributes(xr_obj, attr_dict['yunits'])+ ']')
     return ax
 
 
@@ -76,17 +99,16 @@ def sort_lines(array_dict):
 # lnx = np.arange(1,10,1)
 # ln1 = lnx + 3 + 1*np.random.rand()
 # ln2 = lnx + 10 + 3*np.random.rand()
-# ln3 = lnx + 6 + 2*np.random.rand()
+# #ln3 = lnx + 6 + 2*np.random.rand()
 #
 # fig, ax = plt.subplots(figsize = (4,3))
-# ax.plot(lnx, ln1)
-# ax.plot(lnx, ln2)
-# ax.plot(lnx, ln3)
+# line_1 = ax.plot(lnx, ln1)
+# line_2 = ax.plot(lnx, ln2)
+# #line_3 = ax.plot(lnx, ln3)
 #
 # ax.fill_between(lnx, ln1,ln2, alpha = 0.2, color = 'red')
-# ax.fill_between(lnx, ln1,ln3, alpha = 0.2, color = 'blue')
+# #ax.fill_between(lnx, ln1,ln3, alpha = 0.2, color = 'blue')
 # plt.show()
-
 
 
 

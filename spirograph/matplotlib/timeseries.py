@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 # To add
 #  language
 #  smoothing
-# manual mode?
 # logo
-# default value for attributes to use?
+# transformer dates de days since... a dates?
+# use_attrs = default au lieu de None??
 
 
 ## idees pour labels: arg replace_label
@@ -47,21 +47,26 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
     #plot
     if ensemble is True:
 
-        ax.plot(array_dict[sorted_lines['middle']][array_dict[sorted_lines['middle']].dims[0]],
+        line_1 = ax.plot(array_dict[sorted_lines['middle']][array_dict[sorted_lines['middle']].dims[0]],
                 array_dict[sorted_lines['middle']].values, **kwargs['line_kw'])
 
         ax.fill_between(array_dict[sorted_lines['lower']][array_dict[sorted_lines['lower']].dims[0]],
                         array_dict[sorted_lines['lower']].values,
                         array_dict[sorted_lines['upper']].values,
-                        alpha = 0.2)
+                        color = line_1[0].get_color(),
+                        edgecolor = 'white', alpha = 0.2)
     else:
         for name, arr in array_dict.items():
-            #da.plot.line(ax=ax, **kwargs['line_kw']) # using xarray plotting
             ax.plot(arr[arr.dims[0]], arr.values,label = name, **kwargs['line_kw'])
 
     #add/modify plot elements
+    plot_attrs = default_attrs(data)
     if use_attrs:
-        set_plot_attrs(use_attrs, data, ax)
+        for k, v in use_attrs.items():
+            plot_attrs[k] = v
+
+    set_plot_attrs(plot_attrs, data, ax)
+
 
     ax.legend()
 
@@ -69,5 +74,6 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
 
 #test
 
-line_ts(da_pct, use_attrs= {'title': 'ccdp_name'})
-line_ts(ds_pct, use_attrs= {'title': 'ccdp_name'}, ensemble = True)
+line_ts(da_pct, use_attrs={'title': 'ccdp_name'}, line_kw = {'color': 'red'})
+line_ts(ds_pct, ensemble=True, line_kw={'color': 'red'})
+line_ts(ds_pct, use_attrs= {'title': 'ccdp_name'}, ensemble = True,line_kw = {'color':'red'})
