@@ -16,16 +16,16 @@ import matplotlib.pyplot as plt
 ## idees pour labels: arg replace_label
 
 
-def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, ensemble = False):
+def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_kw=None):
     """
-    Plots unique time series from dataframe
+    Plots unique time series from 1D dataframe or dataset
     Args:
         ax: user-specified matplotlib axis
         da: Xarray DataArray containing the data to plot
         use_attrs: dict linking a plot element (key, e.g. 'title')
             to a DataArray attribute (value, e.g. 'Description')
         sub_kw: matplotlib subplot kwargs
-        line_kw : maplotlib or xarray line kwargs
+        line_kw : matplotlib or xarray line kwargs
     Returns:
         matplotlib axis
     """
@@ -35,28 +35,29 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, ensemble =
         fig, ax = plt.subplots(**kwargs['sub_kw'])
 
     #arrange data
-    plot_dict = {}
+    array_dict = {}
     if str(type(data)) == "<class 'xarray.core.dataset.Dataset'>":
-        for k,v in data.data_vars.items():
-            plot_dict[k] = v
+        for k, v in data.data_vars.items():
+            array_dict[k] = v
+            if ensemble is True:
+                sorted_lines = sort_lines(array_dict)
     else:
-        plot_dict[data.name] = data
-
-    #set up for ensemble
-    sorted_line_y = []
-    sorted_line_x = []
+        array_dict[data.name] = data
 
     #plot
-    for name, xr in plot_dict.items():
-        #da.plot.line(ax=ax, **kwargs['line_kw']) # using xarray plotting
-        ax.plot(xr[xr.dims[0]], xr.values, label = name) #assumes the only dim is time
-
-        if ensemble is True:
-            sorted_line_x.append(xr[xr.dims[0]])
-            sorted_line_y.append(xr.values)
-
     if ensemble is True:
-        ax.fill_between()
+
+        ax.plot(array_dict[sorted_lines['middle']][array_dict[sorted_lines['middle']].dims[0]],
+                array_dict[sorted_lines['middle']].values, **kwargs['line_kw'])
+
+        ax.fill_between(array_dict[sorted_lines['lower']][array_dict[sorted_lines['lower']].dims[0]],
+                        array_dict[sorted_lines['lower']].values,
+                        array_dict[sorted_lines['upper']].values,
+                        alpha = 0.2)
+    else:
+        for name, arr in array_dict.items():
+            #da.plot.line(ax=ax, **kwargs['line_kw']) # using xarray plotting
+            ax.plot(arr[arr.dims[0]], arr.values,label = name, **kwargs['line_kw'])
 
     #add/modify plot elements
     if use_attrs:
@@ -69,3 +70,4 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, ensemble =
 #test
 
 line_ts(da_pct, use_attrs= {'title': 'ccdp_name'})
+line_ts(ds_pct, use_attrs= {'title': 'ccdp_name'}, ensemble = True)

@@ -46,20 +46,21 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
 def sort_lines(array_dict):
     """
-    Sorts same-length parallel (not crossing across x-y coordinates) arrays by y coordinates
+    Sorts and labels same-length arrays that plot as parallel lines in x,y space
+    according to the highest and lowest along the y-axis
     Args:
-        array_dict: dict of arrays, must contain an odd number of arrays
+        array_dict: dict of arrays.
     Returns:
-        dict of names
-    To do: different lengths?, warning if even number
+        dict
     """
     ref_values = {}
     sorted_lines = {}
-    for name, xr in array_dict.items():
-        ref_values[name] = int(xr[int(len(xr)/2)])
+    for name, arr in array_dict.items():
+        ref_values[name] = int(arr[int(len(arr)/2)])
     sorted_series = pd.Series(ref_values).sort_values()
-    sorted_lines['upper'] = sorted_series.idxmax()
     sorted_lines['lower'] = sorted_series.idxmin()
+    sorted_lines['upper'] = sorted_series.idxmax()
+    sorted_lines['middle'] = sorted_series.index[int(len(sorted_series)/2 - 0.5)] # -0.5 is + 0.5 - 1, to account for 0-indexing
 
     return sorted_lines
 
