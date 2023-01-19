@@ -1,6 +1,10 @@
 
-import pandas as pd
+import numpy as np
 import xarray as xr
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
 
 
 def empty_dict(kwargs):
@@ -27,7 +31,7 @@ def get_attributes(xr_obj, str):
     else:
         raise Exception('Attribute "{0}" not found in "{1}"'.format(str, xr_obj.name))
 
-def default_attrs(xr_obj):
+def default_attrs():
     """
     Builds a dictionary of default Xarray object attributes to use as plot labels,
     using similar behaviour to Xarray.DataArray.plot()
