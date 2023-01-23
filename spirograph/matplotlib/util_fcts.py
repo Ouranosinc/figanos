@@ -1,19 +1,38 @@
 
-import numpy as np
-import xarray as xr
-import matplotlib.pyplot as plt
+
 import pandas as pd
+import re
 
 
+def get_array_categ(array):
+    """Returns an array category
+        PCT_VAR_ENS: ensemble of percentiles stored as variables
+        PCT_DIM_ENS: ensemble of percentiles stored as dimension coordinates
+        STATS_VAR_ENS: ensemble of statistics (min, mean, max) stored as variables
+        NON_ENS_DS: dataset of individual lines, not an ensemble
+        DA: DataArray
+    Args:
+        data_dict:  Xarray Dataset or DataArray
+    Returns
+        str
+        """
 
+    if str(type(array)) == "<class 'xarray.core.dataset.Dataset'>":
+        if pd.notnull([re.search("_p[0-9]{1,2}", var) for var in array.data_vars]).sum() >=2:
+            cat = "PCT_VAR_ENS"
+        elif pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
+            cat = "PCT_DIM_ENS"
+        elif pd.notnull([re.search("[Mm]ax|[Mm]in", var) for var in array.data_vars]).sum() >= 2:
+            cat = "STATS_VAR_ENS"
+        else:
+            cat = "NON_ENS_DS"
 
-def empty_dict(kwargs):
-    """Returns empty dictionaries
-    """
-    for k, v in kwargs.items():
-        if not v:
-            kwargs[k] = {}
-    return kwargs
+    elif str(type(array)) == "<class 'xarray.core.dataarray.DataArray'>":
+        cat = "DA"
+    else:
+        raise TypeError('Array is not an Xarray Dataset or DataArray')
+    return cat
+
 
 def get_attributes(xr_obj, str):
     """
@@ -31,23 +50,6 @@ def get_attributes(xr_obj, str):
     else:
         raise Exception('Attribute "{0}" not found in "{1}"'.format(str, xr_obj.name))
 
-def default_attrs():
-    """
-    Builds a dictionary of default Xarray object attributes to use as plot labels,
-    using similar behaviour to Xarray.DataArray.plot()
-
-    Args:
-        xr_obj: Xarray object (DataArray or Dataset)
-    Returns:
-        dict of key-value pairs of the format (plot_element:attribute_name)
-    """
-    default = {}
-    default['title'] = 'long_name'
-    default['xlabel'] = 'time'
-    default['ylabel'] = 'standard_name'
-    default['yunits'] = 'units'
-
-    return default
 
 
 def set_plot_attrs(attr_dict, xr_obj, ax):
