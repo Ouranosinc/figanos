@@ -1,7 +1,8 @@
 
-
 import pandas as pd
 import re
+
+
 
 
 def get_array_categ(array):
@@ -46,7 +47,7 @@ def get_attributes(xr_obj, str):
     if str in xr_obj.attrs:
         return xr_obj.attrs[str]
     elif str in xr_obj.dims:
-        return str #special case because DataArray and Dataset dims are not the same types
+        return str # special case because DataArray and Dataset dims are not the same types
     else:
         raise Exception('Attribute "{0}" not found in "{1}"'.format(str, xr_obj.name))
 

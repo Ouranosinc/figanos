@@ -9,8 +9,8 @@ ds_pct = ds_pct_open.isel(lon=500, lat=250)[['tx_max_p50', 'tx_max_p10', 'tx_max
 da_pct = ds_pct['tx_max_p50']
 
 
-data = np.random.rand(4,3)
-time = [1,2,3,4]
+data = np.random.rand(4,3)*25 + 300
+time = pd.date_range(start ='1960-01-01', end = '2020-01-01', periods = 4)
 pct = [15,50,95]
 datest = xr.DataArray(data, coords = [time, pct], dims = ['time', 'percentiles'])
 
