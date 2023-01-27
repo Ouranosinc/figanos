@@ -10,18 +10,15 @@ import pandas as pd
 #   logo
 #   xlim
 # fct qui s'assure que 'time' est une dimension
-# variables superflues?
-# FIX when PCT_DIM_ENS, label for each line??
 # FIX label used twice
-# ensemble percentiles is a dataarray? it's a dataset
 # show lat,lon
 # show percentiles?
 # option for legend placement
 #CHECK: if data not a dict, line_kw not a dict of dicts
 #Exceptions, no data, data is all nans
 # cftime conversion?
-# xlabel not showing up
 # ylabel at end of line rather than legend
+#special term in use_attrs to use dict key
 
 
 

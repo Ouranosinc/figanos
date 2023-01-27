@@ -69,6 +69,7 @@ def output_ds(paths):
 
     datasets = {}
 
+
     for path in paths:
         if re.search("_stats", path):
             open_ds = xr.open_dataset(path, decode_timedelta=False)
@@ -82,7 +83,8 @@ def output_ds(paths):
 
         loc_ds = var_ds.sel(lat = target_lat, lon = target_lon, method = 'nearest').\
             convert_calendar('standard')
-        datasets[path.split(sep = '/')[-1]] = loc_ds
+        datasets[path.split(sep='/')[-1].split(sep='.')[0]] = loc_ds
+
     return datasets
 
 paths = glob.glob('/exec/abeaupre/Projects/spirograph/test_data/tasmax*.nc')
@@ -105,4 +107,4 @@ pct = [15,50,95]
 da_pct_rand = xr.DataArray(data, coords = [time, pct], dims = ['time', 'percentiles'])
 attr_list = ['long_name','time','standard_name','units']
 for a in attr_list:
-    da_pct_rand.attrs[a] = 'default
+    da_pct_rand.attrs[a] = 'default'
