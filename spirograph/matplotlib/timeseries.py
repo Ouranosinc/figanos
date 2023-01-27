@@ -9,12 +9,23 @@ import pandas as pd
 #   language
 #   logo
 #   xlim
-# assumer que 'time' est la dimension, et fct qui regarde
+# fct qui s'assure que 'time' est une dimension
 # variables superflues?
-# FIX when PCT_DIM_ENS, label for each line
+# FIX when PCT_DIM_ENS, label for each line??
+# FIX label used twice
+# ensemble percentiles is a dataarray? it's a dataset
+# show lat,lon
+# show percentiles?
+# option for legend placement
+#CHECK: if data not a dict, line_kw not a dict of dicts
+#Exceptions, no data, data is all nans
+# cftime conversion?
+# xlabel not showing up
+# ylabel at end of line rather than legend
 
 
-def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_kw=None):
+
+def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None):
     """
     Plots time series from 1D dataframe or dataset
     Args:
@@ -31,7 +42,8 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
     # if only one data input, insert in dict
     non_dict_data = False
     if type(data) != dict:
-        data = {'data': data}
+        data = {'data_1': data}
+        line_kw = {'data_1': empty_dict(line_kw)}
         non_dict_data = True
 
     # set default kwargs and add/replace with user inputs, if provided
@@ -40,13 +52,15 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
                   'ylabel': 'standard_name',
                   'yunits': 'units'}
     plot_sub_kw = {}
-    plot_line_kw = { name: {} for name in data.keys() }
+    if non_dict_data is True:
+        plot_line_kw = {}
+    else:
+        plot_line_kw = {name: {} for name in data.keys()}
 
     for user_dict, attr_dict in zip([use_attrs, sub_kw, line_kw], [plot_attrs, plot_sub_kw, plot_line_kw]):
         if user_dict:
-            for k,v in user_dict.items():
+            for k, v in user_dict.items():
                 attr_dict[k] = v
-
 
     kwargs = {'sub_kw': plot_sub_kw, 'line_kw': plot_line_kw}
 
@@ -62,13 +76,13 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
 
     for name, arr in data.items():
 
-        if array_categ[name] in ['PCT_VAR_ENS', 'STATS_VAR_ENS', 'PCT_DIM_ENS']:
+        if array_categ[name] in ['PCT_VAR_ENS', 'STATS_VAR_ENS', 'PCT_DIM_ENS_DA']:
 
             # extract each line from the datasets
             array_data = {}
-            if array_categ[name] == 'PCT_DIM_ENS':
+            if array_categ[name] == 'PCT_DIM_ENS_DA':
                 for pct in arr.percentiles:
-                    array_data[pct] = arr.sel(percentiles=int(pct))
+                    array_data[str(int(pct))] = arr.sel(percentiles=int(pct))
             else:
                 for k, v in arr.data_vars.items():
                     array_data[k] = v
@@ -91,14 +105,14 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
 
                 for k, sub_arr in arr.data_vars.items():
                     sub_name = name + "_" + sub_arr.name  # creates plot label
-                    ax.plot(sub_arr['time'], sub_arr.values, **kwargs['line_kw'][name], label = sub_name)
+                    ax.plot(sub_arr['time'], sub_arr.values, **kwargs['line_kw'][name], label=sub_name)
 
 
         else: # should be DataArray
 
-            ax.plot(arr['time'], arr.values, **kwargs['line_kw'][name], label = name)
+            ax.plot(arr['time'], arr.values, **kwargs['line_kw'][name], label=name)
 
-    #add/modify plot elements according to the first entry
+    #add/modify plot elements according to the first entry.
     set_plot_attrs(plot_attrs, list(data.values())[0], ax)
 
     if non_dict_data is False:
@@ -107,23 +121,6 @@ def line_ts(data, ensemble = False, ax=None, use_attrs=None, sub_kw=None, line_k
 
     return ax
 
-# test
-
-## simple DataArray, labeled or unlabeled
-line_ts(da_pct, line_kw = {'color': 'red'})
-line_ts({'My data': da_pct})
-
-## simple Dataset ensemble (variables)
-line_ts(ds_pct, use_attrs= {'title': 'ccdp_name'})
-line_ts({'My other data':ds_pct}, use_attrs= {'title': 'ccdp_name'})
-
-## simple Dataset ensemble (pct)
-line_ts(datest)
-line_ts({'My random data': datest})
-
-## all together
-line_ts({'DataArray':da_pct, 'Var Ensemble': ds_pct, 'other': datest},
-        line_kw = {'DataArray':{'color': 'purple'}, 'Var Ensemble': {'color': 'brown'}})
 
 
 
