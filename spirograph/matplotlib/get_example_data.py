@@ -66,8 +66,9 @@ def output_ds(paths):
 
     target_lat = 45.5
     target_lon = -73.6
+    time_slice = slice(150,200)
 
-    datasets = {}
+    dsets = {}
 
 
     for path in paths:
@@ -81,15 +82,21 @@ def output_ds(paths):
             print(path, ' not _stats or _perc')
             continue
 
-        loc_ds = var_ds.sel(lat = target_lat, lon = target_lon, method = 'nearest').\
-            convert_calendar('standard')
-        datasets[path.split(sep='/')[-1].split(sep='.')[0]] = loc_ds
+        loc_ds = var_ds.sel(lat=target_lat, lon=target_lon, method='nearest')
+            #.convert_calendar('standard')
+        if time_slice:
+            loc_ds = loc_ds.isel(time=time_slice)
+        dsets[path.split(sep='/')[-1].split(sep='.')[0]] = loc_ds
 
-    return datasets
+    return dsets
+
 
 paths = glob.glob('/exec/abeaupre/Projects/spirograph/test_data/tasmax*.nc')
 
 datasets = output_ds(paths)
+
+
+#datasets['tasmax_rcp45_2015_1_stats']
 
 #   Other datasets
 ## ensemble percentiles (pct in variables)

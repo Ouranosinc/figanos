@@ -1,12 +1,25 @@
 
 import pandas as pd
 import re
+import warnings
+import xarray as xr
 
 def empty_dict(param):
     if param is None:
         param = {}
     return param
 
+def check_timeindex(xr_dict):
+    """ checks if the time index of Xarray objects in a dict is CFtime
+    and converts to pd.DatetimeIndex if true"""
+    for name, xr_obj in xr_dict.items():
+        if 'time' in xr_obj.dims:
+            if isinstance(xr_obj.get_index('time'), xr.CFTimeIndex):
+                conv_obj = xr_obj.convert_calendar('standard', use_cftime=None)
+                xr_dict[name] = conv_obj
+        else:
+            raise ValueError('"time" dimension not found in {}'.format(xr_obj))
+    return xr_dict
 
 def get_array_categ(array):
     """Returns an array category
@@ -20,8 +33,7 @@ def get_array_categ(array):
     Returns
         str
         """
-
-    if str(type(array)) == "<class 'xarray.core.dataset.Dataset'>":
+    if isinstance(array, xr.Dataset):
         if pd.notnull([re.search("_p[0-9]{1,2}", var) for var in array.data_vars]).sum() >=2:
             cat = "PCT_VAR_ENS"
         elif pd.notnull([re.search("[Mm]ax|[Mm]in", var) for var in array.data_vars]).sum() >= 2:
@@ -31,18 +43,18 @@ def get_array_categ(array):
         else:
             cat = "NON_ENS_DS"
 
-    elif str(type(array)) == "<class 'xarray.core.dataarray.DataArray'>":
+    elif isinstance(array, xr.DataArray):
         if pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
            cat = "PCT_DIM_ENS_DA"
         else:
             cat = "DA"
     else:
         raise TypeError('Array is not an Xarray Dataset or DataArray')
-    print('cat: ', cat)
+
     return cat
 
 
-def get_attributes(xr_obj, strg):
+def get_attributes(strg, xr_obj):
     """
     Fetches attributes or dims corresponding to keys from Xarray objects. Looks in
     Dataset attributes first, and then looks in DataArray.
@@ -54,13 +66,16 @@ def get_attributes(xr_obj, strg):
     """
     if strg in xr_obj.attrs:
         return xr_obj.attrs[strg]
-    elif str(type(xr_obj)) == "<class 'xarray.core.dataset.Dataset'>":
-        if strg in xr_obj[list(xr_obj.data_vars)[0]].attrs:  # DataArray of first variable
-            return xr_obj[list(xr_obj.data_vars)[0]].attrs[strg]
+
     elif strg in xr_obj.dims:
         return strg  # special case for 'time' because DataArray and Dataset dims are not the same types
+
+    elif isinstance(array, xr.Dataset):
+        if strg in xr_obj[list(xr_obj.data_vars)[0]].attrs:  # DataArray of first variable
+            return xr_obj[list(xr_obj.data_vars)[0]].attrs[strg]
+
     else:
-        print('Attribute "{0}" not found in attributes'.format(strg))
+        warnings.warn('Attribute "{0}" not found in attributes'.format(strg))
         return ''
 
 
@@ -75,39 +90,67 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
         ax: matplotlib axis
     Returns:
         matplotlib axis
-    Todo: include lat,lon coordinates in title, add warning if input not in list (e.g. y_label)
+
     """
+    #  check
+    for key in attr_dict:
+        if key not in ['title','xlabel', 'ylabel', 'yunits']:
+            warnings.warn('Use_attrs element "{}" not supported'.format(key))
+
     if 'title' in attr_dict:
-        ax.set_title(get_attributes(xr_obj, attr_dict['title']), wrap=True)
+        if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
+            ax.set_title(get_attributes(attr_dict['title'], xr_obj) +
+                         ' (lat={:.2f}, lon={:.2f})'.format(float(xr_obj['lat']),
+                                                              float(xr_obj['lon'])),
+                         wrap=True)
+        else:
+            ax.set_title(get_attributes(attr_dict['title'], xr_obj), wrap=True)
+
     if 'xlabel' in attr_dict:
-        ax.set_xlabel(get_attributes(xr_obj, attr_dict['xlabel']))  # rotation?
+        ax.set_xlabel(get_attributes(attr_dict['xlabel'], xr_obj))
+
     if 'ylabel' in attr_dict:
         if 'units' in attr_dict and len(attr_dict['units']) >= 1: # second condition avoids '[]' as label
-            ax.set_ylabel(get_attributes(xr_obj, attr_dict['ylabel']) + ' [' +
-                      get_attributes(xr_obj, attr_dict['yunits']) + ']')
+            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj) + ' [' +
+                      get_attributes(attr_dict['yunits'], xr_obj) + ']')
         else:
-            ax.set_ylabel(get_attributes(xr_obj, attr_dict['ylabel']))
+            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj))
     return ax
 
 
 def sort_lines(array_dict):
     """
-    Sorts and labels same-length arrays that plot as parallel lines in x,y space
-    according to the highest and lowest along the y-axis
+    Labels arrays as 'middle', 'upper' and 'lower' for ensemble plotting
     Args:
         array_dict: dict of arrays.
     Returns:
         dict
     """
-    ref_values = {}
-    sorted_lines = {}
-    for name, arr in array_dict.items():
-        ref_values[name] = float(arr[int(len(arr)/2)]) # why the first int??
-    sorted_series = pd.Series(ref_values).sort_values()
-    sorted_lines['lower'] = sorted_series.idxmin()
-    sorted_lines['upper'] = sorted_series.idxmax()
-    sorted_lines['middle'] = sorted_series.index[int(len(sorted_series)/2 - 0.5)] # -0.5 is + 0.5 - 1, to account for 0-indexing
+    if len(array_dict) != 3:
+        raise ValueError('Ensembles must contain exactly three arrays')
 
+    sorted_lines = {}
+
+    for name in array_dict.keys():
+        if re.search("[0-9]{1,2}$|[Mm]ax$|[Mm]in$|[Mm]ean$", name):
+            suffix = re.search("[0-9]{1,2}$|[Mm]ax$|[Mm]in$|[Mm]ean$", name).group()
+
+            if suffix.isalpha():
+                if suffix in ['max', 'Max']:
+                    sorted_lines['upper'] = name
+                elif suffix in ['min', 'Min']:
+                    sorted_lines['lower'] = name
+                elif suffix in ['mean', 'Mean']:
+                    sorted_lines['middle'] = name
+            elif suffix.isdigit():
+                if int(suffix) >= 51:
+                    sorted_lines['upper'] = name
+                elif int(suffix) <= 49:
+                    sorted_lines['lower'] = name
+                elif int(suffix) == 50:
+                    sorted_lines['middle'] = name
+            else:
+                raise Exception('Arrays names must end in format "_mean" or "_p50" ')
     return sorted_lines
 
 

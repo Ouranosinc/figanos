@@ -19,7 +19,7 @@ line_ts({'My data': da_pct_1}, line_kw={'My data': {'color': 'red'}})
 line_ts({'Random data': da_pct_rand})
 
 ## simple Dataset ensemble (variables)
-line_ts({'rcp45_2015_1': datasets['tasmax_rcp45_2015_1_stats']})
+line_ts({'rcp45_2015_1': datasets['tasmax_rcp45_2015_1_stats']}, legend = 'full')
 line_ts({'rcp45_2015_1': datasets['tasmax_rcp45_2015_1_stats']},
         line_kw={'rcp45_2015_1': {'color': 'purple'}})
 
@@ -34,5 +34,10 @@ line_ts({'DataArray': datasets['tasmax_rcp45_2015_1_stats']['tasmax_mean'],
          'Dataset_dims': datasets['tasmax_rcp85_2015_1_perc']},
         line_kw={'DataArray': {'color': '#000080'},
                  'Dataset_vars': {'color': '#ffa500'},
-                 'Dataset_dims': {'color':'#468499'}
+                 'Dataset_dims': {'color': '#468499'}
                  })
+
+# test with non-ensemble DS
+
+
+ll = line_ts({'rcp45_2015_1': datasets['tasmax_rcp45_2015_1_stats']}, legend = 'full')
