@@ -1,21 +1,15 @@
 
-import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-import warnings
-import pandas as pd
 
 # To add
-#  language
+#  translation to fr
 #  logo
-# FIX label used twice
-# show percentiles?
+# FIX full legend when multiple ensembles
 # ylabel at end of line rather than legend
-#special term in use_attrs to use dict key
-#change fill_between() edgecolor to the background color
 
-def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='lines'):
+def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='lines', show_coords = True):
     """
     Plots time series from 1D dataframe or dataset
     Args:
@@ -25,7 +19,8 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
             to a DataArray attribute (value, e.g. 'Description')
         sub_kw: matplotlib subplot kwargs
         line_kw: matplotlib or xarray line kwargs
-        legend: 'full' (lines and shading), 'lines' (lines only), 'none' (no legend)
+        legend: 'full' (lines and shading), 'lines' (lines only),
+                'in_plot' (self-expl.), 'none' (no legend)
     Returns:
         matplotlib axis
     """
@@ -34,8 +29,8 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
     non_dict_data = False
 
     if type(data) != dict:
-        data = {'data_1': data}
-        line_kw = {'data_1': empty_dict(line_kw)}
+        data = {'no_label': data}
+        line_kw = {'no_label': empty_dict(line_kw)}
         non_dict_data = True
 
     # basic checks
@@ -78,9 +73,13 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
     array_categ = {name: get_array_categ(array) for name, array in data.items()}
 
     # get data and plot
-    lines_dict = {}
+    lines_dict = {}  # created to facilitate accessing line properties later
 
     for name, arr in data.items():
+
+        #  add name in line kwargs if not there, to avoid error due to double 'label' args in plot()
+        if 'label' not in kwargs['line_kw'][name]:
+            kwargs['line_kw'][name]['label'] = name
 
         # ensembles
         if array_categ[name] in ['PCT_VAR_ENS', 'STATS_VAR_ENS', 'PCT_DIM_ENS_DA']:
@@ -97,51 +96,52 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
             # create a dictionary labeling the middle, upper and lower line
             sorted_lines = sort_lines(array_data)
 
-            # plot the ensemble
+            # plot line
             lines_dict[name] = ax.plot(array_data[sorted_lines['middle']]['time'],
-                             array_data[sorted_lines['middle']].values, **kwargs['line_kw'][name], label=name)
+                                       array_data[sorted_lines['middle']].values,
+                                       **kwargs['line_kw'][name])
+
+            # plot shading
+            if array_categ[name] in ['PCT_VAR_ENS', 'PCT_DIM_ENS_DA']:
+                fill_between_label = "{}th-{}th percentiles".format(get_suffix(sorted_lines['lower']),
+                                                                    get_suffix(sorted_lines['upper']))
+            if array_categ[name] in ['STATS_VAR_ENS']:
+                fill_between_label = "min-max range"
+            if legend != 'full':
+                fill_between_label = None
 
             ax.fill_between(array_data[sorted_lines['lower']]['time'],
                             array_data[sorted_lines['lower']].values,
                             array_data[sorted_lines['upper']].values,
                             color=lines_dict[name][0].get_color(),
-                            edgecolor='white', alpha=0.2)
-
-            if legend == 'full':
-                patch = Patch(facecolor=lines_dict[name][0].get_color(),
-                              edgecolor='white', alpha=0.2,
-                              label="{} - {}".format(sorted_lines['lower'],
-                                                     sorted_lines['upper']))
-
+                            linewidth = 0.0, alpha=0.2, label=fill_between_label)
 
         #  non-ensemble Datasets
         elif array_categ[name] in ['NON_ENS_DS']:
             for k, sub_arr in arr.data_vars.items():
-                sub_name = name + "_" + sub_arr.name  # creates plot label
-                lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values,
-                                          **kwargs['line_kw'][name], label=sub_name
-                                          )
+                sub_name = kwargs['line_kw'][name]['label'] + "_" + sub_arr.name
+                lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values,**kwargs['line_kw'][name])
 
         #  non-ensemble DataArrays
         else:
-            lines_dict[name] = ax.plot(arr['time'], arr.values,
-                                  **kwargs['line_kw'][name], label=name
-                                  )
+            lines_dict[name] = ax.plot(arr['time'], arr.values,**kwargs['line_kw'][name])
 
     #  add/modify plot elements according to the first entry.
     set_plot_attrs(plot_attrs, list(data.values())[0], ax)
 
-    #  other plot elements
+    # other plot elements
+
+    ax.margins(x=0, y=0.05)
+
+    if show_coords:
+        plot_coords(ax, list(data.values())[0])
 
     if non_dict_data is False and legend is not None:
-        if legend == 'full':
-            handles = [v[0] for v in list(lines_dict.values())] # line objects are tuples(?)
-            handles.append(patch)
-            ax.legend(handles=handles)
+        if legend == 'in_plot':
+            in_plot_legend(ax)
         else:
             ax.legend()
 
-    ax.margins(x=0, y=0.05)
 
     return ax
 

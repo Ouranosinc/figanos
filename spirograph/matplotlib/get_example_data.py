@@ -66,7 +66,7 @@ def output_ds(paths):
 
     target_lat = 45.5
     target_lon = -73.6
-    time_slice = slice(150,200)
+    time_slice = slice(160,260)
 
     dsets = {}
 
