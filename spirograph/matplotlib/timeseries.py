@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 def timeseries(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='lines', show_coords = True):
     """
     Plots time series from 1D dataframes or datasets
+
     Parameters
     __________
     data: dict or Dataset/DataArray
