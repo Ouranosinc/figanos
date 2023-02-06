@@ -21,8 +21,8 @@ tasmax_rcp45_2015_1_perc.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test
 ens2015_rcp45 = glob.glob('/scen3/scenario/netcdf/ouranos/cb-oura-1.0/tasmax_day_*_rcp45_*_2015.nc')
 tasmax_rcp45_2015_2 = ensembles.create_ensemble(ens2015_rcp45[0:3])
 
-tasmax_rcp45_2015_2_stats = ensembles.ensemble_mean_std_max_min(tasmax_rcp45_2015_2)
-tasmax_rcp45_2015_2_perc = ensembles.ensemble_percentiles(tasmax_rcp45_2015_2, values=[15, 50, 85], split=False)
+tasmax_rcp45_2015_2_stats = ensembles.ensemble_mean_std_max_min(tasmax_rcp45_2015_2).sel(lat =slice(65,40), lon = slice(-90,-55))
+tasmax_rcp45_2015_2_perc = ensembles.ensemble_percentiles(tasmax_rcp45_2015_2, values=[15, 50, 85], split=False).sel(lat =slice(65,40), lon = slice(-90,-55))
 
 tasmax_rcp45_2015_2_stats.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test_data/tasmax_rcp45_2015_2_stats.nc')
 tasmax_rcp45_2015_2_perc.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test_data/tasmax_rcp45_2015_2_perc.nc')
@@ -31,8 +31,8 @@ tasmax_rcp45_2015_2_perc.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test
 ens2015_rcp85 = glob.glob('/scen3/scenario/netcdf/ouranos/cb-oura-1.0/tasmax_day_*_rcp85_*_2015.nc')
 tasmax_rcp85_2015_1 = ensembles.create_ensemble(ens2015_rcp85[3:6])
 
-tasmax_rcp85_2015_1_stats = ensembles.ensemble_mean_std_max_min(tasmax_rcp85_2015_1)
-tasmax_rcp85_2015_1_perc = ensembles.ensemble_percentiles(tasmax_rcp85_2015_1, values=[15, 50, 85], split=False)
+tasmax_rcp85_2015_1_stats = ensembles.ensemble_mean_std_max_min(tasmax_rcp85_2015_1).sel(lat =slice(65,40), lon = slice(-90,-55))
+tasmax_rcp85_2015_1_perc = ensembles.ensemble_percentiles(tasmax_rcp85_2015_1, values=[15, 50, 85], split=False).sel(lat =slice(65,40), lon = slice(-90,-55))
 
 tasmax_rcp85_2015_1_stats.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test_data/tasmax_rcp85_2015_1_stats.nc')
 tasmax_rcp85_2015_1_perc.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test_data/tasmax_rcp85_2015_1_perc.nc')
@@ -42,8 +42,8 @@ tasmax_rcp85_2015_1_perc.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test
 ens2015_rcp85 = glob.glob('/scen3/scenario/netcdf/ouranos/cb-oura-1.0/tasmax_day_*_rcp85_*_2015.nc')
 tasmax_rcp85_2015_2 = ensembles.create_ensemble(ens2015_rcp85[0:3])
 
-tasmax_rcp85_2015_2_stats = ensembles.ensemble_mean_std_max_min(tasmax_rcp85_2015_2)
-tasmax_rcp85_2015_2_perc = ensembles.ensemble_percentiles(tasmax_rcp85_2015_2, values=[15, 50, 85], split=False)
+tasmax_rcp85_2015_2_stats = ensembles.ensemble_mean_std_max_min(tasmax_rcp85_2015_2).sel(lat =slice(65,40), lon = slice(-90,-55))
+tasmax_rcp85_2015_2_perc = ensembles.ensemble_percentiles(tasmax_rcp85_2015_2, values=[15, 50, 85], split=False).sel(lat =slice(65,40), lon = slice(-90,-55))
 
 tasmax_rcp85_2015_2_stats.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test_data/tasmax_rcp85_2015_2_stats.nc')
 tasmax_rcp85_2015_2_perc.to_netcdf(path='/exec/abeaupre/Projects/spirograph/test_data/tasmax_rcp85_2015_2_perc.nc')
@@ -98,6 +98,11 @@ datasets = output_ds(paths)
 
 #datasets['tasmax_rcp45_2015_1_stats']
 
+# make percentile dataset
+
+ds_perc = xr.Dataset({'rcp45': datasets['tasmax_rcp45_2015_1_perc'],
+                      'rcp85': datasets['tasmax_rcp85_2015_1_perc']})
+
 #   Other datasets
 ## ensemble percentiles (pct in variables)
 url_1 = 'https://pavics.ouranos.ca//twitcher/ows/proxy/thredds/dodsC/birdhouse/disk2/cccs_portal/indices/Final/BCCAQv2_CMIP6/tx_max/YS/ssp585/ensemble_percentiles/tx_max_ann_BCCAQ2v2+ANUSPLIN300_historical+ssp585_1950-2100_30ymean_percentiles.nc'
@@ -108,10 +113,23 @@ da_pct_1 = ds_pct_1['tx_max_p50']
 
 ##  randomly-generated ensemble percentiles (pct in dims). No attributes
 data = np.random.rand(4,3)*25 + 300
-time = pd.date_range(start ='1960-01-01', end = '2020-01-01', periods = 4)
+time = pd.date_range(start='1960-01-01', end='2020-01-01', periods=4)
 pct = [15,50,95]
 
 da_pct_rand = xr.DataArray(data, coords = [time, pct], dims = ['time', 'percentiles'])
 attr_list = ['long_name','time','standard_name','units']
 for a in attr_list:
     da_pct_rand.attrs[a] = 'default'
+
+##  randomly-generated non-ensemble dataset
+
+time = pd.date_range(start ='1960-01-01', end = '2020-01-01', periods = 10)
+dat_1 = np.random.rand(10) * 20
+dat_2 = np.random.rand(10) * 20
+dat_3 = np.random.rand(10) * 20
+
+rand_ds = xr.Dataset(data_vars={'data1': ('time', dat_1),
+                                'data2': ('time', dat_2),
+                                'data3': ('time', dat_3)},
+                     coords={'time': time},
+                     attrs={'description': 'Randomly generated time-series'})

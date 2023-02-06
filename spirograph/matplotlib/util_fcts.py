@@ -1,17 +1,30 @@
-
 import pandas as pd
 import re
 import warnings
 import xarray as xr
+import matplotlib as mpl
+
 
 def empty_dict(param):
+    """ returns empty dict if input is None"""
     if param is None:
         param = {}
     return param
 
+
 def check_timeindex(xr_dict):
     """ checks if the time index of Xarray objects in a dict is CFtime
-    and converts to pd.DatetimeIndex if true"""
+    and converts to pd.DatetimeIndex if true
+
+    Parameters
+    _________
+    xr_dict: dict
+        dictionary containing Xarray DataArrays or Datasets
+    Returns
+    _______
+    dict
+    """
+
     for name, xr_obj in xr_dict.items():
         if 'time' in xr_obj.dims:
             if isinstance(xr_obj.get_index('time'), xr.CFTimeIndex):
@@ -21,27 +34,32 @@ def check_timeindex(xr_dict):
             raise ValueError('"time" dimension not found in {}'.format(xr_obj))
     return xr_dict
 
+
 def get_array_categ(array):
-    """Returns an array category
+    """Returns an array category, which determines how to plot
+
+    Parameters
+    __________
+    array: Dataset or DataArray
+
+    Returns
+    _________
+    str
         PCT_VAR_ENS: ensemble of percentiles stored as variables
         PCT_DIM_ENS_DA: ensemble of percentiles stored as dimension coordinates, DataArray
         STATS_VAR_ENS: ensemble of statistics (min, mean, max) stored as variables
-        NON_ENS_DS: dataset of individual lines, not an ensemble
+        DS: any Dataset that is not  recognized as an ensemble
         DA: DataArray
-    Args:
-        data_dict:  Xarray Dataset or DataArray
-    Returns
-        str
-        """
+    """
     if isinstance(array, xr.Dataset):
         if pd.notnull([re.search("_p[0-9]{1,2}", var) for var in array.data_vars]).sum() >=2:
             cat = "PCT_VAR_ENS"
         elif pd.notnull([re.search("[Mm]ax|[Mm]in", var) for var in array.data_vars]).sum() >= 2:
             cat = "STATS_VAR_ENS"
         elif pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
-            cat = "PCT_DIM_ENS_DS"  ## no support for now
+            cat = "PCT_DIM_ENS_DS"  # placeholder, no support for now
         else:
-            cat = "NON_ENS_DS"
+            cat = "DS"
 
     elif isinstance(array, xr.DataArray):
         if pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
@@ -57,12 +75,19 @@ def get_array_categ(array):
 def get_attributes(string, xr_obj):
     """
     Fetches attributes or dims corresponding to keys from Xarray objects. Looks in
-    Dataset attributes first, and then looks in DataArray.
-    Args:
-        xr_obj: Xarray DataArray or Dataset
-        str: string corresponding to an attribute key
-    Returns:
-         Xarray attribute value as string
+    Dataset attributes first, then looks in DataArray.
+
+    Parameters
+    _________
+    string: str
+        string corresponding to an attribute name
+    xr_obj: DataArray or Dataset
+        the Xarray object containing the attributes
+
+    Returns
+    _______
+    str
+        Xarray attribute value as string or empty string if not found
     """
     if string in xr_obj.attrs:
         return xr_obj.attrs[string]
@@ -74,22 +99,27 @@ def get_attributes(string, xr_obj):
         if string in xr_obj[list(xr_obj.data_vars)[0]].attrs:  # DataArray of first variable
             return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
 
-    else:
-        warnings.warn('Attribute "{0}" not found in attributes'.format(string))
-        return ''
-
+        else:
+            warnings.warn('Attribute "{0}" not found in attributes'.format(string))
+            return '' ## would it be better to return None? if so, need to fix ylabel in set_plot_attrs()
 
 
 def set_plot_attrs(attr_dict, xr_obj, ax):
     """
     Sets plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
     to check for and return the string.
-    Args:
-        use_attrs (dict): dict containing specified attribute keys
-        xr_obj: Xarray DataArray.
-        ax: matplotlib axis
-    Returns:
-        matplotlib axis
+
+    Parameters
+    __________
+    use_attrs: dict
+        dictionary containing specified attribute keys
+    xr_obj: Dataset or DataArray
+        The Xarray object containing the attributes
+    ax: matplotlib axis
+        the matplotlib axis
+    Returns
+    ______
+    matplotlib axis
 
     """
     #  check
@@ -104,12 +134,13 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
         ax.set_xlabel(get_attributes(attr_dict['xlabel'], xr_obj))
 
     if 'ylabel' in attr_dict:
-        if 'yunits' in attr_dict and len(attr_dict['yunits']) >= 1: # second condition avoids '[]' as label
-            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj) + ' [' +
-                      get_attributes(attr_dict['yunits'], xr_obj) + ']')
+        if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
+            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj) + ' (' +
+                      get_attributes(attr_dict['yunits'], xr_obj) + ')')
         else:
             ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj))
     return ax
+
 
 def get_suffix(string):
     """ get suffix of typical Xclim variable names"""
@@ -123,10 +154,15 @@ def get_suffix(string):
 def sort_lines(array_dict):
     """
     Labels arrays as 'middle', 'upper' and 'lower' for ensemble plotting
-    Args:
-        array_dict: dict of arrays.
-    Returns:
-        dict
+
+    Parameters
+    _______
+    array_dict: dict of {'name': array}.
+
+    Returns
+    _______
+    dict
+        dictionary of {'middle': 'name', 'upper': 'name', 'lower': 'name'}
     """
     if len(array_dict) != 3:
         raise ValueError('Ensembles must contain exactly three arrays')
@@ -156,71 +192,65 @@ def sort_lines(array_dict):
 
 
 def plot_coords(ax, xr_obj):
+    """ place lat, lon coordinates on bottom right of plot area"""
     if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
         text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
                                                  float(xr_obj['lon']))
         ax.text(0.99, 0.01, text, transform=ax.transAxes, ha = 'right', va = 'bottom')
     else:
-        raise Exception('show_coords set to True, but no coordonates found in {}.coords'.format(xr_obj))
+        warnings.warn('show_coords set to True, but no coordinates found in {}.coords'.format(xr_obj))
 
     return ax
 
 
-
-def in_plot_legend(ax, xlim_factor=0.08, label_gap=0.03, out = False):
+def split_legend(ax, out = True, axis_factor=0.15, label_gap=0.02):
     """
-    Draws line labels at the end of each line
-    Args:
-        xlim_factor: float
-            percentage of the x-axis length to add at the far right of the plot
-        label_gap: float
-        percentage of the x-axis length to add as a gap between line and label
+    Draws line labels at the end of each line, or outside the plot
 
-    Returns:
+    Parameters
+    _______
+    ax: matplotlib axis
+        the axis containing the legend
+    out: bool (default True)
+        if True, print the labels outside of plot area. if False, prolongs plot area to fit labels
+    axis_factor: float
+        if out is True, percentage of the x-axis length to add at the far right of the plot
+    label_gap: float
+        if out is True,percentage of the x-axis length to add as a gap between line and label
+
+    Returns
+    ______
         matplotlib axis
     """
+
     #create extra space
+    init_xbound = ax.get_xbound()
 
+    ax_bump = (init_xbound[1] - init_xbound[0]) * axis_factor
+    label_bump = (init_xbound[1] - init_xbound[0]) * label_gap
 
-    init_xlim = ax.get_xlim()
-    ax.set_xlim(xmin=init_xlim[0],
-                xmax=init_xlim[1] + (init_xlim[1] * xlim_factor))
+    if out is False:
+        ax.set_xbound(lower=init_xbound[0], upper=init_xbound[1] + ax_bump)
 
     #get legend and plot
 
     handles, labels = ax.get_legend_handles_labels()
     for handle, label in zip(handles, labels):
-        last_pt = (handle.get_xdata()[-1], handle.get_ydata()[-1])
-        last_pt_dsp = ax.transData.transform(last_pt)
-        last_pt_ax = ax.transAxes.inverted().transform(last_pt_dsp)
-        last_x = last_pt_ax[0]
-        last_y = last_pt_ax[1]
+
+        last_x = handle.get_xdata()[-1]
+        last_y = handle.get_ydata()[-1]
+
+        if isinstance(last_x, np.datetime64):
+            last_x = mpl.dates.date2num(last_x)
+
         color = handle.get_color()
         ls = handle.get_linestyle()
 
         if out is False:
-            ax.text(last_x + (label_gap * last_x), last_y, label,
-                    ha='left', va='center', color=color, transform=ax.transAxes)
-
-
-        if out is True:
-            ax.text(1.05, last_y, label, ha='left', va='center', color=color, transform=ax.transAxes)
-            ax.plot([1, 1.2], [last_y, last_y], ls=ls, color=color, transform=ax.transAxes)
-            #ax.axhline(y=last_y, xmin=last_x, xmax = 1,ls="-", color=color)
+            ax.text(last_x + label_bump, last_y, label,
+                    ha='left', va='center', color=color)
+        else:
+            trans = mpl.transforms.blended_transform_factory(ax.transAxes, ax.transData)
+            ax.text(1.01, last_y, label, ha='left', va='center', color=color, transform=trans)
 
     return ax
-
-fig, ax = plt.subplots()
-ax.plot([1, 2, 3], [5, 8, 9], label='1st LABEL')
-ax.plot([1, 2, 3], [8, 2, 4], label='2nd LABEL')
-in_plot_legend(ax, out = False)
-
-
-
-fig, [ax1, ax2] = plt.subplots(1,2)
-for ax in [ax1,ax2]:
-    ax.plot([1,2,3],[5,8,9], label = 'YASS')
-    ax.plot([1,2,3],[8,2,4], label = 'YES')
-in_plot_legend(ax1)
-in_plot_legend(ax2, out=True)
-

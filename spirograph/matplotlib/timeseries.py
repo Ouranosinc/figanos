@@ -1,27 +1,32 @@
-
 import xarray as xr
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 
 # To add
 #  translation to fr
 #  logo
-# FIX full legend when multiple ensembles
-# ylabel at end of line rather than legend
 
-def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='lines', show_coords = True):
+def timeseries(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='lines', show_coords = True):
     """
-    Plots time series from 1D dataframe or dataset
-    Args:
-        data: dictionary of labeled Xarray DataArrays or Datasets
-        ax: user-specified matplotlib axis
-        use_attrs: dict linking a plot element (key, e.g. 'title')
-            to a DataArray attribute (value, e.g. 'Description')
-        sub_kw: matplotlib subplot kwargs
-        line_kw: matplotlib or xarray line kwargs
-        legend: 'full' (lines and shading), 'lines' (lines only),
-                'in_plot' (self-expl.), 'none' (no legend)
-    Returns:
+    Plots time series from 1D dataframes or datasets
+    Parameters
+    __________
+    data: dict or Dataset/DataArray
+        dictionary of labeled Xarray DataArrays or Datasets
+    ax: matplotlib axis
+        user-specified matplotlib axis
+    use_attrs: dict
+        dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description')
+    sub_kw: dict
+        matplotlib subplots kwargs in the format {'param': value}
+    line_kw: dict
+        matplotlib or xarray line kwargs in the format {'param': value}
+    legend: str
+        'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
+         'edge' (out of plot), 'none' (no legend)
+    show_coords: bool
+        show latitude, longitude coordinates at the bottom right of the figure
+    Returns
+    _______
         matplotlib axis
     """
 
@@ -29,8 +34,8 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
     non_dict_data = False
 
     if type(data) != dict:
-        data = {'no_label': data}
-        line_kw = {'no_label': empty_dict(line_kw)}
+        data = {'_no_label': data}  # mpl excludes labels starting with "_" from legend
+        line_kw = {'_no_label': empty_dict(line_kw)}
         non_dict_data = True
 
     # basic checks
@@ -41,7 +46,6 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
 
     ## 'time' dimension and calendar format
     data = check_timeindex(data)
-
 
     # set default kwargs
     plot_attrs = {'title': 'long_name',
@@ -117,35 +121,46 @@ def line_ts(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend='li
                             linewidth = 0.0, alpha=0.2, label=fill_between_label)
 
         #  non-ensemble Datasets
-        elif array_categ[name] in ['NON_ENS_DS']:
+        elif array_categ[name] in ['DS']:
             for k, sub_arr in arr.data_vars.items():
-                sub_name = kwargs['line_kw'][name]['label'] + "_" + sub_arr.name
-                lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values,**kwargs['line_kw'][name])
+                if non_dict_data is True:
+                    sub_name = sub_arr.name
+                else:
+                    sub_name = kwargs['line_kw'][name]['label'] + "_" + sub_arr.name
+
+                #put sub_name in line_kwargs to label correctly on plot, store the
+                # original, and put it back after
+                store_label = kwargs['line_kw'][name]['label']
+                kwargs['line_kw'][name]['label'] = sub_name
+                lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, **kwargs['line_kw'][name])
+                kwargs['line_kw'][name]['label'] = store_label
+
 
         #  non-ensemble DataArrays
+        elif array_categ[name] in ['DA']:
+            lines_dict[name] = ax.plot(arr['time'], arr.values, **kwargs['line_kw'][name])
+
         else:
-            lines_dict[name] = ax.plot(arr['time'], arr.values,**kwargs['line_kw'][name])
+            raise Exception('Data structure not supported')
 
     #  add/modify plot elements according to the first entry.
     set_plot_attrs(plot_attrs, list(data.values())[0], ax)
 
-    # other plot elements
+    # other plot elements (check overlap with Stylesheet!)
 
     ax.margins(x=0, y=0.05)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     if show_coords:
         plot_coords(ax, list(data.values())[0])
 
-    if non_dict_data is False and legend is not None:
+    if legend is not None:  # non_dict_data is False and
         if legend == 'in_plot':
-            in_plot_legend(ax)
+            split_legend(ax, out=False)
+        elif legend == 'edge':
+            split_legend(ax, out=True)
         else:
             ax.legend()
 
-
     return ax
-
-
-
-
-
