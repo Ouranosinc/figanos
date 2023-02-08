@@ -12,20 +12,20 @@ def timeseries(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend=
     Parameters
     __________
     data: dict or Dataset/DataArray
-        dictionary of labeled Xarray DataArrays or Datasets
+        Input data to plot. It can be a DataArrays,  Datasets or a dictionary of DataArrays or Datasets.
     ax: matplotlib axis
-        user-specified matplotlib axis
+        Matplotlib axis on which to plot.
     use_attrs: dict
         dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description')
     sub_kw: dict
-        matplotlib subplots kwargs in the format {'param': value}
+        Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
     line_kw: dict
-        matplotlib or xarray line kwargs in the format {'param': value}
+        Arguments to pass the `plot()` function. This is used to change how the line looks.
     legend: str
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend)
     show_coords: bool
-        show latitude, longitude coordinates at the bottom right of the figure
+        show latitude and longitude coordinates at the bottom right of the figure
     Returns
     _______
         matplotlib axis
@@ -43,7 +43,7 @@ def timeseries(data, ax=None, use_attrs=None, sub_kw=None, line_kw=None, legend=
     ## type
     for name, arr in data.items():
         if not isinstance(arr, (xr.Dataset, xr.DataArray)):
-            raise TypeError('data must contain Xarray-type objects')
+            raise TypeError('`data` must contain a xr.Dataset, a xr.DataArray or a dictionary of xr.Dataset/ xr.DataArray.')
 
     ## 'time' dimension and calendar format
     data = check_timeindex(data)

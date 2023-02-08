@@ -3,6 +3,7 @@ import re
 import warnings
 import xarray as xr
 import matplotlib as mpl
+import numpy as np
 
 
 def empty_dict(param):
@@ -44,7 +45,7 @@ def get_array_categ(array):
 
     Returns
     _________
-    str
+    array: str
         PCT_VAR_ENS: ensemble of percentiles stored as variables
         PCT_DIM_ENS_DA: ensemble of percentiles stored as dimension coordinates, DataArray
         STATS_VAR_ENS: ensemble of statistics (min, mean, max) stored as variables
