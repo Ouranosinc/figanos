@@ -1,13 +1,11 @@
 import xarray as xr
 import matplotlib.pyplot as plt
-from spirograph.matplotlib.util_fcts import empty_dict,check_timeindex, get_array_categ, \
-    sort_lines, get_suffix,set_plot_attrs, plot_latlon, split_legend
+from spirograph.matplotlib.util_fcts import empty_dict, check_timeindex, get_array_categ, \
+    sort_lines, get_suffix, set_plot_attrs, split_legend, plot_lat_lon
 
-# To add
-#  translation to fr
-#  logo
+# Todo: translation to fr, logo
 
-def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend='lines', show_coords = True):
+def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend='lines', show_lat_lon = True):
     """
     Plots time series from 1D Xarray Datasets or DataArrays as line plots.Recognizes Xclim percentiles
     or statistics ensembles and plots as shaded regions with a central line.
@@ -30,21 +28,12 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     legend: str
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_coords: bool
+    show_lat_lon: bool
         Show latitude and longitude coordinates at the bottom right of the figure.
     Returns
     _______
         matplotlib axis
     """
-
-    # basic checks
-    ## type
-    for name, arr in data.items():
-        if not isinstance(arr, (xr.Dataset, xr.DataArray)):
-            raise TypeError('`data` must contain a xr.Dataset, a xr.DataArray or a dictionary of xr.Dataset/ xr.DataArray.')
-
-    ## 'time' dimension and calendar format
-    data = check_timeindex(data)
 
 
     #create empty dicts if None
@@ -67,6 +56,15 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
         for name, arr in data.items():
             if name not in plot_kw:
                 raise Exception('plot_kw must be a nested dictionary with keys corresponding to the keys in "data"')
+
+    # basic checks
+    ## type
+    for name, arr in data.items():
+        if not isinstance(arr, (xr.Dataset, xr.DataArray)):
+            raise TypeError('`data` must contain a xr.Dataset, a xr.DataArray or a dictionary of xr.Dataset/ xr.DataArray.')
+
+    ## 'time' dimension and calendar format
+    data = check_timeindex(data)
 
 
     # set default use_attrs values
@@ -208,8 +206,8 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    if show_coords:
-        plot_latlon(ax, list(data.values())[0])
+    if show_lat_lon:
+        plot_lat_lon(ax, list(data.values())[0])
 
     if legend is not None:  # non_dict_data is False and
         if legend == 'in_plot':

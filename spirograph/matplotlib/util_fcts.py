@@ -93,12 +93,8 @@ def get_attributes(string, xr_obj):
     if string in xr_obj.attrs:
         return xr_obj.attrs[string]
 
-    elif string in xr_obj.dims:
-        return string  # special case for 'time' because DataArray and Dataset dims are not the same types
-
-    elif isinstance(xr_obj, xr.Dataset):
-        if string in xr_obj[list(xr_obj.data_vars)[0]].attrs:  # DataArray of first variable
-            return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
+    elif isinstance(xr_obj, xr.Dataset) and string in xr_obj[list(xr_obj.data_vars)[0]].attrs: # DataArray of first variable
+        return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
 
     else:
         warnings.warn('Attribute "{0}" not found in attributes'.format(string))
@@ -191,19 +187,19 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_latlon(ax, xr_obj):
+def plot_lat_lon(ax, xr_obj):
     """ place lat, lon coordinates on bottom right of plot area"""
     if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
         text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
-                                                 float(xr_obj['lon']))
+                                               float(xr_obj['lon']))
         ax.text(0.99, 0.01, text, transform=ax.transAxes, ha = 'right', va = 'bottom')
     else:
-        warnings.warn('show_coords set to True, but "lat" and/or "lon" not found in {}.coords'.format(xr_obj))
-
+        warnings.warn('show_latlon set to True, but "lat" and/or "lon" not found in {}.coords'.format(xr_obj))
     return ax
 
 
-def split_legend(ax, out = True, axis_factor=0.15, label_gap=0.02):
+def split_legend(ax, in_plot = False, axis_factor=0.15, label_gap=0.02):
+    #  TODO: check for and fix overlapping labels
     """
     Draws line labels at the end of each line, or outside the plot
 
@@ -229,7 +225,7 @@ def split_legend(ax, out = True, axis_factor=0.15, label_gap=0.02):
     ax_bump = (init_xbound[1] - init_xbound[0]) * axis_factor
     label_bump = (init_xbound[1] - init_xbound[0]) * label_gap
 
-    if out is False:
+    if in_plot is True:
         ax.set_xbound(lower=init_xbound[0], upper=init_xbound[1] + ax_bump)
 
     #get legend and plot
@@ -246,7 +242,7 @@ def split_legend(ax, out = True, axis_factor=0.15, label_gap=0.02):
         color = handle.get_color()
         ls = handle.get_linestyle()
 
-        if out is False:
+        if in_plot is True:
             ax.text(last_x + label_bump, last_y, label,
                     ha='left', va='center', color=color)
         else:
