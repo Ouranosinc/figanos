@@ -57,7 +57,7 @@ def get_array_categ(array):
             cat = "PCT_VAR_ENS"
         elif pd.notnull([re.search("[Mm]ax|[Mm]in", var) for var in array.data_vars]).sum() >= 2:
             cat = "STATS_VAR_ENS"
-        elif pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
+        elif 'percentiles' in array.dims:
             cat = "PCT_DIM_ENS_DS"  # placeholder, no support for now
         else:
             cat = "DS"
@@ -100,9 +100,9 @@ def get_attributes(string, xr_obj):
         if string in xr_obj[list(xr_obj.data_vars)[0]].attrs:  # DataArray of first variable
             return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
 
-        else:
-            warnings.warn('Attribute "{0}" not found in attributes'.format(string))
-            return '' ## would it be better to return None? if so, need to fix ylabel in set_plot_attrs()
+    else:
+        warnings.warn('Attribute "{0}" not found in attributes'.format(string))
+        return '' ## would it be better to return None? if so, need to fix ylabel in set_plot_attrs()
 
 
 def set_plot_attrs(attr_dict, xr_obj, ax):
@@ -125,14 +125,13 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
     """
     #  check
     for key in attr_dict:
-        if key not in ['title','xlabel', 'ylabel', 'yunits']:
+        if key not in ['title', 'ylabel', 'yunits']:
             warnings.warn('Use_attrs element "{}" not supported'.format(key))
+
+    ax.set_xlabel('time') #  check_timeindex() already checks for 'time'
 
     if 'title' in attr_dict:
         ax.set_title(get_attributes(attr_dict['title'], xr_obj), wrap=True)
-
-    if 'xlabel' in attr_dict:
-        ax.set_xlabel(get_attributes(attr_dict['xlabel'], xr_obj))
 
     if 'ylabel' in attr_dict:
         if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
@@ -192,14 +191,14 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_coords(ax, xr_obj):
+def plot_latlon(ax, xr_obj):
     """ place lat, lon coordinates on bottom right of plot area"""
     if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
         text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
                                                  float(xr_obj['lon']))
         ax.text(0.99, 0.01, text, transform=ax.transAxes, ha = 'right', va = 'bottom')
     else:
-        warnings.warn('show_coords set to True, but no coordinates found in {}.coords'.format(xr_obj))
+        warnings.warn('show_coords set to True, but "lat" and/or "lon" not found in {}.coords'.format(xr_obj))
 
     return ax
 
