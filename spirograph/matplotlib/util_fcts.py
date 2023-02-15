@@ -5,22 +5,24 @@ import xarray as xr
 import matplotlib as mpl
 import numpy as np
 
+warnings.simplefilter('always', UserWarning)
+
 
 def empty_dict(param):
-    """ returns empty dict if input is None"""
+    """ Return empty dict if input is None. """
     if param is None:
         param = {}
     return param
 
 
 def check_timeindex(xr_dict):
-    """ checks if the time index of Xarray objects in a dict is CFtime
-    and converts to pd.DatetimeIndex if true
+    """ Check if the time index of Xarray objects in a dict is CFtime
+    and convert to pd.DatetimeIndex if True.
 
     Parameters
     _________
     xr_dict: dict
-        dictionary containing Xarray DataArrays or Datasets
+        Dictionary containing Xarray DataArrays or Datasets.
     Returns
     _______
     dict
@@ -37,11 +39,12 @@ def check_timeindex(xr_dict):
 
 
 def get_array_categ(array):
-    """Returns an array category, which determines how to plot
+    """Return an array category, which determines how to plot.
 
     Parameters
     __________
     array: Dataset or DataArray
+        The array being categorized.
 
     Returns
     _________
@@ -75,15 +78,15 @@ def get_array_categ(array):
 
 def get_attributes(string, xr_obj):
     """
-    Fetches attributes or dims corresponding to keys from Xarray objects. Looks in
-    Dataset attributes first, then looks in DataArray.
+    Fetch attributes or dims corresponding to keys from Xarray objects. Look in
+    Dataset attributes first, then in the first variable (DataArray) of the Dataset.
 
     Parameters
     _________
     string: str
-        string corresponding to an attribute name
+        String corresponding to an attribute name.
     xr_obj: DataArray or Dataset
-        the Xarray object containing the attributes
+        The Xarray object containing the attributes.
 
     Returns
     _______
@@ -97,23 +100,23 @@ def get_attributes(string, xr_obj):
         return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
 
     else:
-        warnings.warn('Attribute "{0}" not found in attributes'.format(string))
-        return '' ## would it be better to return None? if so, need to fix ylabel in set_plot_attrs()
+        warnings.warn('Attribute "{}" not found.'.format(string))
+        return ''
 
 
 def set_plot_attrs(attr_dict, xr_obj, ax):
     """
-    Sets plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
+    Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
     to check for and return the string.
 
     Parameters
     __________
-    use_attrs: dict
-        dictionary containing specified attribute keys
+    attr_dict: dict
+        Dictionary containing specified attribute keys.
     xr_obj: Dataset or DataArray
-        The Xarray object containing the attributes
+        The Xarray object containing the attributes.
     ax: matplotlib axis
-        the matplotlib axis
+        The matplotlib axis of the plot.
     Returns
     ______
     matplotlib axis
@@ -139,7 +142,7 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
 
 def get_suffix(string):
-    """ get suffix of typical Xclim variable names"""
+    """ Get suffix of typical Xclim variable names. """
     if re.search("[0-9]{1,2}$|_[Mm]ax$|_[Mm]in$|_[Mm]ean$", string):
         suffix = re.search("[0-9]{1,2}$|[Mm]ax$|[Mm]in$|[Mm]ean$", string).group()
         return suffix
@@ -149,16 +152,17 @@ def get_suffix(string):
 
 def sort_lines(array_dict):
     """
-    Labels arrays as 'middle', 'upper' and 'lower' for ensemble plotting
+    Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
 
     Parameters
     _______
-    array_dict: dict of {'name': array}.
+    array_dict: dict
+        Dictionary of format {'name': array...}.
 
     Returns
     _______
     dict
-        dictionary of {'middle': 'name', 'upper': 'name', 'lower': 'name'}
+        Dictionary of {'middle': 'name', 'upper': 'name', 'lower': 'name'}.
     """
     if len(array_dict) != 3:
         raise ValueError('Ensembles must contain exactly three arrays')
@@ -188,31 +192,31 @@ def sort_lines(array_dict):
 
 
 def plot_lat_lon(ax, xr_obj):
-    """ place lat, lon coordinates on bottom right of plot area"""
+    """ Place lat, lon coordinates on bottom right of plot area."""
     if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
         text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
                                                float(xr_obj['lon']))
         ax.text(0.99, 0.01, text, transform=ax.transAxes, ha = 'right', va = 'bottom')
     else:
-        warnings.warn('show_latlon set to True, but "lat" and/or "lon" not found in {}.coords'.format(xr_obj))
+        warnings.warn('show_lat_lon set to True, but "lat" and/or "lon" not found in coords')
     return ax
 
 
 def split_legend(ax, in_plot = False, axis_factor=0.15, label_gap=0.02):
     #  TODO: check for and fix overlapping labels
     """
-    Draws line labels at the end of each line, or outside the plot
+    Drawline labels at the end of each line, or outside the plot.
 
     Parameters
     _______
     ax: matplotlib axis
-        the axis containing the legend
-    out: bool (default True)
-        if True, print the labels outside of plot area. if False, prolongs plot area to fit labels
-    axis_factor: float
-        if out is True, percentage of the x-axis length to add at the far right of the plot
-    label_gap: float
-        if out is True,percentage of the x-axis length to add as a gap between line and label
+        The axis containing the legend.
+    in_plot: bool (default False)
+        If True, prolong plot area to fit labels. If False, print labels outside of plot area.
+    axis_factor: float (default 0.15)
+        If in_plot is True, fraction of the x-axis length to add at the far right of the plot.
+    label_gap: float (default 0.02)
+        If in_plot is True, fraction of the x-axis length to add as a gap between line and label.
 
     Returns
     ______

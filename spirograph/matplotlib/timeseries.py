@@ -7,34 +7,32 @@ from spirograph.matplotlib.util_fcts import empty_dict, check_timeindex, get_arr
 
 def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend='lines', show_lat_lon = True):
     """
-    Plots time series from 1D Xarray Datasets or DataArrays as line plots.Recognizes Xclim percentiles
-    or statistics ensembles and plots as shaded regions with a central line.
+    Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
     __________
     data: dict or Dataset/DataArray
-        Input data to plot. It can be a DataArrays,  Datasets or a dictionary of DataArrays or Datasets.
+        Input data to plot. It can be a DataArray, Dataset or a dictionary of DataArrays and/or Datasets.
     ax: matplotlib axis
         Matplotlib axis on which to plot.
     use_attrs: dict
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'title': 'long_name', 'ylabel': 'standard_name', 'yunits': 'units'}.
-        Only the keys found in the default dict can be used
+        Only the keys found in the default dict can be used.
     fig_kw: dict
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
     plot_kw: dict
         Arguments to pass the `plot()` function. Changes how the line looks.
-        Must be a nested dictionary if data is a dictionary.
-    legend: str
+        If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
+    legend: str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_lat_lon: bool
-        Show latitude and longitude coordinates at the bottom right of the figure.
+    show_lat_lon: bool (default True)
+        If True, show latitude and longitude coordinates at the bottom right of the figure.
     Returns
     _______
         matplotlib axis
     """
-
 
     #create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -72,12 +70,11 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     use_attrs.setdefault('ylabel', 'standard_name')
     use_attrs.setdefault('yunits', 'units')
 
-    kwargs = {'fig_kw': fig_kw, 'plot_kw': plot_kw}
-    print(kwargs)
+
 
     # set fig, ax if not provided
     if not ax:
-        fig, ax = plt.subplots(**kwargs['fig_kw'])
+        fig, ax = plt.subplots(**fig_kw)
 
     # build dictionary of array 'categories', which determine how to plot data
     array_categ = {name: get_array_categ(array) for name, array in data.items()}
@@ -87,9 +84,8 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
     for name, arr in data.items():
 
-        #  add 'label':name in line kwargs if not there, to avoid error due to double 'label' args in plot()
-        if 'label' not in kwargs['plot_kw'][name]:
-            kwargs['plot_kw'][name]['label'] = name
+        #  add 'label':name in ax.plot() kwargs if not there, to avoid error due to double 'label' args
+        plot_kw[name].setdefault('label', name)
 
 
         # Dataset containing percentile ensembles
@@ -98,8 +94,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
                 if non_dict_data is True:
                     sub_name = sub_arr.name
                 else:
-                    sub_name = kwargs['plot_kw'][name]['label'] + "_" + sub_arr.name
-                print('subname:', sub_name)
+                    sub_name = plot_kw[name]['label'] + "_" + sub_arr.name
 
                 # extract each percentile array from the dims
                 array_data = {}
@@ -110,14 +105,14 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
                 sorted_lines = sort_lines(array_data)
 
                 # plot line while temporary changing label to sub_name
-                store_label = kwargs['plot_kw'][name]['label']
-                kwargs['plot_kw'][name]['label'] = sub_name
+                store_label = plot_kw[name]['label']
+                plot_kw[name]['label'] = sub_name
 
                 lines_dict[sub_name] = ax.plot(array_data[sorted_lines['middle']]['time'],
                                            array_data[sorted_lines['middle']].values,
-                                           **kwargs['plot_kw'][name])
+                                           **plot_kw[name])
 
-                kwargs['plot_kw'][name]['label'] = store_label
+                plot_kw[name]['label'] = store_label
 
                 # plot shading
                 fill_between_label = "{}th-{}th percentiles".format(get_suffix(sorted_lines['lower']),
@@ -153,7 +148,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
             # plot line
             lines_dict[name] = ax.plot(array_data[sorted_lines['middle']]['time'],
                                        array_data[sorted_lines['middle']].values,
-                                       **kwargs['plot_kw'][name])
+                                       **plot_kw[name])
 
             # plot shading
             if array_categ[name] in ['PCT_VAR_ENS', 'PCT_DIM_ENS_DA']:
@@ -177,23 +172,28 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
                 if non_dict_data is True:
                     sub_name = sub_arr.name
                 else:
-                    sub_name = kwargs['plot_kw'][name]['label'] + "_" + sub_arr.name
+                    sub_name = plot_kw[name]['label'] + "_" + sub_arr.name
 
-                #put sub_name in plot_kwargs to label correctly on plot, store the
-                # original, and put it back after
-                store_label = kwargs['plot_kw'][name]['label']
-                kwargs['plot_kw'][name]['label'] = sub_name
-                lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, **kwargs['plot_kw'][name])
-                kwargs['plot_kw'][name]['label'] = store_label
+                #label will be modified, so store now and put back later
+                store_label = plot_kw[name]['label']
+
+                #  if kwargs are specified by user, all lines are the same and we want one legend entry
+                if len(plot_kw[name]) >= 2:  # 'label' is there by default
+                    lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, **plot_kw[name])
+                    plot_kw[name]['label'] = '' #  makes sure label only appears once
+                else:
+                    plot_kw[name]['label'] = sub_name
+                    lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, **plot_kw[name])
+                    plot_kw[name]['label'] = store_label
 
 
         #  non-ensemble DataArrays
         elif array_categ[name] in ['DA']:
-            lines_dict[name] = ax.plot(arr['time'], arr.values, **kwargs['plot_kw'][name])
+            lines_dict[name] = ax.plot(arr['time'], arr.values, **plot_kw[name])
 
         else:
-            raise Exception('Data structure not supported') # can probably be removed along with elif logic above,
-                                                            # given that get_array_categ() checks also
+            raise Exception('Data structure not supported')  # can probably be removed along with elif logic above,
+                                                             # given that get_array_categ() checks also
 
 
 
@@ -209,11 +209,13 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     if show_lat_lon:
         plot_lat_lon(ax, list(data.values())[0])
 
-    if legend is not None:  # non_dict_data is False and
-        if legend == 'in_plot':
-            split_legend(ax, out=False)
+    if legend is not None:
+        if not ax.get_legend_handles_labels()[0]: # check if legend is empty
+            pass
+        elif legend == 'in_plot':
+            split_legend(ax, in_plot=True)
         elif legend == 'edge':
-            split_legend(ax, out=True)
+            split_legend(ax, in_plot=False)
         else:
             ax.legend()
 
