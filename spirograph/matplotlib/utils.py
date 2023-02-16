@@ -49,25 +49,32 @@ def get_array_categ(array):
     Returns
     _________
     array: str
-        PCT_VAR_ENS: ensemble of percentiles stored as variables
-        PCT_DIM_ENS_DA: ensemble of percentiles stored as dimension coordinates, DataArray
-        STATS_VAR_ENS: ensemble of statistics (min, mean, max) stored as variables
+        ENS_PCT_VAR_DS: ensemble percentiles stored as variables
+        ENS_PCT_DIM_DA: ensemble percentiles stored as dimension coordinates, DataArray
+        ENS_PCT_DIM_DS: ensemble percentiles stored as dimension coordinates, DataSet
+        ENS_STATS_VAR_DS: ensemble statistics (min, mean, max) stored as variables
+        ENS_REALS_DA: ensemble with 'realization' dim, as DataArray
+        ENS_REALS_DS: ensemble with 'realization' dim, as Dataset
         DS: any Dataset that is not  recognized as an ensemble
         DA: DataArray
     """
     if isinstance(array, xr.Dataset):
-        if pd.notnull([re.search("_p[0-9]{1,2}", var) for var in array.data_vars]).sum() >=2:
-            cat = "PCT_VAR_ENS"
+        if pd.notnull([re.search("_p[0-9]{1,2}", var) for var in array.data_vars]).sum() >= 2:
+            cat = "ENS_PCT_VAR_DS"
         elif pd.notnull([re.search("[Mm]ax|[Mm]in", var) for var in array.data_vars]).sum() >= 2:
-            cat = "STATS_VAR_ENS"
+            cat = "ENS_STATS_VAR_DS"
         elif 'percentiles' in array.dims:
-            cat = "PCT_DIM_ENS_DS"  # placeholder, no support for now
+            cat = "ENS_PCT_DIM_DS"
+        elif 'realization' in array.dims:
+            cat = "ENS_REALS_DS"
         else:
             cat = "DS"
 
     elif isinstance(array, xr.DataArray):
         if pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
-           cat = "PCT_DIM_ENS_DA"
+            cat = "ENS_PCT_DIM_DA"
+        elif 'realization' in array.dims:
+            cat = "ENS_REALS_DA"
         else:
             cat = "DA"
     else:
@@ -254,3 +261,54 @@ def split_legend(ax, in_plot = False, axis_factor=0.15, label_gap=0.02):
             ax.text(1.01, last_y, label, ha='left', va='center', color=color, transform=trans)
 
     return ax
+
+
+def plot_realizations(ax, da, name, plot_kw, non_dict_data):
+    """ Plot realizations from a DataArray, inside or outside a Dataset
+
+    Parameters
+    _________
+    da: DataArray
+        The DataArray containing the realizations
+    name: str
+        The label to be used in the first part of a composite label.
+        Can be the name of the parent Dataset or that of the DataArray
+    plot_kw: dict
+        Dictionary of kwargs coming from the timeseries() input
+    ax: matplotlib axis
+        The Matplotlib axis
+
+    Returns
+    _______
+    Matplotlib axis
+    """
+    ignore_label = False
+
+    for r in da.realization.values:
+
+        if plot_kw[name]:  # if kwargs (all lines identical)
+            if not ignore_label:  # if label not already in legend
+                label = '' if non_dict_data is True else name
+                ignore_label = True
+            else:
+                label = ''
+        else:
+            label = str(r) if non_dict_data is True else (name + '_' + str(r))
+
+        ax.plot(da.sel(realization=r)['time'], da.sel(realization=r).values,
+                label=label, **plot_kw[name])
+
+    return ax
+
+
+def fill_between_label(sorted_lines, name, array_categ, legend):
+    """ Create label for shading"""
+    if legend != 'full':
+        label = None
+    elif array_categ[name] in ['ENS_PCT_VAR_DS','ENS_PCT_DIM_DS','ENS_PCT_DIM_DA']:
+        label = "{}th-{}th percentiles".format(get_suffix(sorted_lines['lower']),
+                                               get_suffix(sorted_lines['upper']))
+    elif array_categ[name] == 'ENS_STATS_VAR_DS':
+        label = 'min-max range'
+
+    return label

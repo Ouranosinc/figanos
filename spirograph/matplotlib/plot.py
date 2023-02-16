@@ -1,7 +1,8 @@
 import xarray as xr
 import matplotlib.pyplot as plt
-from spirograph.matplotlib.util_fcts import empty_dict, check_timeindex, get_array_categ, \
-    sort_lines, get_suffix, set_plot_attrs, split_legend, plot_lat_lon
+import warnings
+from spirograph.matplotlib.utils import empty_dict, check_timeindex, get_array_categ, \
+    sort_lines, set_plot_attrs, split_legend, plot_lat_lon, plot_realizations, fill_between_label
 
 # Todo: translation to fr, logo
 
@@ -34,7 +35,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
         matplotlib axis
     """
 
-    #create empty dicts if None
+    # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
     plot_kw = empty_dict(plot_kw)
@@ -46,7 +47,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
         data = {'_no_label': data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {'_no_label': empty_dict(plot_kw)}
 
-    #assign keys to plot_kw if empty
+    # assign keys to plot_kw if empty
     if len(plot_kw) == 0:
         for name, arr in data.items():
             plot_kw[name] = {}
@@ -55,87 +56,78 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
             if name not in plot_kw:
                 raise Exception('plot_kw must be a nested dictionary with keys corresponding to the keys in "data"')
 
-    # basic checks
-    ## type
+    # check: type
     for name, arr in data.items():
         if not isinstance(arr, (xr.Dataset, xr.DataArray)):
             raise TypeError('`data` must contain a xr.Dataset, a xr.DataArray or a dictionary of xr.Dataset/ xr.DataArray.')
 
-    ## 'time' dimension and calendar format
+    # check: 'time' dimension and calendar format
     data = check_timeindex(data)
-
 
     # set default use_attrs values
     use_attrs.setdefault('title', 'long_name')
     use_attrs.setdefault('ylabel', 'standard_name')
     use_attrs.setdefault('yunits', 'units')
 
-
-
     # set fig, ax if not provided
     if not ax:
         fig, ax = plt.subplots(**fig_kw)
 
-    # build dictionary of array 'categories', which determine how to plot data
+    # dict of array 'categories'
     array_categ = {name: get_array_categ(array) for name, array in data.items()}
 
-    # get data and plot
     lines_dict = {}  # created to facilitate accessing line properties later
 
+    # get data and plot
     for name, arr in data.items():
 
-        #  add 'label':name in ax.plot() kwargs if not there, to avoid error due to double 'label' args
-        plot_kw[name].setdefault('label', name)
+        #  remove 'label' to avoid error due to double 'label' args
+        if 'label' in plot_kw[name]:
+            del plot_kw[name]['label']
+            warnings.warn('"label" entry in plot_kw[{}] will be ignored.'.format(name))
 
 
-        # Dataset containing percentile ensembles
-        if array_categ[name] == 'PCT_DIM_ENS_DS':
+        if array_categ[name] == "ENS_REALS_DA":
+            plot_realizations(ax, arr, name, plot_kw, non_dict_data)
+
+        elif array_categ[name] == "ENS_REALS_DS":
+            if len(arr.data_vars) >= 2:
+                raise Exception('To plot multiple ensembles containing realizations, use DataArrays outside a Dataset')
             for k, sub_arr in arr.data_vars.items():
-                if non_dict_data is True:
-                    sub_name = sub_arr.name
-                else:
-                    sub_name = plot_kw[name]['label'] + "_" + sub_arr.name
+                plot_realizations(ax, sub_arr, name, plot_kw, non_dict_data)
+
+        elif array_categ[name] == 'ENS_PCT_DIM_DS':
+            for k, sub_arr in arr.data_vars.items():
+
+                sub_name = sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
 
                 # extract each percentile array from the dims
                 array_data = {}
-                for pct in sub_arr.percentiles:
-                    array_data[str(int(pct))] = sub_arr.sel(percentiles=int(pct))
+                for pct in sub_arr.percentiles.values:
+                    array_data[str(pct)] = sub_arr.sel(percentiles=pct)
 
                 # create a dictionary labeling the middle, upper and lower line
                 sorted_lines = sort_lines(array_data)
 
-                # plot line while temporary changing label to sub_name
-                store_label = plot_kw[name]['label']
-                plot_kw[name]['label'] = sub_name
-
+                # plot
                 lines_dict[sub_name] = ax.plot(array_data[sorted_lines['middle']]['time'],
-                                           array_data[sorted_lines['middle']].values,
-                                           **plot_kw[name])
-
-                plot_kw[name]['label'] = store_label
-
-                # plot shading
-                fill_between_label = "{}th-{}th percentiles".format(get_suffix(sorted_lines['lower']),
-                                                                    get_suffix(sorted_lines['upper']))
-
-                if legend != 'full':
-                    fill_between_label = None
+                                               array_data[sorted_lines['middle']].values,
+                                               label=sub_name, **plot_kw[name])
 
                 ax.fill_between(array_data[sorted_lines['lower']]['time'],
                                 array_data[sorted_lines['lower']].values,
                                 array_data[sorted_lines['upper']].values,
                                 color=lines_dict[sub_name][0].get_color(),
-                                linewidth=0.0, alpha=0.2, label=fill_between_label)
-
-
+                                linewidth=0.0, alpha=0.2,
+                                label=fill_between_label(sorted_lines, name, array_categ, legend))
 
 
         # other ensembles
-        elif array_categ[name] in ['PCT_VAR_ENS', 'STATS_VAR_ENS', 'PCT_DIM_ENS_DA']:
+        elif array_categ[name] in ['ENS_PCT_VAR_DS', 'ENS_STATS_VAR_DS', 'ENS_PCT_DIM_DA']:
 
             # extract each array from the datasets
             array_data = {}
-            if array_categ[name] == 'PCT_DIM_ENS_DA':
+            if array_categ[name] == 'ENS_PCT_DIM_DA':
                 for pct in arr.percentiles:
                     array_data[str(int(pct))] = arr.sel(percentiles=int(pct))
             else:
@@ -145,51 +137,40 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
             # create a dictionary labeling the middle, upper and lower line
             sorted_lines = sort_lines(array_data)
 
-            # plot line
+            # plot
             lines_dict[name] = ax.plot(array_data[sorted_lines['middle']]['time'],
                                        array_data[sorted_lines['middle']].values,
-                                       **plot_kw[name])
-
-            # plot shading
-            if array_categ[name] in ['PCT_VAR_ENS', 'PCT_DIM_ENS_DA']:
-                fill_between_label = "{}th-{}th percentiles".format(get_suffix(sorted_lines['lower']),
-                                                                    get_suffix(sorted_lines['upper']))
-            if array_categ[name] in ['STATS_VAR_ENS']:
-                fill_between_label = "min-max range"
-            if legend != 'full':
-                fill_between_label = None
+                                       label=name, **plot_kw[name])
 
             ax.fill_between(array_data[sorted_lines['lower']]['time'],
                             array_data[sorted_lines['lower']].values,
                             array_data[sorted_lines['upper']].values,
                             color=lines_dict[name][0].get_color(),
-                            linewidth=0.0, alpha=0.2, label=fill_between_label)
+                            linewidth=0.0, alpha=0.2,
+                            label=fill_between_label(sorted_lines, name, array_categ, legend))
 
 
         #  non-ensemble Datasets
-        elif array_categ[name] in ['DS']:
-            for k, sub_arr in arr.data_vars.items():
-                if non_dict_data is True:
-                    sub_name = sub_arr.name
-                else:
-                    sub_name = plot_kw[name]['label'] + "_" + sub_arr.name
+        elif array_categ[name] == "DS":
 
-                #label will be modified, so store now and put back later
-                store_label = plot_kw[name]['label']
+            ignore_label = False
+            for k, sub_arr in arr.data_vars.items():
+
+                sub_name = sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
 
                 #  if kwargs are specified by user, all lines are the same and we want one legend entry
-                if len(plot_kw[name]) >= 2:  # 'label' is there by default
-                    lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, **plot_kw[name])
-                    plot_kw[name]['label'] = '' #  makes sure label only appears once
+                if plot_kw[name]:
+                    label = name if not ignore_label else ''
+                    ignore_label = True
                 else:
-                    plot_kw[name]['label'] = sub_name
-                    lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, **plot_kw[name])
-                    plot_kw[name]['label'] = store_label
+                    label = sub_name
+
+                lines_dict[sub_name] = ax.plot(sub_arr['time'], sub_arr.values, label=label, **plot_kw[name])
 
 
         #  non-ensemble DataArrays
         elif array_categ[name] in ['DA']:
-            lines_dict[name] = ax.plot(arr['time'], arr.values, **plot_kw[name])
+            lines_dict[name] = ax.plot(arr['time'], arr.values, label=name, **plot_kw[name])
 
         else:
             raise Exception('Data structure not supported')  # can probably be removed along with elif logic above,
