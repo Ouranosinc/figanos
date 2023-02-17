@@ -61,7 +61,7 @@ def get_array_categ(array):
     if isinstance(array, xr.Dataset):
         if pd.notnull([re.search("_p[0-9]{1,2}", var) for var in array.data_vars]).sum() >= 2:
             cat = "ENS_PCT_VAR_DS"
-        elif pd.notnull([re.search("[Mm]ax|[Mm]in", var) for var in array.data_vars]).sum() >= 2:
+        elif pd.notnull([re.search("_[Mm]ax|_[Mm]in", var) for var in array.data_vars]).sum() >= 2:
             cat = "ENS_STATS_VAR_DS"
         elif 'percentiles' in array.dims:
             cat = "ENS_PCT_DIM_DS"
@@ -71,7 +71,7 @@ def get_array_categ(array):
             cat = "DS"
 
     elif isinstance(array, xr.DataArray):
-        if pd.notnull([re.search("percentiles", dim) for dim in array.dims]).sum() == 1:
+        if 'percentiles' in array.dims:
             cat = "ENS_PCT_DIM_DA"
         elif 'realization' in array.dims:
             cat = "ENS_REALS_DA"
@@ -262,47 +262,8 @@ def split_legend(ax, in_plot = False, axis_factor=0.15, label_gap=0.02):
 
     return ax
 
-
-def plot_realizations(ax, da, name, plot_kw, non_dict_data):
-    """ Plot realizations from a DataArray, inside or outside a Dataset
-
-    Parameters
-    _________
-    da: DataArray
-        The DataArray containing the realizations
-    name: str
-        The label to be used in the first part of a composite label.
-        Can be the name of the parent Dataset or that of the DataArray
-    plot_kw: dict
-        Dictionary of kwargs coming from the timeseries() input
-    ax: matplotlib axis
-        The Matplotlib axis
-
-    Returns
-    _______
-    Matplotlib axis
-    """
-    ignore_label = False
-
-    for r in da.realization.values:
-
-        if plot_kw[name]:  # if kwargs (all lines identical)
-            if not ignore_label:  # if label not already in legend
-                label = '' if non_dict_data is True else name
-                ignore_label = True
-            else:
-                label = ''
-        else:
-            label = str(r) if non_dict_data is True else (name + '_' + str(r))
-
-        ax.plot(da.sel(realization=r)['time'], da.sel(realization=r).values,
-                label=label, **plot_kw[name])
-
-    return ax
-
-
 def fill_between_label(sorted_lines, name, array_categ, legend):
-    """ Create label for shading"""
+    """ Create label for shading in line plots."""
     if legend != 'full':
         label = None
     elif array_categ[name] in ['ENS_PCT_VAR_DS','ENS_PCT_DIM_DS','ENS_PCT_DIM_DA']:
@@ -310,5 +271,7 @@ def fill_between_label(sorted_lines, name, array_categ, legend):
                                                get_suffix(sorted_lines['upper']))
     elif array_categ[name] == 'ENS_STATS_VAR_DS':
         label = 'min-max range'
+    else:
+        label = None
 
     return label

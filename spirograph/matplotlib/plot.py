@@ -1,10 +1,47 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 import warnings
-from spirograph.matplotlib.utils import empty_dict, check_timeindex, get_array_categ, \
-    sort_lines, set_plot_attrs, split_legend, plot_lat_lon, plot_realizations, fill_between_label
+from spirograph.matplotlib.utils import *
 
-# Todo: translation to fr, logo
+
+def _plot_realizations(ax, da, name, plot_kw, non_dict_data):
+    """ Plot realizations from a DataArray, inside or outside a Dataset.
+
+    Parameters
+    _________
+    da: DataArray
+        The DataArray containing the realizations
+    name: str
+        The label to be used in the first part of a composite label.
+        Can be the name of the parent Dataset or that of the DataArray
+    plot_kw: dict
+        Dictionary of kwargs coming from the timeseries() input
+    ax: matplotlib axis
+        The Matplotlib axis
+
+    Returns
+    _______
+    Matplotlib axis
+    """
+    ignore_label = False
+
+    for r in da.realization.values:
+
+        if plot_kw[name]:  # if kwargs (all lines identical)
+            if not ignore_label:  # if label not already in legend
+                label = '' if non_dict_data is True else name
+                ignore_label = True
+            else:
+                label = ''
+        else:
+            label = str(r) if non_dict_data is True else (name + '_' + str(r))
+
+        ax.plot(da.sel(realization=r)['time'], da.sel(realization=r).values,
+                label=label, **plot_kw[name])
+
+    return ax
+
+
 
 def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend='lines', show_lat_lon = True):
     """
@@ -88,13 +125,13 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
         if array_categ[name] == "ENS_REALS_DA":
-            plot_realizations(ax, arr, name, plot_kw, non_dict_data)
+            _plot_realizations(ax, arr, name, plot_kw, non_dict_data)
 
         elif array_categ[name] == "ENS_REALS_DS":
             if len(arr.data_vars) >= 2:
                 raise Exception('To plot multiple ensembles containing realizations, use DataArrays outside a Dataset')
             for k, sub_arr in arr.data_vars.items():
-                plot_realizations(ax, sub_arr, name, plot_kw, non_dict_data)
+                _plot_realizations(ax, sub_arr, name, plot_kw, non_dict_data)
 
         elif array_categ[name] == 'ENS_PCT_DIM_DS':
             for k, sub_arr in arr.data_vars.items():
