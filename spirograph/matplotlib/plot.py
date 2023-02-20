@@ -10,14 +10,14 @@ def _plot_realizations(ax, da, name, plot_kw, non_dict_data):
     Parameters
     _________
     da: DataArray
-        The DataArray containing the realizations
+        The DataArray containing the realizations.
     name: str
         The label to be used in the first part of a composite label.
-        Can be the name of the parent Dataset or that of the DataArray
+        Can be the name of the parent Dataset or that of the DataArray.
     plot_kw: dict
-        Dictionary of kwargs coming from the timeseries() input
+        Dictionary of kwargs coming from the timeseries() input.
     ax: matplotlib axis
-        The Matplotlib axis
+        The Matplotlib axis.
 
     Returns
     _______
@@ -102,8 +102,8 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     data = check_timeindex(data)
 
     # set default use_attrs values
-    use_attrs.setdefault('title', 'long_name')
-    use_attrs.setdefault('ylabel', 'standard_name')
+    use_attrs.setdefault('title', 'description')
+    use_attrs.setdefault('ylabel', 'long_name')
     use_attrs.setdefault('yunits', 'units')
 
     # set fig, ax if not provided
