@@ -85,8 +85,8 @@ def get_array_categ(array):
 
 def get_attributes(string, xr_obj):
     """
-    Fetch attributes or dims corresponding to keys from Xarray objects. Look in
-    Dataset attributes first, then in the first variable (DataArray) of the Dataset.
+    Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
+    then the first variable (DataArray) of the Dataset, then the Dataset attributes.
 
     Parameters
     _________
@@ -100,11 +100,14 @@ def get_attributes(string, xr_obj):
     str
         Xarray attribute value as string or empty string if not found
     """
-    if string in xr_obj.attrs:
+    if isinstance(xr_obj, xr.DataArray) and string in xr_obj.attrs:
         return xr_obj.attrs[string]
 
     elif isinstance(xr_obj, xr.Dataset) and string in xr_obj[list(xr_obj.data_vars)[0]].attrs: # DataArray of first variable
         return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
+
+    elif isinstance(xr_obj, xr.Dataset) and string in xr_obj.attrs:
+        return xr_obj.attrs[string]
 
     else:
         warnings.warn('Attribute "{}" not found.'.format(string))
@@ -124,6 +127,7 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
         The Xarray object containing the attributes.
     ax: matplotlib axis
         The matplotlib axis of the plot.
+
     Returns
     ______
     matplotlib axis
@@ -131,10 +135,8 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
     """
     #  check
     for key in attr_dict:
-        if key not in ['title', 'ylabel', 'yunits']:
+        if key not in ['title', 'ylabel', 'yunits', 'cbar_label', 'cbar_units']:
             warnings.warn('Use_attrs element "{}" not supported'.format(key))
-
-    ax.set_xlabel('time') #  check_timeindex() already checks for 'time'
 
     if 'title' in attr_dict:
         ax.set_title(get_attributes(attr_dict['title'], xr_obj), wrap=True)
@@ -145,6 +147,14 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
                       get_attributes(attr_dict['yunits'], xr_obj) + ')')
         else:
             ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj))
+
+    # cbar label has to be assigned in main function, ignore.
+    if 'cbar_label' in attr_dict:
+        pass
+
+    if 'cbar_units' in attr_dict:
+        pass
+
     return ax
 
 

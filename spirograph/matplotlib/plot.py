@@ -1,6 +1,9 @@
-import xarray as xr
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
+import xarray as xr
 import warnings
+
 from spirograph.matplotlib.utils import *
 
 
@@ -55,12 +58,12 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
         Matplotlib axis on which to plot.
     use_attrs: dict
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
-        Default value is {'title': 'long_name', 'ylabel': 'standard_name', 'yunits': 'units'}.
+        Default value is {'title': 'description', 'ylabel': 'long_name', 'yunits': 'units'}.
         Only the keys found in the default dict can be used.
     fig_kw: dict
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
     plot_kw: dict
-        Arguments to pass the `plot()` function. Changes how the line looks.
+        Arguments to pass to the `plot()` function. Changes how the line looks.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
     legend: str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
@@ -217,6 +220,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
     #  add/modify plot elements according to the first entry.
     set_plot_attrs(use_attrs, list(data.values())[0], ax)
+    ax.set_xlabel('time')  # check_timeindex() already checks for 'time'
 
     # other plot elements (will be replaced by Stylesheet)
 
@@ -236,5 +240,102 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
             split_legend(ax, in_plot=False)
         else:
             ax.legend()
+
+    return ax
+
+
+
+def gridmap(data, projection=ccrs.LambertConformal(), features=None, use_attrs=None, fig_kw=None, plot_kw=None, smoothing=False):
+    """ Create map from 2D data.
+
+    Parameters
+    ________
+    data: dict, DataArray or Dataset
+        Input data do plot. If dictionary, must have only one entry.
+    projection: ccrs projection
+        Projection to use. Taken from the cartopy.crs options.
+    features: list
+        List of features to use. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
+    use_attrs: dict
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
+        Only the keys found in the default dict can be used.
+    fig_kw: dict
+        Arguments to pass to `plt.figure()`.
+    plot_kw: dict
+        Arguments to pass to the `xarray.plot.pcolormesh()` or 'xarray.plot.contourf()' function.
+        If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
+    smoothing: bool
+        By default False, use plt.pcolormesh(). If True, use plt.contourf().
+
+    Returns
+    _______
+        matplotlib axis
+    """
+
+    #create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+
+    # set default use_attrs values
+    use_attrs.setdefault('title', 'description')
+    use_attrs.setdefault('cbar_label', 'long_name')
+    use_attrs.setdefault('cbar_units', 'units')
+
+    # extract plot_kw from dict if needed
+    if isinstance(data, dict) and isinstance(list(plot_kw.values())[0], dict):
+        plot_kw = list(plot_kw.values())[0]
+
+    # if data is dict, extract
+    if isinstance(data, dict):
+        if len(data) == 1:
+            data = data[list(data.keys())[0]]
+        else:
+            raise Exception('`data` must be a dict of len=1, a DataArray or a Dataset')
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        plot_data = data
+    elif isinstance(data, xr.Dataset):
+        warnings.warn('data is xr.Dataset; only the first variable will be used in plot')
+        plot_data = data[list(data.keys())[0]]
+    else:
+        raise TypeError('`data` must contain a xr.DataArray or xr.Dataset')
+
+    #setup fig, ax
+    fig = plt.figure(**fig_kw)
+    ax = plt.axes(projection=projection)
+
+    #create cbar label
+    if 'cbar_units' in use_attrs and len(get_attributes(use_attrs['cbar_units'], data)) >= 1:  # avoids '[]' as label
+        cbar_label = get_attributes(use_attrs['cbar_label'], data) + ' (' + \
+                     get_attributes(use_attrs['cbar_units'], data) + ')'
+    else:
+        cbar_label = get_attributes(use_attrs['cbar_label'], data)
+
+    #plot
+    if smoothing is False:
+        plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cbar_kwargs={'label': cbar_label}, **plot_kw)
+    else:
+        plot_data.plot.contourf(ax=ax, transform=ccrs.PlateCarree(), cbar_kwargs={'label': cbar_label}, **plot_kw)
+
+    #add features
+    if features:
+        if 'coastline' in features:
+            ax.add_feature(cfeature.COASTLINE)
+        if 'borders' in features:
+            ax.add_feature(cfeature.BORDERS)
+        if 'lakes' in features:
+            ax.add_feature(cfeature.LAKES)
+        if 'land' in features:
+            ax.add_feature(cfeature.LAND)
+        if 'ocean' in features:
+            ax.add_feature(cfeature.OCEAN)
+        if 'rivers' in features:
+            ax.add_feature(cfeature.RIVERS)
+
+    set_plot_attrs(use_attrs, data, ax)
 
     return ax
