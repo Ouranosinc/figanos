@@ -285,3 +285,4 @@ def fill_between_label(sorted_lines, name, array_categ, legend):
         label = None
 
     return label
+

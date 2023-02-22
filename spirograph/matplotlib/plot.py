@@ -1,6 +1,7 @@
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
+import numpy as np
 import xarray as xr
 import warnings
 
@@ -245,7 +246,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 
-def gridmap(data, projection=ccrs.LambertConformal(), features=None, use_attrs=None, fig_kw=None, plot_kw=None, smoothing=False):
+def gridmap(data, projection=ccrs.LambertConformal(), ax=None, features=None, use_attrs=None, fig_kw=None, plot_kw=None, smoothing=False):
     """ Create map from 2D data.
 
     Parameters
@@ -254,6 +255,8 @@ def gridmap(data, projection=ccrs.LambertConformal(), features=None, use_attrs=N
         Input data do plot. If dictionary, must have only one entry.
     projection: ccrs projection
         Projection to use. Taken from the cartopy.crs options.
+    ax: matplotlib axis
+        Matplotlib axis on which to plot, with the same projection as the one specified.
     features: list
         List of features to use. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
@@ -285,7 +288,7 @@ def gridmap(data, projection=ccrs.LambertConformal(), features=None, use_attrs=N
     use_attrs.setdefault('cbar_units', 'units')
 
     # extract plot_kw from dict if needed
-    if isinstance(data, dict) and isinstance(list(plot_kw.values())[0], dict):
+    if isinstance(data, dict) and plot_kw and isinstance(list(plot_kw.values())[0], dict):
         plot_kw = list(plot_kw.values())[0]
 
     # if data is dict, extract
@@ -305,8 +308,8 @@ def gridmap(data, projection=ccrs.LambertConformal(), features=None, use_attrs=N
         raise TypeError('`data` must contain a xr.DataArray or xr.Dataset')
 
     #setup fig, ax
-    fig = plt.figure(**fig_kw)
-    ax = plt.axes(projection=projection)
+    if not ax:
+        fig, ax = plt.subplots(subplot_kw={'projection': projection}, **fig_kw)
 
     #create cbar label
     if 'cbar_units' in use_attrs and len(get_attributes(use_attrs['cbar_units'], data)) >= 1:  # avoids '[]' as label
@@ -323,18 +326,21 @@ def gridmap(data, projection=ccrs.LambertConformal(), features=None, use_attrs=N
 
     #add features
     if features:
-        if 'coastline' in features:
-            ax.add_feature(cfeature.COASTLINE)
-        if 'borders' in features:
-            ax.add_feature(cfeature.BORDERS)
-        if 'lakes' in features:
-            ax.add_feature(cfeature.LAKES)
-        if 'land' in features:
-            ax.add_feature(cfeature.LAND)
-        if 'ocean' in features:
-            ax.add_feature(cfeature.OCEAN)
-        if 'rivers' in features:
-            ax.add_feature(cfeature.RIVERS)
+        for f in features:
+            if f == 'coastline':
+                ax.add_feature(cfeature.COASTLINE)
+            elif f == 'borders':
+                ax.add_feature(cfeature.BORDERS)
+            elif f == 'lakes':
+                ax.add_feature(cfeature.LAKES)
+            elif f == 'land':
+                ax.add_feature(cfeature.LAND)
+            elif f == 'ocean':
+                ax.add_feature(cfeature.OCEAN)
+            elif f == 'rivers':
+                ax.add_feature(cfeature.RIVERS)
+            else:
+                raise Exception('Feature "{}" does not exist or is not supported'.format(f))
 
     set_plot_attrs(use_attrs, data, ax)
 
