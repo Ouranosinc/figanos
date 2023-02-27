@@ -246,7 +246,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 
-def gridmap(data, projection=ccrs.LambertConformal(), ax=None, features=None, use_attrs=None, fig_kw=None, plot_kw=None, smoothing=False):
+def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(), features=None, smoothing=False):
     """ Create map from 2D data.
 
     Parameters
@@ -294,7 +294,7 @@ def gridmap(data, projection=ccrs.LambertConformal(), ax=None, features=None, us
     # if data is dict, extract
     if isinstance(data, dict):
         if len(data) == 1:
-            data = data[list(data.keys())[0]]
+            data = list(data.values())[0]
         else:
             raise Exception('`data` must be a dict of len=1, a DataArray or a Dataset')
 
