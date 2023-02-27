@@ -288,8 +288,8 @@ def gridmap(data, projection=ccrs.LambertConformal(), ax=None, features=None, us
     use_attrs.setdefault('cbar_units', 'units')
 
     # extract plot_kw from dict if needed
-    if isinstance(data, dict) and plot_kw and isinstance(list(plot_kw.values())[0], dict):
-        plot_kw = list(plot_kw.values())[0]
+    if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
+        plot_kw = plot_kw[list(data.keys())[0]]
 
     # if data is dict, extract
     if isinstance(data, dict):
@@ -327,20 +327,7 @@ def gridmap(data, projection=ccrs.LambertConformal(), ax=None, features=None, us
     #add features
     if features:
         for f in features:
-            if f == 'coastline':
-                ax.add_feature(cfeature.COASTLINE)
-            elif f == 'borders':
-                ax.add_feature(cfeature.BORDERS)
-            elif f == 'lakes':
-                ax.add_feature(cfeature.LAKES)
-            elif f == 'land':
-                ax.add_feature(cfeature.LAND)
-            elif f == 'ocean':
-                ax.add_feature(cfeature.OCEAN)
-            elif f == 'rivers':
-                ax.add_feature(cfeature.RIVERS)
-            else:
-                raise Exception('Feature "{}" does not exist or is not supported'.format(f))
+            ax.add_feature(getattr(cfeature, f.upper()))
 
     set_plot_attrs(use_attrs, data, ax)
 

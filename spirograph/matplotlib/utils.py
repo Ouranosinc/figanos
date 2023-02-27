@@ -139,7 +139,13 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
             warnings.warn('Use_attrs element "{}" not supported'.format(key))
 
     if 'title' in attr_dict:
-        ax.set_title(get_attributes(attr_dict['title'], xr_obj), wrap=True)
+        title = get_attributes(attr_dict['title'], xr_obj)
+        if '.' in title:
+            title = title.replace('.', '. \n')
+        if ':' in title:
+            title = title.replace(':', ': \n')
+
+        ax.set_title(title, wrap=True)
 
     if 'ylabel' in attr_dict:
         if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
