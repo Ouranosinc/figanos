@@ -246,20 +246,15 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 
-def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(), features=None, smoothing=False):
+def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(), features=None, smoothing=False, frame = False):
     """ Create map from 2D data.
 
     Parameters
     ________
     data: dict, DataArray or Dataset
         Input data do plot. If dictionary, must have only one entry.
-    projection: ccrs projection
-        Projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
     ax: matplotlib axis
         Matplotlib axis on which to plot, with the same projection as the one specified.
-    features: list
-        List of features to use. Options are the predefined features from
-        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
     use_attrs: dict
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
@@ -269,8 +264,15 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     plot_kw: dict
         Arguments to pass to the `xarray.plot.pcolormesh()` or 'xarray.plot.contourf()' function.
         If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
+    projection: ccrs projection
+        Projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    features: list
+        List of features to use. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
     smoothing: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
+    frame: bool
+        Show or hide frame. Default False.
 
     Returns
     _______
@@ -329,6 +331,11 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
 
+    #modifications
+
     set_plot_attrs(use_attrs, data, ax)
+
+    if frame is False:
+        ax.spines['geo'].set_visible(False)
 
     return ax
