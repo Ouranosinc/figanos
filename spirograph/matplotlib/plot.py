@@ -254,7 +254,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     data: dict, DataArray or Dataset
         Input data do plot. If dictionary, must have only one entry.
     projection: ccrs projection
-        Projection to use. Taken from the cartopy.crs options.
+        Projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
     ax: matplotlib axis
         Matplotlib axis on which to plot, with the same projection as the one specified.
     features: list

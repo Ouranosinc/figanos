@@ -140,11 +140,8 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
     if 'title' in attr_dict:
         title = get_attributes(attr_dict['title'], xr_obj)
-        if '.' in title:
-            title = title.replace('.', '. \n')
-        if ':' in title:
-            title = title.replace(':', ': \n')
-
+        title = title.replace('.', '. \n')
+        title = title.replace(':', ': \n')
         ax.set_title(title, wrap=True)
 
     if 'ylabel' in attr_dict:
