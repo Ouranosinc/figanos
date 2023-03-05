@@ -246,7 +246,8 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 
-def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(), features=None, smoothing=False, frame = False):
+def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(),
+            features=None, contourf=False, cmap=None, levels=None, divergent=False, frame=False):
     """ Create map from 2D data.
 
     Parameters
@@ -269,15 +270,30 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     features: list
         List of features to use. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
-    smoothing: bool
+    contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
+    cmap: colormap or str
+        Colormap to use. If str, can be a matplotlib or IPCC colormap. If None, look for common variables in
+        data.name or data.history and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    levels: int
+        Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
+    divergent: bool
+        If True, use diverging colormap.
     frame: bool
         Show or hide frame. Default False.
+    divergent: bool or int
+        If int, becomes center of cmap.
 
     Returns
     _______
         matplotlib axis
     """
+
+    # checks
+    if levels:
+        if type(levels) != int or levels < 2 or levels > 21:
+            raise Exception('levels must be int between 2 and 21, inclusively')
 
     #create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -320,11 +336,35 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     else:
         cbar_label = get_attributes(use_attrs['cbar_label'], data)
 
+    #colormap
+    if type(cmap) == str:
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(levels=levels, filename=cmap)
+            except FileNotFoundError:
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / 'data/ipcc_colors/variable_groups.json'
+        cmap = create_cmap(get_var_group(plot_data, path_to_json=cdata), levels=levels, divergent=divergent)
+
+
+    # set defaults
+    if divergent:
+        plot_kw.setdefault('center', 0)
+
+    plot_kw.setdefault('cbar_kwargs', {})
+    plot_kw['cbar_kwargs'].setdefault('label', cbar_label)
+
     #plot
-    if smoothing is False:
-        plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cbar_kwargs={'label': cbar_label}, **plot_kw)
+    if contourf is False:
+        if levels:
+            plot_kw['cbar_kwargs'].setdefault('ticks', cbar_ticks(plot_data, levels))
+        plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
     else:
-        plot_data.plot.contourf(ax=ax, transform=ccrs.PlateCarree(), cbar_kwargs={'label': cbar_label}, **plot_kw)
+        if levels:
+            plot_kw.setdefault('levels', levels)
+        plot_data.plot.contourf(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
 
     #add features
     if features:

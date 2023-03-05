@@ -4,6 +4,9 @@ import warnings
 import xarray as xr
 import matplotlib as mpl
 import numpy as np
+import matplotlib.colors as mcolors
+from pathlib import Path
+import json
 
 warnings.simplefilter('always', UserWarning)
 
@@ -288,4 +291,125 @@ def fill_between_label(sorted_lines, name, array_categ, legend):
         label = None
 
     return label
+
+
+def get_var_group(da, path_to_json):
+    """Get IPCC variable group from DataArray using data stored in a json file."""
+
+    # create dict
+    with open(path_to_json) as f:
+        var_dict = json.load(f)
+
+    matches = []
+
+    # look in DataArray name
+    if da.name:
+        for v in var_dict:
+            regex = r"(?:^|[^a-zA-Z])({})(?:[^a-zA-Z]|$)".format(v)
+            if re.search(regex, da.name):
+                matches.append(var_dict[v])
+
+    # look in history
+    if da.history and len(matches) == 0:
+        for v in var_dict:
+            regex = r"(?:^|[^a-zA-Z])({})(?:[^a-zA-Z]|$)".format(v)  # matches when variable is not inside word
+            if re.search(regex, da.history):
+                matches.append(var_dict[v])
+
+    if len(matches) == 0:
+        matches.append('misc')
+        warnings.warn('Colormap warning: Variable type not found. Use the cmap argument.')
+
+    elif len(matches) >= 2:
+        matches = ['misc']
+        warnings.warn('Colormap warning: More than one variable type found. Use the cmap argument.')
+
+    return matches[0]
+
+
+def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
+    """
+    Create colormap according to variable type.
+
+    Parameters
+    _________
+    var_group: str
+        Variable group. Options are 'temp', 'prec'.
+    levels: int
+        Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
+    divergent: bool
+        Diverging colormap. If False, use sequential colormap.
+    filename: str
+        Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
+    """
+
+    # func to get position of sequential cmap in txt file
+    def skip_rows(levels):
+        skiprows = 1
+
+        if levels > 5:
+            for i in np.arange(5, levels):
+                skiprows += i + 1
+        return skiprows
+
+    if filename:
+        if 'disc' in filename:
+            folder = 'discrete_colormaps_rgb_0-255'
+        else:
+            folder = 'continuous_colormaps_rgb_0-255'
+
+        filename = filename.replace('.txt', '')
+
+    else:
+        # filename
+        if divergent is True:
+            filename = var_group + '_div'
+        else:
+            if var_group == 'misc':
+                filename = var_group + '_seq_1'  # Imola
+            else:
+                filename = var_group + '_seq'
+
+        # continuous or discrete
+        if levels:
+            folder = 'discrete_colormaps_rgb_0-255'
+            filename = filename + '_disc'
+        else:
+            folder = 'continuous_colormaps_rgb_0-255'
+
+    # parent should be 'spirograph/'
+    path = Path(__file__).parents[1] / 'data/ipcc_colors' / folder / (filename + '.txt')
+
+    if levels:
+        rgb_data = np.loadtxt(path, skiprows=skip_rows(levels), max_rows=levels)
+    else:
+        rgb_data = np.loadtxt(path)
+
+    # convert to 0-1 RGB
+    rgb_data = rgb_data / 255
+
+    if levels or '_disc' in filename:
+        N = levels
+    else:
+        N = 256  # default value
+
+    cmap = mcolors.LinearSegmentedColormap.from_list('cmap', rgb_data, N=N)
+
+    return cmap
+
+def cbar_ticks(da, levels):
+    """create list of ticks for colorbar based on DataArray values
+    """
+    vmin = da.min().values
+    vmax = da.max().values
+
+    ticks = np.linspace(vmin,vmax,levels+1)
+
+    # if there are more than 7 levels, return every second label
+    if levels >= 7:
+        return [ticks[i] for i in np.arange(0, len(ticks), 2)]
+    else:
+        return ticks
+
+
 
