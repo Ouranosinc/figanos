@@ -348,7 +348,6 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         cdata = Path(__file__).parents[1] / 'data/ipcc_colors/variable_groups.json'
         cmap = create_cmap(get_var_group(plot_data, path_to_json=cdata), levels=levels, divergent=divergent)
 
-
     # set defaults
     if divergent:
         plot_kw.setdefault('center', 0)
@@ -358,7 +357,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
 
     #plot
     if contourf is False:
-        if levels:
+        if levels:  # remove some labels to avoid overcrowding
             plot_kw['cbar_kwargs'].setdefault('ticks', cbar_ticks(plot_data, levels))
         plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
     else:

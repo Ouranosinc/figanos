@@ -225,7 +225,7 @@ def plot_lat_lon(ax, xr_obj):
     return ax
 
 
-def split_legend(ax, in_plot = False, axis_factor=0.15, label_gap=0.02):
+def split_legend(ax, in_plot=False, axis_factor=0.15, label_gap=0.02):
     #  TODO: check for and fix overlapping labels
     """
     Drawline labels at the end of each line, or outside the plot.
@@ -334,7 +334,7 @@ def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
     Parameters
     _________
     var_group: str
-        Variable group. Options are 'temp', 'prec'.
+        Variable group from IPCC scheme.
     levels: int
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
     divergent: bool
@@ -398,18 +398,14 @@ def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
     return cmap
 
 def cbar_ticks(da, levels):
-    """create list of ticks for colorbar based on DataArray values
-    """
+    """create list of ticks for colorbar based on DataArray values, to avoid crowded ax."""
     vmin = da.min().values
     vmax = da.max().values
 
-    ticks = np.linspace(vmin,vmax,levels+1)
+    ticks = np.linspace(vmin, vmax, levels+1)
 
     # if there are more than 7 levels, return every second label
     if levels >= 7:
-        return [ticks[i] for i in np.arange(0, len(ticks), 2)]
-    else:
-        return ticks
+        ticks = [ticks[i] for i in np.arange(0, len(ticks), 2)]
 
-
-
+    return ticks
