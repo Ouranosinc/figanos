@@ -273,8 +273,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
     cmap: colormap or str
-        Colormap to use. If str, can be a matplotlib or IPCC colormap. If None, look for common variables in
-        data.name or data.history and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors). If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels: int
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
