@@ -369,10 +369,10 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     if contourf is False:
         if levels:  # remove some labels to avoid overcrowding
             plot_kw['cbar_kwargs'].setdefault('ticks', cbar_ticks(plot_data, levels))
-        plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
+        plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
     else:
         plot_kw.setdefault('levels', levels)
-        plot_data.plot.contourf(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
+        plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     #add features
     if features:
