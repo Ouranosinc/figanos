@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.colors as mcolors
 from pathlib import Path
 import json
+import cartopy.crs as ccrs
 
 warnings.simplefilter('always', UserWarning)
 
@@ -316,15 +317,16 @@ def get_var_group(da, path_to_json):
             if re.search(regex, da.history):
                 matches.append(var_dict[v])
 
+    matches = np.unique(matches)
+
     if len(matches) == 0:
-        matches.append('misc')
         warnings.warn('Colormap warning: Variable type not found. Use the cmap argument.')
-
+        return 'misc'
     elif len(matches) >= 2:
-        matches = ['misc']
         warnings.warn('Colormap warning: More than one variable type found. Use the cmap argument.')
-
-    return matches[0]
+        return 'misc'
+    else:
+        return matches[0]
 
 
 def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
@@ -337,7 +339,7 @@ def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
         Variable group from IPCC scheme.
     levels: int
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
-    divergent: bool
+    divergent: bool or int, float
         Diverging colormap. If False, use sequential colormap.
     filename: str
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
@@ -362,7 +364,7 @@ def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
 
     else:
         # filename
-        if divergent is True:
+        if divergent is not False:
             filename = var_group + '_div'
         else:
             if var_group == 'misc':
@@ -409,3 +411,14 @@ def cbar_ticks(da, levels):
         ticks = [ticks[i] for i in np.arange(0, len(ticks), 2)]
 
     return ticks
+
+def get_rotpole(xr_obj):
+    try:
+        rotpole = ccrs.RotatedPole(
+            pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
+            pole_latitude=xr_obj.rotated_pole.grid_north_pole_latitude,
+            central_rotated_longitude=xr_obj.rotated_pole.north_pole_grid_longitude)
+        return rotpole
+    except:
+        warnings.warn('Rotated pole not found. Specify a transform if necessary.')
+        return None

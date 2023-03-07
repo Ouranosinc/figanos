@@ -247,7 +247,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(),
-            features=None, contourf=False, cmap=None, levels=None, divergent=False, frame=False):
+            transform=None, features=None, contourf=False, cmap=None, levels=None, divergent=False, frame=False):
     """ Create map from 2D data.
 
     Parameters
@@ -273,16 +273,16 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
     cmap: colormap or str
-        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors). If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels: int
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
-    divergent: bool
-        If True, use diverging colormap.
+   divergent: bool or int or float
+        If int or float, becomes center of cmap.
     frame: bool
         Show or hide frame. Default False.
-    divergent: bool or int
-        If int, becomes center of cmap.
 
     Returns
     _______
@@ -292,7 +292,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     # checks
     if levels:
         if type(levels) != int or levels < 2 or levels > 21:
-            raise Exception('levels must be int between 2 and 21, inclusively')
+            raise Exception('levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.')
 
     #create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -324,7 +324,15 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     else:
         raise TypeError('`data` must contain a xr.DataArray or xr.Dataset')
 
-    #setup fig, ax
+    # setup transform
+    if transform is None:
+        if 'lat' in plot_data.dims and 'lon' in plot_data.dims:
+            transform = ccrs.PlateCarree()
+        elif 'rlat' in plot_data.dims and 'rlon' in plot_data.dims:
+            if plot_data.rotated_pole:
+                transform = get_rotpole(plot_data)
+
+    # setup fig, ax
     if not ax:
         fig, ax = plt.subplots(subplot_kw={'projection': projection}, **fig_kw)
 
@@ -348,8 +356,11 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         cmap = create_cmap(get_var_group(plot_data, path_to_json=cdata), levels=levels, divergent=divergent)
 
     # set defaults
-    if divergent:
-        plot_kw.setdefault('center', 0)
+    if divergent is not False:
+        if type(divergent) in [int, float]:
+            plot_kw.setdefault('center', divergent)
+        else:
+            plot_kw.setdefault('center', 0)
 
     plot_kw.setdefault('cbar_kwargs', {})
     plot_kw['cbar_kwargs'].setdefault('label', cbar_label)
@@ -360,8 +371,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
             plot_kw['cbar_kwargs'].setdefault('ticks', cbar_ticks(plot_data, levels))
         plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
     else:
-        if levels:
-            plot_kw.setdefault('levels', levels)
+        plot_kw.setdefault('levels', levels)
         plot_data.plot.contourf(ax=ax, transform=ccrs.PlateCarree(), cmap=cmap, **plot_kw)
 
     #add features
