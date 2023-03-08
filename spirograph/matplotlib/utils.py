@@ -438,9 +438,9 @@ def wrap_text(text, threshold=30):
     if len(text) >= threshold:
         if '.' in text:
             text = text.replace('. ','.\n')
-        elif ':' in text:
+        if ':' in text:
             text = text.replace(': ',':\n')
-        else:
+        if '.' not in text and ':' not in text: # if neither, find the middle space.
             center = len(text) // 2
             spaces = [m.start() for m in re.finditer("\s", text)] # position of whitespaces
             relative = [abs(s-center) for s in spaces]
