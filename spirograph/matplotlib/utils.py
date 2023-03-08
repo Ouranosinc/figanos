@@ -4,6 +4,10 @@ import warnings
 import xarray as xr
 import matplotlib as mpl
 import numpy as np
+import matplotlib.colors as mcolors
+from pathlib import Path
+import json
+import cartopy.crs as ccrs
 
 warnings.simplefilter('always', UserWarning)
 
@@ -211,18 +215,27 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_lat_lon(ax, xr_obj):
-    """ Place lat, lon coordinates on bottom right of plot area."""
-    if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
-        text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
-                                               float(xr_obj['lon']))
-        ax.text(0.99, 0.01, text, transform=ax.transAxes, ha = 'right', va = 'bottom')
-    else:
-        warnings.warn('show_lat_lon set to True, but "lat" and/or "lon" not found in coords')
+def plot_coords(ax, xr_obj, type=None):
+    """ Place coordinates on bottom right of plot area. 'location' or 'time' """
+    text=None
+    if type == 'location':
+        if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
+            text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
+                                                   float(xr_obj['lon']))
+        else:
+            warnings.warn('show_lat_lon set to True, but "lat" and/or "lon" not found in coords')
+    if type == 'time':
+        if 'time' in xr_obj.coords:
+            text = np.datetime_as_string(xr_obj.time.values, unit='D')
+        else:
+            warnings.warn('show_time set to True, but "time" not found in coords')
+
+    if text:
+        ax.text(0.99, 0.01, text, transform=ax.transAxes, ha='right', va='bottom')
+
     return ax
 
-
-def split_legend(ax, in_plot = False, axis_factor=0.15, label_gap=0.02):
+def split_legend(ax, in_plot=False, axis_factor=0.15, label_gap=0.02):
     #  TODO: check for and fix overlapping labels
     """
     Drawline labels at the end of each line, or outside the plot.
@@ -289,3 +302,149 @@ def fill_between_label(sorted_lines, name, array_categ, legend):
 
     return label
 
+
+def get_var_group(da, path_to_json):
+    """Get IPCC variable group from DataArray using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
+
+    # create dict
+    with open(path_to_json) as f:
+        var_dict = json.load(f)
+
+    matches = []
+
+    # look in DataArray name
+    if hasattr(da,'name'):
+        for v in var_dict:
+            regex = r"(?:^|[^a-zA-Z])({})(?:[^a-zA-Z]|$)".format(v)
+            if re.search(regex, da.name):
+                matches.append(var_dict[v])
+
+    # look in history
+    if hasattr(da, 'history') and len(matches) == 0:
+        for v in var_dict:
+            regex = r"(?:^|[^a-zA-Z])({})(?:[^a-zA-Z]|$)".format(v)  # matches when variable is not inside word
+            if re.search(regex, da.history):
+                matches.append(var_dict[v])
+
+    matches = np.unique(matches)
+
+    if len(matches) == 0:
+        warnings.warn('Colormap warning: Variable type not found. Use the cmap argument.')
+        return 'misc'
+    elif len(matches) >= 2:
+        warnings.warn('Colormap warning: More than one variable type found. Use the cmap argument.')
+        return 'misc'
+    else:
+        return matches[0]
+
+
+def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
+    """
+    Create colormap according to variable type.
+
+    Parameters
+    _________
+    var_group: str
+        Variable group from IPCC scheme.
+    levels: int
+        Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
+    divergent: bool or int, float
+        Diverging colormap. If False, use sequential colormap.
+    filename: str
+        Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
+    """
+
+    # func to get position of sequential cmap in txt file
+    def skip_rows(levels):
+        skiprows = 1
+
+        if levels > 5:
+            for i in np.arange(5, levels):
+                skiprows += i + 1
+        return skiprows
+
+    if filename:
+        if 'disc' in filename:
+            folder = 'discrete_colormaps_rgb_0-255'
+        else:
+            folder = 'continuous_colormaps_rgb_0-255'
+
+        filename = filename.replace('.txt', '')
+
+    else:
+        # filename
+        if divergent is not False:
+            filename = var_group + '_div'
+        else:
+            if var_group == 'misc':
+                filename = var_group + '_seq_3'  # Batlow
+            else:
+                filename = var_group + '_seq'
+
+        # continuous or discrete
+        if levels:
+            folder = 'discrete_colormaps_rgb_0-255'
+            filename = filename + '_disc'
+        else:
+            folder = 'continuous_colormaps_rgb_0-255'
+
+    # parent should be 'spirograph/'
+    path = Path(__file__).parents[1] / 'data/ipcc_colors' / folder / (filename + '.txt')
+
+    if levels:
+        rgb_data = np.loadtxt(path, skiprows=skip_rows(levels), max_rows=levels)
+    else:
+        rgb_data = np.loadtxt(path)
+
+    # convert to 0-1 RGB
+    rgb_data = rgb_data / 255
+
+    if levels or '_disc' in filename:
+        N = levels
+    else:
+        N = 256  # default value
+
+    cmap = mcolors.LinearSegmentedColormap.from_list('cmap', rgb_data, N=N)
+
+    return cmap
+
+def cbar_ticks(plot_obj, levels):
+    """create list of ticks for colorbar based on DataArray values, to avoid crowded ax."""
+    vmin = plot_obj.colorbar.vmin
+    vmax = plot_obj.colorbar.vmax
+
+    ticks = np.linspace(vmin, vmax, levels+1)
+
+    # if there are more than 7 levels, return every second label
+    if levels >= 7:
+        ticks = [ticks[i] for i in np.arange(0, len(ticks), 2)]
+
+    return ticks
+
+def get_rotpole(xr_obj):
+    try:
+        rotpole = ccrs.RotatedPole(
+            pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
+            pole_latitude=xr_obj.rotated_pole.grid_north_pole_latitude,
+            central_rotated_longitude=xr_obj.rotated_pole.north_pole_grid_longitude)
+        return rotpole
+    except:
+        warnings.warn('Rotated pole not found. Specify a transform if necessary.')
+        return None
+
+
+def wrap_text(text, threshold=30):
+    """ Wrap text from characters or central whitespace"""
+    if len(text) >= threshold:
+        if '.' in text:
+            text = text.replace('. ','.\n')
+        elif ':' in text:
+            text = text.replace(': ',':\n')
+        else:
+            center = len(text) // 2
+            spaces = [m.start() for m in re.finditer("\s", text)] # position of whitespaces
+            relative = [abs(s-center) for s in spaces]
+            central = spaces[np.argmin(relative)]
+            text = text[:central] + "\n" + text[central+1:]
+
+    return text

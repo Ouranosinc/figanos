@@ -230,7 +230,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     ax.spines['right'].set_visible(False)
 
     if show_lat_lon:
-        plot_lat_lon(ax, list(data.values())[0])
+        plot_coords(ax, list(data.values())[0], type='location')
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]: # check if legend is empty
@@ -246,7 +246,8 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 
-def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(), features=None, smoothing=False, frame = False):
+def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(),transform=None,
+            features=None, contourf=False, cmap=None, levels=None, divergent=False, show_time=False, frame=False):
     """ Create map from 2D data.
 
     Parameters
@@ -269,8 +270,19 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     features: list
         List of features to use. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
-    smoothing: bool
+    contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
+    cmap: colormap or str
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    levels: int
+        Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
+    divergent: bool or int or float
+        If int or float, becomes center of cmap.
+    show_time:bool
+        Show time (as date) at bottom right of plot.
     frame: bool
         Show or hide frame. Default False.
 
@@ -278,6 +290,11 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     _______
         matplotlib axis
     """
+
+    # checks
+    if levels:
+        if type(levels) != int or levels < 2 or levels > 21:
+            raise Exception('levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.')
 
     #create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -309,7 +326,15 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     else:
         raise TypeError('`data` must contain a xr.DataArray or xr.Dataset')
 
-    #setup fig, ax
+    # setup transform
+    if transform is None:
+        if 'lat' in data.dims and 'lon' in data.dims:
+            transform = ccrs.PlateCarree()
+        elif 'rlat' in data.dims and 'rlon' in data.dims:
+            if hasattr(data, 'rotated_pole'):
+                transform = get_rotpole(data)
+
+    # setup fig, ax
     if not ax:
         fig, ax = plt.subplots(subplot_kw={'projection': projection}, **fig_kw)
 
@@ -320,18 +345,47 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     else:
         cbar_label = get_attributes(use_attrs['cbar_label'], data)
 
+    #colormap
+    if type(cmap) == str:
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(levels=levels, filename=cmap)
+            except FileNotFoundError:
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / 'data/ipcc_colors/variable_groups.json'
+        cmap = create_cmap(get_var_group(plot_data, path_to_json=cdata), levels=levels, divergent=divergent)
+
+    # set defaults
+    if divergent is not False:
+        if type(divergent) in [int, float]:
+            plot_kw.setdefault('center', divergent)
+        else:
+            plot_kw.setdefault('center', 0)
+
+    plot_kw.setdefault('cbar_kwargs', {})
+    plot_kw['cbar_kwargs'].setdefault('label', wrap_text(cbar_label))
+
     #plot
-    if smoothing is False:
-        plot_data.plot.pcolormesh(ax=ax, transform=ccrs.PlateCarree(), cbar_kwargs={'label': cbar_label}, **plot_kw)
+    if contourf is False:
+        pl = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+
     else:
-        plot_data.plot.contourf(ax=ax, transform=ccrs.PlateCarree(), cbar_kwargs={'label': cbar_label}, **plot_kw)
+        plot_kw.setdefault('levels', levels)
+        pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     #add features
     if features:
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
 
-    #modifications
+    if show_time is True:
+        plot_coords(ax, plot_data, type='time')
+
+    # remove some labels to avoid overcrowding, when levels are used with pcolormesh
+    if contourf is False and levels is not None:
+        pl.colorbar.ax.set_yticks(cbar_ticks(pl, levels))
 
     set_plot_attrs(use_attrs, data, ax)
 
