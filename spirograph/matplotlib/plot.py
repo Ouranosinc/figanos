@@ -230,7 +230,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     ax.spines['right'].set_visible(False)
 
     if show_lat_lon:
-        plot_lat_lon(ax, list(data.values())[0])
+        plot_coords(ax, list(data.values())[0], type='location')
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]: # check if legend is empty
@@ -246,8 +246,8 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 
-def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(),
-            transform=None, features=None, contourf=False, cmap=None, levels=None, divergent=False, frame=False):
+def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(),transform=None,
+            features=None, contourf=False, cmap=None, levels=None, divergent=False, show_time=False, frame=False):
     """ Create map from 2D data.
 
     Parameters
@@ -279,8 +279,10 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels: int
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
-   divergent: bool or int or float
+    divergent: bool or int or float
         If int or float, becomes center of cmap.
+    show_time:bool
+        Show time (as date) at bottom right of plot.
     frame: bool
         Show or hide frame. Default False.
 
@@ -326,11 +328,11 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
 
     # setup transform
     if transform is None:
-        if 'lat' in plot_data.dims and 'lon' in plot_data.dims:
+        if 'lat' in data.dims and 'lon' in data.dims:
             transform = ccrs.PlateCarree()
-        elif 'rlat' in plot_data.dims and 'rlon' in plot_data.dims:
-            if plot_data.rotated_pole:
-                transform = get_rotpole(plot_data)
+        elif 'rlat' in data.dims and 'rlon' in data.dims:
+            if hasattr(data, 'rotated_pole'):
+                transform = get_rotpole(data)
 
     # setup fig, ax
     if not ax:
@@ -363,23 +365,27 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
             plot_kw.setdefault('center', 0)
 
     plot_kw.setdefault('cbar_kwargs', {})
-    plot_kw['cbar_kwargs'].setdefault('label', cbar_label)
+    plot_kw['cbar_kwargs'].setdefault('label', wrap_text(cbar_label))
 
     #plot
     if contourf is False:
-        if levels:  # remove some labels to avoid overcrowding
-            plot_kw['cbar_kwargs'].setdefault('ticks', cbar_ticks(plot_data, levels))
-        plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        pl = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+
     else:
         plot_kw.setdefault('levels', levels)
-        plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     #add features
     if features:
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
 
-    #modifications
+    if show_time is True:
+        plot_coords(ax, plot_data, type='time')
+
+    # remove some labels to avoid overcrowding, when levels are used with pcolormesh
+    if contourf is False and levels is not None:
+        pl.colorbar.ax.set_yticks(cbar_ticks(pl, levels))
 
     set_plot_attrs(use_attrs, data, ax)
 

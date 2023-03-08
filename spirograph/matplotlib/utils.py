@@ -215,16 +215,25 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_lat_lon(ax, xr_obj):
-    """ Place lat, lon coordinates on bottom right of plot area."""
-    if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
-        text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
-                                               float(xr_obj['lon']))
-        ax.text(0.99, 0.01, text, transform=ax.transAxes, ha = 'right', va = 'bottom')
-    else:
-        warnings.warn('show_lat_lon set to True, but "lat" and/or "lon" not found in coords')
-    return ax
+def plot_coords(ax, xr_obj, type=None):
+    """ Place coordinates on bottom right of plot area. 'location' or 'time' """
+    text=None
+    if type == 'location':
+        if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
+            text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
+                                                   float(xr_obj['lon']))
+        else:
+            warnings.warn('show_lat_lon set to True, but "lat" and/or "lon" not found in coords')
+    if type == 'time':
+        if 'time' in xr_obj.coords:
+            text = np.datetime_as_string(xr_obj.time.values, unit='D')
+        else:
+            warnings.warn('show_time set to True, but "time" not found in coords')
 
+    if text:
+        ax.text(0.99, 0.01, text, transform=ax.transAxes, ha='right', va='bottom')
+
+    return ax
 
 def split_legend(ax, in_plot=False, axis_factor=0.15, label_gap=0.02):
     #  TODO: check for and fix overlapping labels
@@ -295,7 +304,7 @@ def fill_between_label(sorted_lines, name, array_categ, legend):
 
 
 def get_var_group(da, path_to_json):
-    """Get IPCC variable group from DataArray using data stored in a json file."""
+    """Get IPCC variable group from DataArray using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
 
     # create dict
     with open(path_to_json) as f:
@@ -304,14 +313,14 @@ def get_var_group(da, path_to_json):
     matches = []
 
     # look in DataArray name
-    if da.name:
+    if hasattr(da,'name'):
         for v in var_dict:
             regex = r"(?:^|[^a-zA-Z])({})(?:[^a-zA-Z]|$)".format(v)
             if re.search(regex, da.name):
                 matches.append(var_dict[v])
 
     # look in history
-    if da.history and len(matches) == 0:
+    if hasattr(da, 'history') and len(matches) == 0:
         for v in var_dict:
             regex = r"(?:^|[^a-zA-Z])({})(?:[^a-zA-Z]|$)".format(v)  # matches when variable is not inside word
             if re.search(regex, da.history):
@@ -368,7 +377,7 @@ def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
             filename = var_group + '_div'
         else:
             if var_group == 'misc':
-                filename = var_group + '_seq_1'  # Imola
+                filename = var_group + '_seq_3'  # Batlow
             else:
                 filename = var_group + '_seq'
 
@@ -399,10 +408,10 @@ def create_cmap(var_group=None, levels=None, divergent=False, filename=None):
 
     return cmap
 
-def cbar_ticks(da, levels):
+def cbar_ticks(plot_obj, levels):
     """create list of ticks for colorbar based on DataArray values, to avoid crowded ax."""
-    vmin = da.min().values
-    vmax = da.max().values
+    vmin = plot_obj.colorbar.vmin
+    vmax = plot_obj.colorbar.vmax
 
     ticks = np.linspace(vmin, vmax, levels+1)
 
@@ -422,3 +431,20 @@ def get_rotpole(xr_obj):
     except:
         warnings.warn('Rotated pole not found. Specify a transform if necessary.')
         return None
+
+
+def wrap_text(text, threshold=30):
+    """ Wrap text from characters or central whitespace"""
+    if len(text) >= threshold:
+        if '.' in text:
+            text = text.replace('. ','.\n')
+        elif ':' in text:
+            text = text.replace(': ',':\n')
+        else:
+            center = len(text) // 2
+            spaces = [m.start() for m in re.finditer("\s", text)] # position of whitespaces
+            relative = [abs(s-center) for s in spaces]
+            central = spaces[np.argmin(relative)]
+            text = text[:central] + "\n" + text[central+1:]
+
+    return text
