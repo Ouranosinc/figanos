@@ -49,6 +49,7 @@ def _plot_realizations(ax, da, name, plot_kw, non_dict_data):
 
 def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend='lines', show_lat_lon = True):
     """
+    Todo: erreur quand nom rcp35 pas legal, regarder pour rcp dans noms lorsque ds
     Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
@@ -75,6 +76,11 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     _______
         matplotlib axis
     """
+    # convert SSP, RCP, CMIP formats in keys
+    if type(data) == dict:
+        process_keys(data, convert_scen_name)
+    if type(plot_kw) == dict:
+        process_keys(plot_kw, convert_scen_name)
 
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -121,6 +127,11 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
     # get data and plot
     for name, arr in data.items():
+
+        # look for SSP, RCP, CMIP color
+        cat_colors = Path(__file__).parents[1] / 'data/ipcc_colors/categorical_colors.json'
+        if get_scen_color(name, cat_colors):
+            plot_kw[name].setdefault('color', get_scen_color(name, cat_colors))
 
         #  remove 'label' to avoid error due to double 'label' args
         if 'label' in plot_kw[name]:
@@ -280,7 +291,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     levels: int
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
     divergent: bool or int or float
-        If int or float, becomes center of cmap.
+        If int or float, becomes center of cmap. Default center is 0.
     show_time:bool
         Show time (as date) at bottom right of plot.
     frame: bool
