@@ -75,6 +75,11 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     _______
         matplotlib axis
     """
+    # convert SSP, RCP, CMIP formats in keys
+    if type(data) == dict:
+        process_keys(data, convert_scen_name)
+    if type(plot_kw) == dict:
+        process_keys(plot_kw, convert_scen_name)
 
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -122,11 +127,15 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     # get data and plot
     for name, arr in data.items():
 
+        # look for SSP, RCP, CMIP color
+        cat_colors = Path(__file__).parents[1] / 'data/ipcc_colors/categorical_colors.json'
+        if get_scen_color(name, cat_colors):
+            plot_kw[name].setdefault('color', get_scen_color(name, cat_colors))
+
         #  remove 'label' to avoid error due to double 'label' args
         if 'label' in plot_kw[name]:
             del plot_kw[name]['label']
             warnings.warn('"label" entry in plot_kw[{}] will be ignored.'.format(name))
-
 
         if array_categ[name] == "ENS_REALS_DA":
             _plot_realizations(ax, arr, name, plot_kw, non_dict_data)
@@ -161,7 +170,6 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
                                 color=lines_dict[sub_name][0].get_color(),
                                 linewidth=0.0, alpha=0.2,
                                 label=fill_between_label(sorted_lines, name, array_categ, legend))
-
 
         # other ensembles
         elif array_categ[name] in ['ENS_PCT_VAR_DS', 'ENS_STATS_VAR_DS', 'ENS_PCT_DIM_DA']:
@@ -280,7 +288,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     levels: int
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
     divergent: bool or int or float
-        If int or float, becomes center of cmap.
+        If int or float, becomes center of cmap. Default center is 0.
     show_time:bool
         Show time (as date) at bottom right of plot.
     frame: bool

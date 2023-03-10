@@ -216,7 +216,7 @@ def sort_lines(array_dict):
 
 
 def plot_coords(ax, xr_obj, type=None):
-    """ Place coordinates on bottom right of plot area. 'location' or 'time' """
+    """ Place coordinates on bottom right of plot area. Types are 'location' or 'time'. """
     text=None
     if type == 'location':
         if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
@@ -433,6 +433,7 @@ def get_rotpole(xr_obj):
         return None
 
 
+
 def wrap_text(text, threshold=30, min_line_len=12):
     """ Wrap text from characters or central whitespace."""
     if len(text) >= threshold:
@@ -458,3 +459,47 @@ def wrap_text(text, threshold=30, min_line_len=12):
             text = sep.join(lines)
 
     return text
+
+def convert_scen_name(name):
+    """Convert SSP, RCP, CMIP strings to proper format"""
+
+    matches = re.findall(r"(?:SSP|RCP|CMIP)[0-9]{1,3}", name, flags=re.I)
+    if matches:
+        for s in matches:
+            if sum(c.isdigit() for c in s) == 3:
+                new_s = s.replace(s[-3:], s[-3] + '-' + s[-2] + '.'+ s[-1]).upper() # ssp245 to SSP2-4.5
+                new_name = name.replace(s,new_s) # put back in name
+            elif sum(c.isdigit() for c in s) == 2:
+                new_s = s.replace(s[-2:], s[-2] + '.'+ s[-1]).upper() # rcp45 to RCP4.5
+                new_name = name.replace(s,new_s)
+            else:
+                new_s = s.upper() # cmip5 to CMIP5
+                new_name = name.replace(s, new_s)
+
+        return new_name
+    else:
+        return name
+
+
+def get_scen_color(name,path_to_dict):
+    """Get color corresponding to SSP,RCP or CMIP."""
+    with open(path_to_dict) as f:
+        color_dict = json.load(f)
+
+    regex = r"(?:CMIP|RCP|SSP)[0-9\.-]{1,5}"
+    matches = re.findall(regex, name)
+    if matches:
+        colors = [color_dict[m] for m in matches if m in color_dict]
+        if colors:
+            return colors[-1]  # last entry
+        else:
+            return None
+    else:
+        return None
+
+def process_keys(dict, function):
+    old_keys = [key for key in dict]
+    for old_key in old_keys:
+        new_key = function(old_key)
+        dict[new_key] = dict.pop(old_key)
+    return dict
