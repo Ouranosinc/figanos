@@ -478,7 +478,11 @@ def get_scen_color(name,path_to_dict):
     regex = r"(?:CMIP|RCP|SSP)[0-9\.-]{1,5}"
     matches = re.findall(regex, name)
     if matches:
-        return color_dict[matches[-1]]  # taking last entry
+        colors = [color_dict[m] for m in matches if m in color_dict]
+        if colors:
+            return colors[-1]  # last entry
+        else:
+            return None
     else:
         return None
 

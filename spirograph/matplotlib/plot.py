@@ -49,7 +49,6 @@ def _plot_realizations(ax, da, name, plot_kw, non_dict_data):
 
 def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend='lines', show_lat_lon = True):
     """
-    Todo: erreur quand nom rcp35 pas legal, regarder pour rcp dans noms lorsque ds
     Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
