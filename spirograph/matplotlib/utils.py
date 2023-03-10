@@ -433,19 +433,30 @@ def get_rotpole(xr_obj):
         return None
 
 
-def wrap_text(text, threshold=30):
+
+def wrap_text(text, threshold=30, min_line_len=12):
     """ Wrap text from characters or central whitespace."""
     if len(text) >= threshold:
-        if '.' in text:
+        if '. ' in text:
             text = text.replace('. ','.\n')
-        elif ':' in text:
+        if ': ' in text:
             text = text.replace(': ',':\n')
-        else:
+        if '. ' not in text and ': ' not in text: # if neither, find the middle space.
             center = len(text) // 2
             spaces = [m.start() for m in re.finditer("\s", text)] # position of whitespaces
             relative = [abs(s-center) for s in spaces]
             central = spaces[np.argmin(relative)]
             text = text[:central] + "\n" + text[central+1:]
+
+        #if one of the middle lines is too short, put it back.
+        lines = text.splitlines(keepends=True)
+        if len(lines) > 2:
+            lengths = [len(line) for line in lines[1:-1]]
+            for l, i in zip(lengths, range(len(lengths))):
+                if l < min_line_len:
+                    lines[i] = lines[i].replace('\n', ' ')
+            sep = ''
+            text = sep.join(lines)
 
     return text
 
