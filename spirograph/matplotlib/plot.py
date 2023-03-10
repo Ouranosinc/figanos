@@ -137,7 +137,6 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
             del plot_kw[name]['label']
             warnings.warn('"label" entry in plot_kw[{}] will be ignored.'.format(name))
 
-
         if array_categ[name] == "ENS_REALS_DA":
             _plot_realizations(ax, arr, name, plot_kw, non_dict_data)
 
@@ -171,7 +170,6 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
                                 color=lines_dict[sub_name][0].get_color(),
                                 linewidth=0.0, alpha=0.2,
                                 label=fill_between_label(sorted_lines, name, array_categ, legend))
-
 
         # other ensembles
         elif array_categ[name] in ['ENS_PCT_VAR_DS', 'ENS_STATS_VAR_DS', 'ENS_PCT_DIM_DA']:

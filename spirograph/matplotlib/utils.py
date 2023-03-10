@@ -450,7 +450,7 @@ def wrap_text(text, threshold=30):
     return text
 
 def convert_scen_name(name):
-    """Convert name from format ssp245 to SSP2-4.5"""
+    """Convert SSP, RCP, CMIP strings to proper format"""
 
     matches = re.findall(r"(?:SSP|RCP|CMIP)[0-9]{1,3}", name, flags=re.I)
     if matches:
