@@ -8,6 +8,7 @@ import matplotlib.colors as mcolors
 from pathlib import Path
 import json
 import cartopy.crs as ccrs
+import geopandas as gpd
 
 warnings.simplefilter('always', UserWarning)
 
@@ -448,3 +449,14 @@ def wrap_text(text, threshold=30):
             text = text[:central] + "\n" + text[central+1:]
 
     return text
+
+def gpd_to_ccrs(path, projection):
+    """ Opens shapefile with geopandas and convert to cartopy projection.
+    Parameters
+    ----------
+    path: str
+        Path to shapefile.
+    projection: ccrs cartopy
+    """
+    prj4 = projection.proj4_init
+    return gpd.read_file(path).to_crs(prj4)
