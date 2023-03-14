@@ -150,10 +150,12 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
     if 'ylabel' in attr_dict:
         if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
-            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj) + ' (' +
-                      get_attributes(attr_dict['yunits'], xr_obj) + ')')
+            ylabel = wrap_text(get_attributes(attr_dict['ylabel'], xr_obj) + ' (' +
+                               get_attributes(attr_dict['yunits'], xr_obj) + ')')
         else:
-            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj))
+            ylabel = wrap_text(get_attributes(attr_dict['ylabel'], xr_obj))
+
+        ax.set_ylabel(ylabel)
 
     # cbar label has to be assigned in main function, ignore.
     if 'cbar_label' in attr_dict:

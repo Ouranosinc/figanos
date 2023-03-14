@@ -77,9 +77,9 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     """
     # convert SSP, RCP, CMIP formats in keys
     if type(data) == dict:
-        process_keys(data, convert_scen_name)
+        data = process_keys(data, convert_scen_name)
     if type(plot_kw) == dict:
-        process_keys(plot_kw, convert_scen_name)
+        plot_kw = process_keys(plot_kw, convert_scen_name)
 
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -93,13 +93,13 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
         data = {'_no_label': data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {'_no_label': empty_dict(plot_kw)}
 
-    # assign keys to plot_kw if empty
-    if len(plot_kw) == 0:
-        for name, arr in data.items():
-            plot_kw[name] = {}
-    else:
-        for name, arr in data.items():
+    # assign keys to plot_kw if not there
+    if non_dict_data is False:
+        for name in data:
             if name not in plot_kw:
+                plot_kw[name] = {}
+        for key in plot_kw:
+            if key not in data:
                 raise Exception('plot_kw must be a nested dictionary with keys corresponding to the keys in "data"')
 
     # check: type
