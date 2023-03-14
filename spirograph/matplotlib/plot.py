@@ -271,7 +271,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         List of features to use. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
     geometries_kw : dict
-        Add the given shapely geometries (in the given crs) to axe (see cartopy).
+        Add the given shapely geometries (in the given crs) to axe (see cartopy ax.add_geometry()).
         If contains the key "path" and ends with .shp, will open and convert the shapefile to crs projection.
     contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
