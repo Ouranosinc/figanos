@@ -505,3 +505,11 @@ def process_keys(dict, function):
         new_key = function(old_key)
         dict[new_key] = dict.pop(old_key)
     return dict
+
+def categorical_colors():
+    """ Return a list of the categorical colors associated with certain strings (SSP,RCP,CMIP)."""
+    path = Path(__file__).parents[1] / 'data/ipcc_colors/categorical_colors.json'
+    with open(path) as f:
+        cat = json.load(f)
+
+        return cat
