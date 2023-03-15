@@ -1,0 +1,59 @@
+#Ouranos matplotlib style-sheet
+#should not have plotting style already in paper or poster
+#classic matplotlib version: https://github.com/matplotlib/matplotlib/blob/6a9a07155c0e7f91c20dd4c7e280198ec652c4ae/lib/matplotlib/mpl-data/stylelib/classic.mplstyle
+#refer to IPCC style guide
+
+# --- AXES ---
+axes.facecolor      : w
+axes.edgecolor      : k
+axes.linewidth      : 0.5
+axes.grid           : True
+axes.grid.axis      : y
+axes.axisbelow      : True
+
+axes.prop_cycle     : cycler('color', ['052946', '7E0AEB', 'CE153D', 'D4880C', 'EFCC00', '4EBF0D', '0ADEE1'])
+
+axes.spines.bottom  : True
+axes.spines.left    : True
+axes.spines.right   : False
+axes.spines.top     : False
+
+axes.labelsize      : 11
+axes.titlelocation  : left
+axes.titlesize      : 12
+axes.titlepad       : 10.0
+# --- GRIDS ---
+grid.color          : w
+grid.linestyle      : -
+grid.linewidth      : 0.5
+grid.color          : CAD4D6
+grid.alpha          : 1.0
+
+# --- LINES ---
+lines.linewidth     : 1.5
+
+# --- TICKS ---
+xtick.major.size    : 2
+xtick.minor.size    : 0
+ytick.major.size    : 2
+ytick.minor.size    : 0
+
+xtick.labelsize     : 11
+ytick.labelsize     : 11
+xtick.direction     : in
+ytick.direction     : in
+xtick.color         : k
+ytick.color         : k
+
+# --- FONTS ---
+font.size           : 11
+font.family         : sans-serif
+font.serif          : Arial
+
+# --- LEGEND ---
+legend.facelor      : 'CAD4D6'        #ne fonctionne pas
+legend.edgecolor    : CAD4D6
+
+
+
+
