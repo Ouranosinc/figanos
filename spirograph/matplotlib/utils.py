@@ -151,10 +151,12 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
     if 'ylabel' in attr_dict:
         if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
-            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj) + ' (' +
-                      get_attributes(attr_dict['yunits'], xr_obj) + ')')
+            ylabel = wrap_text(get_attributes(attr_dict['ylabel'], xr_obj) + ' (' +
+                               get_attributes(attr_dict['yunits'], xr_obj) + ')')
         else:
-            ax.set_ylabel(get_attributes(attr_dict['ylabel'], xr_obj))
+            ylabel = wrap_text(get_attributes(attr_dict['ylabel'], xr_obj))
+
+        ax.set_ylabel(ylabel)
 
     # cbar label has to be assigned in main function, ignore.
     if 'cbar_label' in attr_dict:
@@ -516,4 +518,12 @@ def process_keys(dict, function):
         new_key = function(old_key)
         dict[new_key] = dict.pop(old_key)
     return dict
+
+def categorical_colors():
+    """ Return a list of the categorical colors associated with certain strings (SSP,RCP,CMIP)."""
+    path = Path(__file__).parents[1] / 'data/ipcc_colors/categorical_colors.json'
+    with open(path) as f:
+        cat = json.load(f)
+
+        return cat
 
