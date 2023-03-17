@@ -370,8 +370,9 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         else:
             plot_kw.setdefault('center', 0)
 
-    plot_kw.setdefault('cbar_kwargs', {})
-    plot_kw['cbar_kwargs'].setdefault('label', wrap_text(cbar_label))
+    if 'add_colorbar' not in plot_kw or plot_kw['add_colorbar'] is not False:
+        plot_kw.setdefault('cbar_kwargs', {})
+        plot_kw['cbar_kwargs'].setdefault('label', wrap_text(cbar_label))
 
     #plot
     if contourf is False:
