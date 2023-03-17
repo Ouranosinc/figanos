@@ -11,32 +11,34 @@ axes.grid           : True
 axes.grid.axis      : y
 axes.axisbelow      : True
 
-axes.prop_cycle     : cycler('color', ['052946', '7E0AEB', 'CE153D', 'D4880C', 'EFCC00', '4EBF0D', '0ADEE1'])
+axes.prop_cycle     : cycler('color', ['052946', 'ce153d', '18bbbb', 'fdc414', '6850af', '196a5e', '7a5315'])
 
 axes.spines.bottom  : True
 axes.spines.left    : True
 axes.spines.right   : False
 axes.spines.top     : False
 
+axes.xmargin        : 0
+axes.ymargin        : 0.05
+
 axes.labelsize      : 11
-axes.titlelocation  : left
-axes.titlesize      : 12
+axes.titlelocation  : center
+axes.titlesize      : 14
 axes.titlepad       : 10.0
+
 # --- GRIDS ---
-grid.color          : w
 grid.linestyle      : -
 grid.linewidth      : 0.5
-grid.color          : CAD4D6
-grid.alpha          : 1.0
+grid.color          : k
+grid.alpha          : 0.4
 
 # --- LINES ---
 lines.linewidth     : 1.5
 
 # --- TICKS ---
 xtick.major.size    : 2
-xtick.minor.size    : 0
 ytick.major.size    : 2
-ytick.minor.size    : 0
+xtick.minor.visible : False
 
 xtick.labelsize     : 11
 ytick.labelsize     : 11
@@ -48,11 +50,13 @@ ytick.color         : k
 # --- FONTS ---
 font.size           : 11
 font.family         : sans-serif
-font.serif          : Arial
+font.sans-serif     : Arial
 
 # --- LEGEND ---
-legend.facelor      : 'CAD4D6'        #ne fonctionne pas
-legend.edgecolor    : CAD4D6
+legend.facecolor      : w
+legend.edgecolor      : w
+legend.frameon        : True
+legend.framealpha     : 1
 
 
 
