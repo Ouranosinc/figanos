@@ -16,6 +16,9 @@ spirograph
 
 Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.
 
+Pour nous partager vos codes à ajouter dans spirograph, s.v.p créer un issue sur le repo github avec une description de la fonction et 
+le code de celle-ci.
+
 
 * Free software: Apache Software License 2.0
 * Documentation: https://spirograph.readthedocs.io.

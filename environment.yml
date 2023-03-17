@@ -17,16 +17,20 @@ dependencies:
   - notebook
   - geopandas
   - xclim   #une fois que finit test sera pas necessaire
+  - re
+  - warnings
+  - json
+  - pathlib
   #visualisation
-  - hvplot
+  #- hvplot
   - cartopy
   - matplotlib
-  - plotly
-  - bokeh
-  - holoviews
+  #- plotly
+  #- bokeh
+  #- holoviews
   - geoviews
   # pour pourvoir exporter bokeh en png
-  - selenium
-  - geckodriver
-  - firefox
-  - python-kaleido # pour pouvoir exporter plotly en png
+  #- selenium
+  #- geckodriver
+  #- firefox
+  #- python-kaleido # pour pouvoir exporter plotly en png
