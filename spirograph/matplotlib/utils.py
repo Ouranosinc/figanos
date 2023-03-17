@@ -527,3 +527,17 @@ def categorical_colors():
 
         return cat
 
+def get_mpl_styles():
+    folder = Path(__file__).parent / 'style/'
+    paths = sorted(folder.glob('*.mplstyle'))
+    names = [str(p).split('/')[-1].removesuffix('.mplstyle') for p in paths]
+
+    return names, paths
+
+def set_mpl_style(*args):
+    for style in args:
+        if style in get_mpl_styles()[0]:
+            index = get_mpl_styles()[0].index(style)
+            mpl.style.use(get_mpl_styles()[1][index])
+        else:
+            warnings.warn('Style {} not found.'.format(style))
