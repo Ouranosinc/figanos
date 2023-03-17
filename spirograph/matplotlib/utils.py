@@ -144,9 +144,7 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
     if 'title' in attr_dict:
         title = get_attributes(attr_dict['title'], xr_obj)
-        title = title.replace('.', '. \n')
-        title = title.replace(':', ': \n')
-        ax.set_title(title, wrap=True)
+        ax.set_title(wrap_text(title))
 
     if 'ylabel' in attr_dict:
         if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
