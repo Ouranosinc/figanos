@@ -233,7 +233,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
     # other plot elements
     if show_lat_lon:
-        plot_coords(ax, list(data.values())[0], type='location', backgroundcolor='w')
+        plot_coords(ax, list(data.values())[0], type='location', backgroundalpha=1)
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]: # check if legend is empty
@@ -387,7 +387,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
             ax.add_feature(getattr(cfeature, f.upper()))
 
     if show_time is True:
-        plot_coords(ax, plot_data, type='time')
+        plot_coords(ax, plot_data, type='time', backgroundalpha=0)
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
