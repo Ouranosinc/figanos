@@ -218,7 +218,7 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_coords(ax, xr_obj, type=None):
+def plot_coords(ax, xr_obj, type=None, backgroundcolor=None):
     """ Place coordinates on bottom right of plot area. Types are 'location' or 'time'. """
     text=None
     if type == 'location':
@@ -234,7 +234,7 @@ def plot_coords(ax, xr_obj, type=None):
             warnings.warn('show_time set to True, but "time" not found in coords')
 
     if text:
-        ax.text(0.99, 0.01, text, transform=ax.transAxes, ha='right', va='bottom')
+        ax.text(0.99, 0.03, text, transform=ax.transAxes, ha='right', va='bottom', backgroundcolor=backgrouncolor)
 
     return ax
 
