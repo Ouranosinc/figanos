@@ -145,9 +145,7 @@ def set_plot_attrs(attr_dict, xr_obj, ax):
 
     if 'title' in attr_dict:
         title = get_attributes(attr_dict['title'], xr_obj)
-        title = title.replace('.', '. \n')
-        title = title.replace(':', ': \n')
-        ax.set_title(title, wrap=True)
+        ax.set_title(wrap_text(title))
 
     if 'ylabel' in attr_dict:
         if 'yunits' in attr_dict and len(get_attributes(attr_dict['yunits'], xr_obj)) >= 1: # second condition avoids '[]' as label
@@ -218,9 +216,9 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_coords(ax, xr_obj, type=None):
+def plot_coords(ax, xr_obj, type=None, backgroundalpha=0):
     """ Place coordinates on bottom right of plot area. Types are 'location' or 'time'. """
-    text=None
+    text = None
     if type == 'location':
         if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
             text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
@@ -234,7 +232,8 @@ def plot_coords(ax, xr_obj, type=None):
             warnings.warn('show_time set to True, but "time" not found in coords')
 
     if text:
-        ax.text(0.99, 0.01, text, transform=ax.transAxes, ha='right', va='bottom')
+        t = ax.text(0.98, 0.03, text, transform=ax.transAxes, ha='right', va='bottom')
+        t.set_bbox(dict(facecolor='w', alpha=backgroundalpha, edgecolor='w'))
 
     return ax
 
