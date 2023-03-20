@@ -57,7 +57,7 @@ If you are proposing a feature:
 Get Started!
 -------------------------------------------------
 
-Ready to contribute? Here's how to set up `spirograph` for local development for developpers outside Ouranos.
+Ready to contribute? Here's how to set up `spirograph` for local development for developers outside Ouranos.
 
 1. Fork the `spirograph` repo on GitHub.
 2. Clone your fork locally::
