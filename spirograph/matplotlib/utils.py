@@ -527,7 +527,7 @@ def categorical_colors():
         return cat
 
 def get_mpl_styles():
-    """ Get lists of the available matplotlib styles and their paths, as a tuple. """
+    """ Get the available matplotlib styles and their paths, as a dictionary. """
     folder = Path(__file__).parent / 'style/'
     paths = sorted(folder.glob('*.mplstyle'))
     names = [str(p).split('/')[-1].removesuffix('.mplstyle') for p in paths]

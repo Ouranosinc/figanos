@@ -105,7 +105,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
     # check: type
     for name, arr in data.items():
         if not isinstance(arr, (xr.Dataset, xr.DataArray)):
-            raise TypeError('`data` must contain a xr.Dataset, a xr.DataArray or a dictionary of xr.Dataset/ xr.DataArray.')
+            raise TypeError('"data" must contain a xr.Dataset, a xr.DataArray or a dictionary of such objects.')
 
     # check: 'time' dimension and calendar format
     data = check_timeindex(data)
@@ -236,7 +236,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
         plot_coords(ax, list(data.values())[0], type='location', backgroundalpha=1)
 
     if legend is not None:
-        if not ax.get_legend_handles_labels()[0]: # check if legend is empty
+        if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
             pass
         elif legend == 'in_plot':
             split_legend(ax, in_plot=True)
@@ -270,6 +270,9 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
     projection: ccrs projection
         Projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    transform: ccrs transform
+        Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
+        ccrs.PlateCarree() or ccrs.RotatedPole().
     features: list
         List of features to use. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
@@ -370,8 +373,9 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         else:
             plot_kw.setdefault('center', 0)
 
-    plot_kw.setdefault('cbar_kwargs', {})
-    plot_kw['cbar_kwargs'].setdefault('label', wrap_text(cbar_label))
+    if 'add_colorbar' not in plot_kw or plot_kw['add_colorbar'] is not False:
+        plot_kw.setdefault('cbar_kwargs', {})
+        plot_kw['cbar_kwargs'].setdefault('label', wrap_text(cbar_label))
 
     #plot
     if contourf is False:
