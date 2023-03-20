@@ -4,13 +4,13 @@
   "checkout": null,
   "context": {
     "cookiecutter": {
-      "full_name": "Trevor James Smith",
-      "email": "smith.trevorj@ouranos.ca",
-      "github_username": "Zeitsperre",
+      "full_name": "Sarah-Claude Bourdeau-Goulet",
+      "email": "bourdeau-goulet.sarah-claude@ouranos.ca",
+      "github_username": "Sarahclaude",
       "project_name": "spirograph",
       "project_slug": "spirograph",
       "project_short_description": "Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
-      "pypi_username": "Zeitsperre",
+      "pypi_username": "Sarahclaude",
       "version": "0.1.0",
       "use_pytest": "y",
       "use_black": "y",

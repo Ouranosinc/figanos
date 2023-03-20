@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/Zeitsperre/spirograph/issues.
+Report bugs at https://github.com/Ouranosinc/spirograph/issues.
 
 If you are reporting a bug, please include:
 
@@ -45,7 +45,7 @@ articles, and such.
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/Zeitsperre/spirograph/issues.
+The best way to send feedback is to file an issue at https://github.com/Ouranosinc/spirograph/issues.
 
 If you are proposing a feature:
 
@@ -55,9 +55,9 @@ If you are proposing a feature:
   are welcome :)
 
 Get Started!
-------------
+-------------------------------------------------
 
-Ready to contribute? Here's how to set up `spirograph` for local development.
+Ready to contribute? Here's how to set up `spirograph` for local development for developers outside Ouranos.
 
 1. Fork the `spirograph` repo on GitHub.
 2. Clone your fork locally::
@@ -120,7 +120,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
 3. The pull request should work for Python 3.7, 3.8, 3.9, and 3.10. Check
-   https://travis-ci.com/Zeitsperre/spirograph/pull_requests
+   https://github.com/Ouranosinc/spirograph/pulls
    and make sure that the tests pass for all supported Python versions.
 
 Tips

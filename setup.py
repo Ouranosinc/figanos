@@ -23,8 +23,8 @@ dev_requirements = [
 ]
 
 setup(
-    author="Trevor James Smith",
-    author_email="smith.trevorj@ouranos.ca",
+    author="Sarah-Claude Bourdeau-Goulet",
+    author_email="bourdeau-goulet.sarah-claude@ouranos.ca",
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
