@@ -8,6 +8,7 @@ import matplotlib.colors as mcolors
 from pathlib import Path
 import json
 import cartopy.crs as ccrs
+import geopandas as gpd
 
 warnings.simplefilter('always', UserWarning)
 
@@ -215,9 +216,9 @@ def sort_lines(array_dict):
     return sorted_lines
 
 
-def plot_coords(ax, xr_obj, type=None, backgroundcolor=None):
+def plot_coords(ax, xr_obj, type=None, backgroundalpha=0):
     """ Place coordinates on bottom right of plot area. Types are 'location' or 'time'. """
-    text=None
+    text = None
     if type == 'location':
         if 'lat' in xr_obj.coords and 'lon' in xr_obj.coords:
             text = 'lat={:.2f}, lon={:.2f}'.format(float(xr_obj['lat']),
@@ -231,7 +232,8 @@ def plot_coords(ax, xr_obj, type=None, backgroundcolor=None):
             warnings.warn('show_time set to True, but "time" not found in coords')
 
     if text:
-        ax.text(0.99, 0.03, text, transform=ax.transAxes, ha='right', va='bottom', backgroundcolor=backgroundcolor)
+        t = ax.text(0.98, 0.03, text, transform=ax.transAxes, ha='right', va='bottom')
+        t.set_bbox(dict(facecolor='w', alpha=backgroundalpha, edgecolor='w'))
 
     return ax
 
@@ -460,6 +462,18 @@ def wrap_text(text, threshold=30, min_line_len=12):
 
     return text
 
+
+def gpd_to_ccrs(path, projection):
+    """ Opens shapefile with geopandas and convert to cartopy projection.
+    Parameters
+    ----------
+    path: str
+        Path to shapefile.
+    projection: ccrs cartopy
+    """
+    prj4 = projection.proj4_init
+    return gpd.read_file(path).to_crs(prj4)
+
 def convert_scen_name(name):
     """Convert SSP, RCP, CMIP strings to proper format"""
 
@@ -513,16 +527,29 @@ def categorical_colors():
         return cat
 
 def get_mpl_styles():
+    """ Get lists of the available matplotlib styles and their paths, as a tuple. """
     folder = Path(__file__).parent / 'style/'
     paths = sorted(folder.glob('*.mplstyle'))
     names = [str(p).split('/')[-1].removesuffix('.mplstyle') for p in paths]
+    styles = {name: path for name, path in zip(names, paths)}
 
-    return names, paths
+    return styles
 
-def set_mpl_style(*args):
+def set_mpl_style(*args, reset=False):
+    """ Set the matplotlib style using one or more stylesheets.
+    Parameters
+    _________
+    *args: str
+        Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
+    reset: bool
+        Reset style to matplotlib default before applying the stylesheets.
+    """
+    if reset is True:
+        mpl.style.use('default')
     for style in args:
-        if style in get_mpl_styles()[0]:
-            index = get_mpl_styles()[0].index(style)
-            mpl.style.use(get_mpl_styles()[1][index])
+        if style.endswith('.mplstyle') is True:
+            mpl.style.use(style)
+        elif style in get_mpl_styles():
+            mpl.style.use(get_mpl_styles()[style])
         else:
             warnings.warn('Style {} not found.'.format(style))

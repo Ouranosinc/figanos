@@ -233,7 +233,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
     # other plot elements
     if show_lat_lon:
-        plot_coords(ax, list(data.values())[0], type='location', backgroundcolor='w')
+        plot_coords(ax, list(data.values())[0], type='location', backgroundalpha=1)
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -250,7 +250,7 @@ def timeseries(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, legend=
 
 
 def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection=ccrs.LambertConformal(),transform=None,
-            features=None, contourf=False, cmap=None, levels=None, divergent=False, show_time=False, frame=False):
+            features=None, geometries_kw=None, contourf=False, cmap=None, levels=None, divergent=False, show_time=False, frame=False):
     """ Create map from 2D data.
 
     Parameters
@@ -276,6 +276,9 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     features: list
         List of features to use. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
+    geometries_kw : dict
+        Add the given shapely geometries (in the given crs) to axe (see cartopy ax.add_geometry()).
+        If contains the key "path" and ends with .shp, will open and convert the shapefile to crs projection.
     contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
     cmap: colormap or str
@@ -388,7 +391,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
             ax.add_feature(getattr(cfeature, f.upper()))
 
     if show_time is True:
-        plot_coords(ax, plot_data, type='time')
+        plot_coords(ax, plot_data, type='time', backgroundalpha=0)
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
@@ -398,5 +401,14 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
 
     if frame is False:
         ax.spines['geo'].set_visible(False)
+
+    #add geometries
+    if geometries_kw:
+        if 'path' in geometries_kw.keys():
+            df = gpd_to_ccrs(geometries_kw['path'], projection)
+            geometries_kw.pop('path')
+            geometries_kw.setdefault('geoms', df['geometry'])
+        geometries_kw = {'crs': projection, 'facecolor': 'none', 'edgecolor': 'black'} | geometries_kw
+        ax.add_geometries(**geometries_kw)
 
     return ax
