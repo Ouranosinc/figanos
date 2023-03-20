@@ -535,13 +535,17 @@ def get_mpl_styles():
 
     return styles
 
-def set_mpl_style(*args):
+def set_mpl_style(*args, reset=False):
     """ Set the matplotlib style using one or more stylesheets.
     Parameters
     _________
     *args: str
         Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
+    reset: bool
+        Reset style to matplotlib default before applying the stylesheets.
     """
+    if reset is True:
+        mpl.style.use('default')
     for style in args:
         if style.endswith('.mplstyle') is True:
             mpl.style.use(style)
