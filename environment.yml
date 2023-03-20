@@ -17,7 +17,6 @@ dependencies:
   - notebook
   - geopandas
   - xclim   #une fois que finit test sera pas necessaire
-  - pathlib
   #visualisation
   #- hvplot
   - cartopy
