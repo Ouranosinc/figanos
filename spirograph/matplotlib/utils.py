@@ -526,3 +526,30 @@ def categorical_colors():
 
         return cat
 
+def get_mpl_styles():
+    """ Get lists of the available matplotlib styles and their paths, as a tuple. """
+    folder = Path(__file__).parent / 'style/'
+    paths = sorted(folder.glob('*.mplstyle'))
+    names = [str(p).split('/')[-1].removesuffix('.mplstyle') for p in paths]
+    styles = {name: path for name, path in zip(names, paths)}
+
+    return styles
+
+def set_mpl_style(*args, reset=False):
+    """ Set the matplotlib style using one or more stylesheets.
+    Parameters
+    _________
+    *args: str
+        Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
+    reset: bool
+        Reset style to matplotlib default before applying the stylesheets.
+    """
+    if reset is True:
+        mpl.style.use('default')
+    for style in args:
+        if style.endswith('.mplstyle') is True:
+            mpl.style.use(style)
+        elif style in get_mpl_styles():
+            mpl.style.use(get_mpl_styles()[style])
+        else:
+            warnings.warn('Style {} not found.'.format(style))
