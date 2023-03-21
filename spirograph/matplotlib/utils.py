@@ -542,14 +542,14 @@ def set_mpl_style(*args, reset=False):
     *args: str
         Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
     reset: bool
-        Reset style to matplotlib default before applying the stylesheets.
+        If True, reset style to matplotlib default before applying the stylesheets.
     """
     if reset is True:
         mpl.style.use('default')
-    for style in args:
-        if style.endswith('.mplstyle') is True:
-            mpl.style.use(style)
-        elif style in get_mpl_styles():
-            mpl.style.use(get_mpl_styles()[style])
+    for s in args:
+        if s.endswith('.mplstyle') is True:
+            mpl.style.use(s)
+        elif s in get_mpl_styles():
+            mpl.style.use(get_mpl_styles()[s])
         else:
-            warnings.warn('Style {} not found.'.format(style))
+            warnings.warn('Style {} not found.'.format(s))
