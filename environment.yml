@@ -6,7 +6,7 @@ dependencies:
   - dask
   - geopandas
   - h5py
-  - jupyter
+  - ipykernel
   - netCDF4
   - notebook
   - numpy
