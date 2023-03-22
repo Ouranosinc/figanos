@@ -2,7 +2,7 @@ name: spirograph
 channels:
   - conda-forge
 dependencies:
-  - python >=3.7,<3.10
+  - python >=3.7,<3.11
   - dask
   - geopandas
   - h5py
@@ -12,7 +12,7 @@ dependencies:
   - numpy
   - pandas
   - xarray
-  - xclim >=0.38.0  # une fois que finit test sera pas nécessaire
+  - xclim # une fois que finit test sera pas nécessaire
   - yaml
   - zarr
 # Visualisation
