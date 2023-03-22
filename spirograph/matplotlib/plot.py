@@ -386,10 +386,10 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     #add features
-    if type(features) == list:
+    if isinstance(features, list):
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
-    if type(features) == dict:
+    if isinstance(features, dict):
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()), **features[f])
 
