@@ -355,8 +355,8 @@ def gridmap(
     transform: ccrs transform
         Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
         ccrs.PlateCarree() or ccrs.RotatedPole().
-    features: list
-        List of features to use. Options are the predefined features from
+    features: list or dict
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
     geometries_kw : dict
         Add the given shapely geometries (in the given crs) to axe (see cartopy ax.add_geometry()).
@@ -482,10 +482,13 @@ def gridmap(
         plot_kw.setdefault("levels", levels)
         pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
-    # add features
-    if features:
+    #add features
+    if isinstance(features, list):
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
+    if isinstance(features, dict):
+        for f in features:
+            ax.add_feature(getattr(cfeature, f.upper()), **features[f])
 
     if show_time is True:
         plot_coords(ax, plot_data, type="time", backgroundalpha=0)
