@@ -3,5 +3,6 @@ timeseries,
 gridmap
 )
 from .utils import (
-set_mpl_style
+set_mpl_style,
+categorical_colors
 )
