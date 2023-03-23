@@ -12,5 +12,3 @@ Welcome to spirograph's documentation!
    contributing
    authors
    history
-
-

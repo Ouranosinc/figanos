@@ -1,32 +1,30 @@
 name: spirograph
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - python < 3.10
-  - yaml
-  - xarray
-  - pandas
-  - ipykernel
-  - h5py
-  - zarr
-  - netCDF4
+  - python >=3.7,<3.11
   - dask
-  - pandas
-  - numpy
-  - notebook
   - geopandas
-  - xclim   #une fois que finit test sera pas necessaire
-  #visualisation
-  #- hvplot
+  - h5py
+  - ipykernel
+  - netCDF4
+  - notebook
+  - numpy
+  - pandas
+  - xarray
+  - xclim # une fois que finit test sera pas nécessaire
+  - yaml
+  - zarr
+# Visualisation
   - cartopy
-  - matplotlib
-  #- plotly
-  #- bokeh
-  #- holoviews
   - geoviews
-  # pour pourvoir exporter bokeh en png
-  #- selenium
-  #- geckodriver
-  #- firefox
-  #- python-kaleido # pour pouvoir exporter plotly en png
+  - matplotlib
+#  - bokeh
+#  - holoviews
+#  - hvplot
+#  - plotly
+# Pour exporter vers bokeh en PNG
+#  - firefox
+#  - geckodriver
+#  - python-kaleido # pour pouvoir exporter plotly en png
+#  - selenium
