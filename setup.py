@@ -10,7 +10,24 @@ with open("README.rst") as readme_file:
 with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
-requirements = ["Click>=7.0"]
+requirements = [
+    "cartopy",
+    "dask",
+    "geopandas",
+    "geoviews",
+    "h5py",
+    "holoviews",
+    "jupyter",
+    "matplotlib",
+    "netCDF4",
+    "notebook",
+    "numpy",
+    "pandas",
+    "xarray",
+    "xclim>=0.38",
+    "pyyaml",
+    "zarr",
+]
 
 test_requirements = ["pytest>=3"]
 
@@ -57,7 +74,11 @@ setup(
         "docs": docs_requirements,
         "dev": dev_requirements,
     },
-    url="https://github.com/Zeitsperre/spirograph",
+    project_urls={
+        "Source": "https://github.com/Ouranosinc/spirograph",
+        "Issue tracker": "https://github.com/Ouranosinc/spirograph/issues",
+        "About Ouranos": "https://www.ouranos.ca/en/",
+    },
     version="0.1.0",
     zip_safe=False,
 )

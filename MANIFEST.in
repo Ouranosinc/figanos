@@ -5,11 +5,14 @@ include LICENSE
 include README.rst
 include requirements_dev.txt
 include requirements_docs.txt
+
+recursive-include spirograph *.json *.mplstyle *.py *.txt
 recursive-include tests *
+recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+recursive-include data *.json *.txt
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
-
-recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 
 exclude .coveralls.yml
 exclude .cruft.json
@@ -18,5 +21,6 @@ exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
 exclude .yamllint.yaml
 exclude Makefile
+exclude environment.yml
 exclude environment-docs.yml
 exclude tox.ini
