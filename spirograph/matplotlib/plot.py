@@ -301,7 +301,7 @@ def timeseries(
 
     # other plot elements
     if show_lat_lon:
-        plot_coords(ax, list(data.values())[0], type="location", backgroundalpha=1)
+        plot_coords(ax, list(data.values())[0], param="location", backgroundalpha=1)
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -481,7 +481,7 @@ def gridmap(
         plot_kw.setdefault("levels", levels)
         pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
-    #add features
+    # add features
     if isinstance(features, list):
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
@@ -490,7 +490,7 @@ def gridmap(
             ax.add_feature(getattr(cfeature, f.upper()), **features[f])
 
     if show_time is True:
-        plot_coords(ax, plot_data, type="time", backgroundalpha=0)
+        plot_coords(ax, plot_data, param="time", backgroundalpha=0)
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
@@ -503,14 +503,21 @@ def gridmap(
 
     # add geometries
     if geometries_kw:
-
-        if 'geoms' not in geometries_kw.keys():
-            warnings.warn('geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})')
-        if 'crs' in geometries_kw.keys():
-            geometries_kw['geoms'] = gpd_to_ccrs(geometries_kw['geoms'], geometries_kw['crs'])
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
         else:
-            geometries_kw['geoms'] = gpd_to_ccrs(geometries_kw['geoms'], projection)
-        geometries_kw = {'crs': projection, 'facecolor': 'none', 'edgecolor': 'black'} | geometries_kw
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
 
         ax.add_geometries(**geometries_kw)
 

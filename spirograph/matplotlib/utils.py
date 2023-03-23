@@ -69,16 +69,12 @@ def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
     """
     if isinstance(array, xr.Dataset):
         if (
-            pd.notnull(
-                [re.search("_p[0-9]{1,2}", var) for var in array.data_vars]
-            ).sum()
+            pd.notnull([re.search("_p[0-9]{1,2}", v) for v in array.data_vars]).sum()
             >= 2
         ):
             cat = "ENS_PCT_VAR_DS"
         elif (
-            pd.notnull(
-                [re.search("_[Mm]ax|_[Mm]in", var) for var in array.data_vars]
-            ).sum()
+            pd.notnull([re.search("_[Mm]ax|_[Mm]in", v) for v in array.data_vars]).sum()
             >= 2
         ):
             cat = "ENS_STATS_VAR_DS"
@@ -242,16 +238,15 @@ def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
     return sorted_lines
 
 
-# FIXME: `type` is already a python base function. Try not to overload it.
 def plot_coords(
     ax: matplotlib.axes.Axes,
     xr_obj: Union[xr.DataArray, xr.Dataset],
-    type: str = None,
+    param: str = None,
     backgroundalpha: int = 0,
 ):
-    """Place coordinates on bottom right of plot area. Types are 'location' or 'time'."""
+    """Place coordinates on bottom right of plot area. Param options are 'location' or 'time'."""
     text = None
-    if type == "location":
+    if param == "location":
         if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
             text = "lat={:.2f}, lon={:.2f}".format(
                 float(xr_obj["lat"]), float(xr_obj["lon"])
@@ -260,7 +255,7 @@ def plot_coords(
             warnings.warn(
                 'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
             )
-    if type == "time":
+    if param == "time":
         if "time" in xr_obj.coords:
             text = np.datetime_as_string(xr_obj.time.values, unit="D")
         else:
@@ -383,12 +378,12 @@ def get_var_group(da, path_to_json):
 
     if len(matches) == 0:
         warnings.warn(
-            "Colormap warning: Variable type not found. Use the cmap argument."
+            "Colormap warning: Variable group not found. Use the cmap argument."
         )
         return "misc"
     elif len(matches) >= 2:
         warnings.warn(
-            "Colormap warning: More than one variable type found. Use the cmap argument."
+            "Colormap warning: More than one variable group found. Use the cmap argument."
         )
         return "misc"
     else:
@@ -401,7 +396,7 @@ def create_cmap(
     divergent: Union[int, float, bool] = False,
     filename: str = None,
 ) -> matplotlib.colors.Colormap:
-    """Create colormap according to variable type.
+    """Create colormap according to variable group.
 
     Parameters
     ----------
