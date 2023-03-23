@@ -531,19 +531,21 @@ def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
 
     return text
 
-
-def gpd_to_ccrs(path: str, projection: ccrs.CRS):
-    """Opens shapefile with geopandas and convert to cartopy projection.
-
+def gpd_to_ccrs(df, proj):
+    """ Opens shapefile with geopandas and convert to cartopy projection.
     Parameters
     ----------
-    path: str
-        Path to shapefile.
-    projection: ccrs.CRS
-        Cartopy CRS object.
+    df: GeoDataFrame
+      GeoDataFrame (geopandas) geometry to be added to axis. 
+    proj: ccrs projection
+        Projection to use, taken from the cartopy.crs options. 
+    Returns
+    --------
+    GeoDataFrame
+      GeoDataFrame adjusted to given projection
     """
-    prj4 = projection.proj4_init
-    return gpd.read_file(path).to_crs(prj4)
+    prj4 = proj.proj4_init
+    return df.to_crs(prj4)
 
 
 def convert_scen_name(name: str) -> str:
