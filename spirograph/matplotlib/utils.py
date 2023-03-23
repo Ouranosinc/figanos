@@ -463,16 +463,15 @@ def wrap_text(text, threshold=30, min_line_len=12):
     return text
 
 
-def gpd_to_ccrs(path, projection):
+def gpd_to_ccrs(df, proj):
     """ Opens shapefile with geopandas and convert to cartopy projection.
     Parameters
     ----------
-    path: str
-        Path to shapefile.
-    projection: ccrs cartopy
+    df: GeoDataFrame
+    proj: ccrs cartopy
     """
-    prj4 = projection.proj4_init
-    return gpd.read_file(path).to_crs(prj4)
+    prj4 = proj.proj4_init
+    return df.to_crs(prj4)
 
 def convert_scen_name(name):
     """Convert SSP, RCP, CMIP strings to proper format"""

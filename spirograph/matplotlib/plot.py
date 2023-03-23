@@ -277,8 +277,7 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
         Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
     geometries_kw : dict
-        Add the given shapely geometries (in the given crs) to axe (see cartopy ax.add_geometry()).
-        If contains the key "path" and ends with .shp, will open and convert the shapefile to crs projection.
+        Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
     contourf: bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
     cmap: colormap or str
@@ -405,12 +404,14 @@ def gridmap(data, ax=None, use_attrs=None, fig_kw=None, plot_kw=None, projection
     if frame is False:
         ax.spines['geo'].set_visible(False)
 
-    #add geometries
+    # add geometries
     if geometries_kw:
-        if 'path' in geometries_kw.keys():
-            df = gpd_to_ccrs(geometries_kw['path'], projection)
-            geometries_kw.pop('path')
-            geometries_kw.setdefault('geoms', df['geometry'])
+        if 'geoms' not in geometries_kw.keys():
+            warnings.warn('geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})')
+        if 'crs' in geometries_kw.keys():
+            geometries_kw['geoms'] = gpd_to_ccrs(geometries_kw['geoms'], geometries_kw['crs'])
+        else:
+            geometries_kw['geoms'] = gpd_to_ccrs(geometries_kw['geoms'], projection)
         geometries_kw = {'crs': projection, 'facecolor': 'none', 'edgecolor': 'black'} | geometries_kw
         ax.add_geometries(**geometries_kw)
 
