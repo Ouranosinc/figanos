@@ -630,9 +630,9 @@ def set_mpl_style(*args: str, reset: bool = False):
     if reset is True:
         mpl.style.use("default")
     for s in args:
-        if style.endswith(".mplstyle") is True:
+        if s.endswith(".mplstyle") is True:
             mpl.style.use(s)
-        elif style in get_mpl_styles():
+        elif s in get_mpl_styles():
             mpl.style.use(get_mpl_styles()[s])
         else:
             warnings.warn(f"Style {s} not found.")
