@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import json
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import cartopy.crs as ccrs
 import geopandas as gpd
@@ -23,7 +25,7 @@ def empty_dict(param):
     return param
 
 
-def check_timeindex(xr_dict: Dict[str, Any]):
+def check_timeindex(xr_dict: dict[str, Any]):
     """Check if the time index of Xarray objects in a dict is CFtime
     and convert to pd.DatetimeIndex if True.
 
@@ -47,7 +49,7 @@ def check_timeindex(xr_dict: Dict[str, Any]):
     return xr_dict
 
 
-def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
+def get_array_categ(array: xr.DataArray | xr.Dataset):
     """Return an array category, which determines how to plot.
 
     Parameters
@@ -102,7 +104,7 @@ def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
     return cat
 
 
-def get_attributes(string: str, xr_obj: Union[xr.DataArray, xr.Dataset]) -> str:
+def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
     """
     Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
     then the first variable (DataArray) of the Dataset, then the Dataset attributes.
@@ -137,8 +139,8 @@ def get_attributes(string: str, xr_obj: Union[xr.DataArray, xr.Dataset]) -> str:
 
 
 def set_plot_attrs(
-    attr_dict: Dict[str, Any],
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    attr_dict: dict[str, Any],
+    xr_obj: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes,
 ) -> matplotlib.axes.Axes:
     """
@@ -202,7 +204,7 @@ def get_suffix(string: str):
         raise Exception(f"No suffix found in {string}")
 
 
-def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
+def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
     """Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
 
     Parameters
@@ -245,7 +247,7 @@ def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
 # FIXME: `type` is already a python base function. Try not to overload it.
 def plot_coords(
     ax: matplotlib.axes.Axes,
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    xr_obj: xr.DataArray | xr.Dataset,
     type: str = None,
     backgroundalpha: int = 0,
 ):
@@ -339,7 +341,7 @@ def split_legend(
 
 
 def fill_between_label(
-    sorted_lines: Dict[str, Any], name: str, array_categ: Dict[str, Any], legend: str
+    sorted_lines: dict[str, Any], name: str, array_categ: dict[str, Any], legend: str
 ) -> str:
     """Create label for shading in line plots."""
     if legend != "full":
@@ -398,7 +400,7 @@ def get_var_group(da, path_to_json):
 def create_cmap(
     var_group: str = None,
     levels: int = None,
-    divergent: Union[int, float, bool] = False,
+    divergent: int | float | bool = False,
     filename: str = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable type.
@@ -488,7 +490,7 @@ def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int):
     return ticks
 
 
-def get_rotpole(xr_obj: Union[xr.DataArray, xr.Dataset]):
+def get_rotpole(xr_obj: xr.DataArray | xr.Dataset):
     try:
         rotpole = ccrs.RotatedPole(
             pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
@@ -532,19 +534,19 @@ def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
     return text
 
 
-def gpd_to_ccrs(df, proj):
+def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS):
     """Opens shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
-    df: GeoDataFrame
+    df : gpd.GeoDataFrame
         GeoDataFrame (geopandas) geometry to be added to axis.
-    proj: ccrs projection
+    proj : ccrs.CRS
         Projection to use, taken from the cartopy.crs options.
 
     Returns
     --------
-    GeoDataFrame
+    gpd.GeoDataFrame
         GeoDataFrame adjusted to given projection
     """
     prj4 = proj.proj4_init

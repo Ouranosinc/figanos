@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-
-"""Tests for `spirograph` package."""
+""""Tests for `spirograph` package."""
 
 import pytest
 from click.testing import CliRunner
 
 import spirograph.cli as cli
-from spirograph.hvplot import spirograph
 
 
 @pytest.fixture

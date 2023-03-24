@@ -12,6 +12,7 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "cartopy",
+    "click>=8.0",
     "dask",
     "geopandas",
     "geoviews",

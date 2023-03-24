@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import cartopy.feature as cfeature  # noqa
 import matplotlib.axes
@@ -34,8 +36,8 @@ def _plot_realizations(
     ax: matplotlib.axes.Axes,
     da: xr.DataArray,
     name: str,
-    plot_kw: Dict[str, Any],
-    non_dict_data: Dict[str, Any],
+    plot_kw: dict[str, Any],
+    non_dict_data: dict[str, Any],
 ):
     """Plot realizations from a DataArray, inside or outside a Dataset.
 
@@ -78,11 +80,11 @@ def _plot_realizations(
 
 
 def timeseries(
-    data: Union[Dict[str, Any], xr.DataArray, xr.Dataset],
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes = None,
-    use_attrs: Dict[str, Any] = None,
-    fig_kw: Dict[str, Any] = None,
-    plot_kw: Dict[str, Any] = None,
+    use_attrs: dict[str, Any] = None,
+    fig_kw: dict[str, Any] = None,
+    plot_kw: dict[str, Any] = None,
     legend: str = "lines",
     show_lat_lon: bool = True,
 ):
@@ -481,7 +483,7 @@ def gridmap(
         plot_kw.setdefault("levels", levels)
         pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
-    #add features
+    # add features
     if isinstance(features, list):
         for f in features:
             ax.add_feature(getattr(cfeature, f.upper()))
@@ -503,14 +505,21 @@ def gridmap(
 
     # add geometries
     if geometries_kw:
-
-        if 'geoms' not in geometries_kw.keys():
-            warnings.warn('geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})')
-        if 'crs' in geometries_kw.keys():
-            geometries_kw['geoms'] = gpd_to_ccrs(geometries_kw['geoms'], geometries_kw['crs'])
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
         else:
-            geometries_kw['geoms'] = gpd_to_ccrs(geometries_kw['geoms'], projection)
-        geometries_kw = {'crs': projection, 'facecolor': 'none', 'edgecolor': 'black'} | geometries_kw
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
 
         ax.add_geometries(**geometries_kw)
 

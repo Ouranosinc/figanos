@@ -1,8 +1,2 @@
-from .plot import (
-timeseries,
-gridmap
-)
-from .utils import (
-set_mpl_style,
-categorical_colors
-)
+from .plot import gridmap, timeseries
+from .utils import categorical_colors, set_mpl_style
