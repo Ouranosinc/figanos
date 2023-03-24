@@ -298,7 +298,13 @@ def timeseries(
             # given that get_array_categ() checks also
 
     #  add/modify plot elements according to the first entry.
-    set_plot_attrs(use_attrs, list(data.values())[0], ax)
+    set_plot_attrs(
+        use_attrs,
+        list(data.values())[0],
+        ax,
+        title_loc="left",
+        wrap_kw={"max_line_len": 30},
+    )
     ax.set_xlabel("time")  # check_timeindex() already checks for 'time'
 
     # other plot elements
