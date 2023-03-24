@@ -579,20 +579,17 @@ def convert_scen_name(name: str) -> str:
 
 
 def get_scen_color(name, path_to_dict):
-    """Get color corresponding to SSP,RCP or CMIP."""
+    """Get color corresponding to SSP,RCP, model or CMIP substring."""
     with open(path_to_dict) as f:
         color_dict = json.load(f)
 
-    regex = r"(?:CMIP|RCP|SSP)[0-9\.-]{1,5}"
-    matches = re.findall(regex, name)
-    if matches:
-        colors = [color_dict[m] for m in matches if m in color_dict]
-        if colors:
-            return colors[-1]  # last entry
-        else:
-            return None
-    else:
-        return None
+    color = None
+    for entry in color_dict:
+        if entry in name:
+            color = color_dict[entry]
+            break
+
+    return color
 
 
 def process_keys(dict, function):
