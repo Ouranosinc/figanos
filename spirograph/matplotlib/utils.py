@@ -23,7 +23,7 @@ def empty_dict(param):
     return param
 
 
-def check_timeindex(xr_dict: Dict[str, Any]):
+def check_timeindex(xr_dict: Dict[str, Any]) -> Dict[str, Any]:
     """Check if the time index of Xarray objects in a dict is CFtime
     and convert to pd.DatetimeIndex if True.
 
@@ -47,7 +47,7 @@ def check_timeindex(xr_dict: Dict[str, Any]):
     return xr_dict
 
 
-def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
+def get_array_categ(array: Union[xr.DataArray, xr.Dataset]) -> str:
     """Return an array category, which determines how to plot.
 
     Parameters
@@ -57,7 +57,7 @@ def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
 
     Returns
     _________
-    array: str
+    str
         ENS_PCT_VAR_DS: ensemble percentiles stored as variables
         ENS_PCT_DIM_DA: ensemble percentiles stored as dimension coordinates, DataArray
         ENS_PCT_DIM_DS: ensemble percentiles stored as dimension coordinates, DataSet
@@ -189,7 +189,7 @@ def set_plot_attrs(
     return ax
 
 
-def get_suffix(string: str):
+def get_suffix(string: str) -> str:
     """Get suffix of typical Xclim variable names."""
     if re.search("[0-9]{1,2}$|_[Mm]ax$|_[Mm]in$|_[Mm]ean$", string):
         suffix = re.search("[0-9]{1,2}$|[Mm]ax$|[Mm]in$|[Mm]ean$", string).group()
@@ -243,7 +243,7 @@ def plot_coords(
     xr_obj: Union[xr.DataArray, xr.Dataset],
     param: str = None,
     backgroundalpha: int = 0,
-):
+) -> matplotlib.axes.Axes:
     """Place coordinates on bottom right of plot area. Param options are 'location' or 'time'."""
     text = None
     if param == "location":
@@ -351,7 +351,7 @@ def fill_between_label(
     return label
 
 
-def get_var_group(da, path_to_json):
+def get_var_group(da: xr.DataArray, path_to_json: Union[str, Path]) -> str:
     """Get IPCC variable group from DataArray using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
 
     # create dict
@@ -415,7 +415,7 @@ def create_cmap(
     """
 
     # func to get position of sequential cmap in txt file
-    def skip_rows(levels):
+    def skip_rows(levels: int) -> int:
         skiprows = 1
 
         if levels > 5:
