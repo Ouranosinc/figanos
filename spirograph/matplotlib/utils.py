@@ -531,18 +531,21 @@ def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
 
     return text
 
+
 def gpd_to_ccrs(df, proj):
-    """ Opens shapefile with geopandas and convert to cartopy projection.
+    """Opens shapefile with geopandas and convert to cartopy projection.
+
     Parameters
     ----------
     df: GeoDataFrame
-      GeoDataFrame (geopandas) geometry to be added to axis. 
+        GeoDataFrame (geopandas) geometry to be added to axis.
     proj: ccrs projection
-        Projection to use, taken from the cartopy.crs options. 
+        Projection to use, taken from the cartopy.crs options.
+
     Returns
     --------
     GeoDataFrame
-      GeoDataFrame adjusted to given projection
+        GeoDataFrame adjusted to given projection
     """
     prj4 = proj.proj4_init
     return df.to_crs(prj4)
@@ -574,20 +577,17 @@ def convert_scen_name(name: str) -> str:
 
 
 def get_scen_color(name, path_to_dict):
-    """Get color corresponding to SSP,RCP or CMIP."""
+    """Get color corresponding to SSP,RCP, model or CMIP substring."""
     with open(path_to_dict) as f:
         color_dict = json.load(f)
 
-    regex = r"(?:CMIP|RCP|SSP)[0-9\.-]{1,5}"
-    matches = re.findall(regex, name)
-    if matches:
-        colors = [color_dict[m] for m in matches if m in color_dict]
-        if colors:
-            return colors[-1]  # last entry
-        else:
-            return None
-    else:
-        return None
+    color = None
+    for entry in color_dict:
+        if entry in name:
+            color = color_dict[entry]
+            break
+
+    return color
 
 
 def process_keys(dict, function):
