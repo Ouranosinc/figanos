@@ -4,7 +4,7 @@ import json
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import cartopy.crs as ccrs
 import geopandas as gpd

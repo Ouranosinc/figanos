@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import cartopy.feature as cfeature  # noqa
 import matplotlib.axes
