@@ -115,7 +115,6 @@ def timeseries(
     Returns
     -------
     matplotlib.axes.Axes
-        matplotlib axis object.
     """
     # convert SSP, RCP, CMIP formats in keys
     if isinstance(data, dict):
@@ -381,7 +380,7 @@ def gridmap(
 
     Returns
     -------
-        matplotlib axis
+    matplotlib.axes.Axes
     """
 
     # checks

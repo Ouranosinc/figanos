@@ -39,6 +39,7 @@ def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
     Returns
     -------
     dict
+        Dictionary of xarray objects with a pandas DatetimeIndex
     """
 
     for name, xr_obj in xr_dict.items():
@@ -52,7 +53,7 @@ def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
 
 
 def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
-    """Return an array category, which determines how to plot.
+    """Get an array category, which determines how to plot the array.
 
     Parameters
     __________
@@ -147,7 +148,7 @@ def set_plot_attrs(
 ) -> matplotlib.axes.Axes:
     """
     Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
-    to check for and return the string.
+    to check for and get the string.
 
     Parameters
     ----------
@@ -252,7 +253,23 @@ def plot_coords(
     param: str = None,
     backgroundalpha: int = 0,
 ) -> matplotlib.axes.Axes:
-    """Place coordinates on bottom right of plot area. Param options are 'location' or 'time'."""
+    """Place coordinates on bottom right of plot area. Param options are 'location' or 'time'.
+
+    Parameters
+    ----------
+    ax: matplotlib.axes.Axes
+        Matplotlib axes object on which to place the text.
+    xr_obj: xr.DataArray or xr.Dataset
+        The xarray object from which to fetch the text content.
+    param: str
+        The parameter used.Options are "location" and "time".
+    backgroundalpha: int
+        Transparency of the text background. 1 is opaque, 0 is transparent.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
     text = None
     if param == "location":
         if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
@@ -283,7 +300,7 @@ def split_legend(
     label_gap: float = 0.02,
 ) -> matplotlib.axes.Axes:
     #  TODO: check for and fix overlapping labels
-    """Drawline labels at the end of each line, or outside the plot.
+    """Draw line labels at the end of each line, or outside the plot.
 
     Parameters
     ----------
@@ -344,7 +361,22 @@ def split_legend(
 def fill_between_label(
     sorted_lines: dict[str, Any], name: str, array_categ: dict[str, Any], legend: str
 ) -> str:
-    """Create label for shading in line plots."""
+    """Create a label for the shading around a line in line plots.
+
+    Parameters
+    ----------
+    sorted_lines: dict
+        Dictionary created by the sort_lines() function.
+    name: str
+        Key associated with the object being plotted in the 'data' argument of the timeseries() function.
+    legend: str
+        Legend mode.
+
+    Returns
+    -------
+    str
+        Label to be applied to the legend element representing the shading.
+    """
     if legend != "full":
         label = None
     elif array_categ[name] in ["ENS_PCT_VAR_DS", "ENS_PCT_DIM_DS", "ENS_PCT_DIM_DA"]:
@@ -424,6 +456,7 @@ def create_cmap(
 
     # func to get position of sequential cmap in txt file
     def skip_rows(levels: int) -> int:
+        """Get number of rows to skip depending on levels."""
         skiprows = 1
 
         if levels > 5:
@@ -478,7 +511,7 @@ def create_cmap(
 
 
 def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int) -> list:
-    """create list of ticks for colorbar based on DataArray values, to avoid crowded ax."""
+    """Create a list of ticks for the colorbar based on data, to avoid crowded ax."""
     vmin = plot_obj.colorbar.vmin
     vmax = plot_obj.colorbar.vmax
 
@@ -492,6 +525,17 @@ def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int) -> list:
 
 
 def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
+    """Create a Cartopy crs rotated pole projection/transform from DataArray or Dataset attributes.
+
+    Parameters
+    ----------
+    xr_obj: xr.DataArray or xr.Dataset
+        The xarray object from which to look for the attributes.
+
+    Returns
+    -------
+    ccrs.RotatedPole or None
+    """
     try:
         rotpole = ccrs.RotatedPole(
             pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
@@ -535,7 +579,7 @@ def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
 
 
 def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> geopandas.GeoDataFrame:
-    """Opens shapefile with geopandas and convert to cartopy projection.
+    """Open shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
@@ -554,7 +598,7 @@ def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> geopandas.GeoDataFrame:
 
 
 def convert_scen_name(name: str) -> str:
-    """Convert SSP, RCP, CMIP strings to proper format"""
+    """Convert strings containing SSP, RCP or CMIP to their proper format."""
 
     matches = re.findall(r"(?:SSP|RCP|CMIP)[0-9]{1,3}", name, flags=re.I)
     if matches:
@@ -579,7 +623,7 @@ def convert_scen_name(name: str) -> str:
 
 
 def get_scen_color(name: str, path_to_dict: str | pathlib.Path) -> str:
-    """Get color corresponding to SSP,RCP, model or CMIP substring."""
+    """Get color corresponding to SSP,RCP, model or CMIP substring from a dictionary."""
     with open(path_to_dict) as f:
         color_dict = json.load(f)
 
@@ -602,7 +646,7 @@ def process_keys(dct: dict[str, Any], func: Callable) -> dict[str, Any]:
 
 
 def categorical_colors() -> dict[str, str]:
-    """Return a list of the categorical colors associated with certain strings (SSP,RCP,CMIP)."""
+    """Get a list of the categorical colors associated with certain substrings (SSP,RCP,CMIP)."""
     path = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
     with open(path) as f:
         cat = json.load(f)
