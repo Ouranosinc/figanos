@@ -303,7 +303,7 @@ def timeseries(
         list(data.values())[0],
         ax,
         title_loc="left",
-        wrap_kw={"max_line_len": 30},
+        wrap_kw={"min_line_len": 35, "max_line_len": 48},
     )
     ax.set_xlabel("time")  # check_timeindex() already checks for 'time'
 
