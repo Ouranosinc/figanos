@@ -145,6 +145,8 @@ def set_plot_attrs(
     attr_dict: dict[str, Any],
     xr_obj: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes,
+    title_loc: str = "center",
+    wrap_kw: dict[str, Any] = None,
 ) -> matplotlib.axes.Axes:
     """
     Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
@@ -158,11 +160,17 @@ def set_plot_attrs(
         The Xarray object containing the attributes.
     ax: matplotlib axis
         The matplotlib axis of the plot.
+    title_loc: str
+        Location of the title.
+    wrap_kw: dict
+        Arguments to pass to the wrap_text function for the title.
 
     Returns
     -------
     matplotlib.axes.Axes
     """
+    wrap_kw = empty_dict(wrap_kw)
+
     #  check
     for key in attr_dict:
         if key not in ["title", "ylabel", "yunits", "cbar_label", "cbar_units"]:
@@ -170,7 +178,7 @@ def set_plot_attrs(
 
     if "title" in attr_dict:
         title = get_attributes(attr_dict["title"], xr_obj)
-        ax.set_title(wrap_text(title))
+        ax.set_title(wrap_text(title, **wrap_kw), loc=title_loc)
 
     if "ylabel" in attr_dict:
         if (
@@ -549,31 +557,44 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
         return None
 
 
-def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
-    """Wrap text from characters or central whitespace."""
-    if len(text) >= threshold:
-        if ". " in text:
-            text = text.replace(". ", ".\n")
-        if ": " in text:
-            text = text.replace(": ", ":\n")
-        if ". " not in text and ": " not in text:  # if neither, find the middle space.
-            center = len(text) // 2
-            spaces = [
-                m.start() for m in re.finditer(r"\s", text)
-            ]  # position of whitespaces
-            relative = [abs(s - center) for s in spaces]
-            central = spaces[np.argmin(relative)]
-            text = text[:central] + "\n" + text[central + 1 :]
+def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
+    """Wrap text.
 
-        # if one of the middle lines is too short, put it back.
-        lines = text.splitlines(keepends=True)
-        if len(lines) > 2:
-            lengths = [len(line) for line in lines[1:-1]]
-            for line_len, i in zip(lengths, range(len(lengths))):
-                if line_len < min_line_len:
-                    lines[i] = lines[i].replace("\n", " ")
-            sep = ""
-            text = sep.join(lines)
+    Arguments
+    ---------
+    text: str
+        The text to wrap.
+    min_line_len: int
+        Minimum length of each line.
+    max_line_len: int
+        Maximum length of each line.
+
+    Returns
+    -------
+    str
+    """
+    start = min_line_len
+    stop = max_line_len
+    sep = "\n"
+    remaining = len(text)
+
+    if len(text) >= max_line_len:
+        while remaining > max_line_len:
+            if ". " in text[start:stop]:
+                pos = text.find(". ", start, stop) + 1
+            elif ": " in text[start:stop]:
+                pos = text.find(": ", start, stop) + 1
+            elif " " in text[start:stop]:
+                pos = text.rfind(" ", start, stop)
+            else:
+                warnings.warn("No spaces, points or colons to break line at.")
+                break
+
+            text = sep.join([text[:pos], text[pos + 1 :]])
+
+            remaining = len(text) - len(text[:pos])
+            start = pos + 1 + min_line_len
+            stop = pos + 1 + max_line_len
 
     return text
 
