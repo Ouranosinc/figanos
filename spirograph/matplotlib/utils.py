@@ -572,6 +572,7 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
     Returns
     -------
     str
+        Wrapped text
     """
     start = min_line_len
     stop = max_line_len
