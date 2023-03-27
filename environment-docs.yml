@@ -1,7 +1,6 @@
 name: spirograph
 channels:
-- conda-forge
-- defaults
+  - conda-forge
 dependencies:
   - click >=8.0
   - pandoc

@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python >=3.7,<3.11
+  - click >=8.0
   - dask
   - geopandas
   - h5py

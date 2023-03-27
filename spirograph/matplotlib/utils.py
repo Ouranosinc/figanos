@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import json
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import cartopy.crs as ccrs
 import geopandas as gpd
@@ -23,7 +25,7 @@ def empty_dict(param):
     return param
 
 
-def check_timeindex(xr_dict: Dict[str, Any]):
+def check_timeindex(xr_dict: dict[str, Any]):
     """Check if the time index of Xarray objects in a dict is CFtime
     and convert to pd.DatetimeIndex if True.
 
@@ -47,7 +49,7 @@ def check_timeindex(xr_dict: Dict[str, Any]):
     return xr_dict
 
 
-def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
+def get_array_categ(array: xr.DataArray | xr.Dataset):
     """Return an array category, which determines how to plot.
 
     Parameters
@@ -102,7 +104,7 @@ def get_array_categ(array: Union[xr.DataArray, xr.Dataset]):
     return cat
 
 
-def get_attributes(string: str, xr_obj: Union[xr.DataArray, xr.Dataset]) -> str:
+def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
     """
     Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
     then the first variable (DataArray) of the Dataset, then the Dataset attributes.
@@ -137,9 +139,11 @@ def get_attributes(string: str, xr_obj: Union[xr.DataArray, xr.Dataset]) -> str:
 
 
 def set_plot_attrs(
-    attr_dict: Dict[str, Any],
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    attr_dict: dict[str, Any],
+    xr_obj: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes,
+    title_loc: str = "center",
+    wrap_kw: dict[str, Any] = None,
 ) -> matplotlib.axes.Axes:
     """
     Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
@@ -153,11 +157,17 @@ def set_plot_attrs(
         The Xarray object containing the attributes.
     ax: matplotlib axis
         The matplotlib axis of the plot.
+    title_loc: str
+        Location of the title.
+    wrap_kw: dict
+        Arguments to pass to the wrap_text function for the title.
 
     Returns
     -------
     matplotlib.axes.Axes
     """
+    wrap_kw = empty_dict(wrap_kw)
+
     #  check
     for key in attr_dict:
         if key not in ["title", "ylabel", "yunits", "cbar_label", "cbar_units"]:
@@ -165,7 +175,7 @@ def set_plot_attrs(
 
     if "title" in attr_dict:
         title = get_attributes(attr_dict["title"], xr_obj)
-        ax.set_title(wrap_text(title))
+        ax.set_title(wrap_text(title, **wrap_kw), loc=title_loc)
 
     if "ylabel" in attr_dict:
         if (
@@ -202,7 +212,7 @@ def get_suffix(string: str):
         raise Exception(f"No suffix found in {string}")
 
 
-def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
+def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
     """Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
 
     Parameters
@@ -245,7 +255,7 @@ def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
 # FIXME: `type` is already a python base function. Try not to overload it.
 def plot_coords(
     ax: matplotlib.axes.Axes,
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    xr_obj: xr.DataArray | xr.Dataset,
     type: str = None,
     backgroundalpha: int = 0,
 ):
@@ -339,7 +349,7 @@ def split_legend(
 
 
 def fill_between_label(
-    sorted_lines: Dict[str, Any], name: str, array_categ: Dict[str, Any], legend: str
+    sorted_lines: dict[str, Any], name: str, array_categ: dict[str, Any], legend: str
 ) -> str:
     """Create label for shading in line plots."""
     if legend != "full":
@@ -398,7 +408,7 @@ def get_var_group(da, path_to_json):
 def create_cmap(
     var_group: str = None,
     levels: int = None,
-    divergent: Union[int, float, bool] = False,
+    divergent: int | float | bool = False,
     filename: str = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable type.
@@ -488,7 +498,7 @@ def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int):
     return ticks
 
 
-def get_rotpole(xr_obj: Union[xr.DataArray, xr.Dataset]):
+def get_rotpole(xr_obj: xr.DataArray | xr.Dataset):
     try:
         rotpole = ccrs.RotatedPole(
             pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
@@ -503,48 +513,61 @@ def get_rotpole(xr_obj: Union[xr.DataArray, xr.Dataset]):
         return None
 
 
-def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
-    """Wrap text from characters or central whitespace."""
-    if len(text) >= threshold:
-        if ". " in text:
-            text = text.replace(". ", ".\n")
-        if ": " in text:
-            text = text.replace(": ", ":\n")
-        if ". " not in text and ": " not in text:  # if neither, find the middle space.
-            center = len(text) // 2
-            spaces = [
-                m.start() for m in re.finditer(r"\s", text)
-            ]  # position of whitespaces
-            relative = [abs(s - center) for s in spaces]
-            central = spaces[np.argmin(relative)]
-            text = text[:central] + "\n" + text[central + 1 :]
+def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
+    """Wrap text.
 
-        # if one of the middle lines is too short, put it back.
-        lines = text.splitlines(keepends=True)
-        if len(lines) > 2:
-            lengths = [len(line) for line in lines[1:-1]]
-            for line_len, i in zip(lengths, range(len(lengths))):
-                if line_len < min_line_len:
-                    lines[i] = lines[i].replace("\n", " ")
-            sep = ""
-            text = sep.join(lines)
+    Arguments
+    ---------
+    text: str
+        The text to wrap.
+    min_line_len: int
+        Minimum length of each line.
+    max_line_len: int
+        Maximum length of each line.
+
+    Returns
+    -------
+    str
+    """
+    start = min_line_len
+    stop = max_line_len
+    sep = "\n"
+    remaining = len(text)
+
+    if len(text) >= max_line_len:
+        while remaining > max_line_len:
+            if ". " in text[start:stop]:
+                pos = text.find(". ", start, stop) + 1
+            elif ": " in text[start:stop]:
+                pos = text.find(": ", start, stop) + 1
+            elif " " in text[start:stop]:
+                pos = text.rfind(" ", start, stop)
+            else:
+                warnings.warn("No spaces, points or colons to break line at.")
+                break
+
+            text = sep.join([text[:pos], text[pos + 1 :]])
+
+            remaining = len(text) - len(text[:pos])
+            start = pos + 1 + min_line_len
+            stop = pos + 1 + max_line_len
 
     return text
 
 
-def gpd_to_ccrs(df, proj):
+def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS):
     """Opens shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
-    df: GeoDataFrame
+    df : gpd.GeoDataFrame
         GeoDataFrame (geopandas) geometry to be added to axis.
-    proj: ccrs projection
+    proj : ccrs.CRS
         Projection to use, taken from the cartopy.crs options.
 
     Returns
     --------
-    GeoDataFrame
+    gpd.GeoDataFrame
         GeoDataFrame adjusted to given projection
     """
     prj4 = proj.proj4_init
