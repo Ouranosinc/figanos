@@ -142,7 +142,7 @@ def timeseries(
                 plot_kw[name] = {}
         for key in plot_kw:
             if key not in data:
-                raise Exception(
+                raise KeyError(
                     'plot_kw must be a nested dictionary with keys corresponding to the keys in "data"'
                 )
 
@@ -150,7 +150,7 @@ def timeseries(
     for name, arr in data.items():
         if not isinstance(arr, (xr.Dataset, xr.DataArray)):
             raise TypeError(
-                '"data" must contain a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
+                '"data" must be a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
             )
 
     # check: 'time' dimension and calendar format
@@ -189,7 +189,7 @@ def timeseries(
 
         elif array_categ[name] == "ENS_REALS_DS":
             if len(arr.data_vars) >= 2:
-                raise Exception(
+                raise TypeError(
                     "To plot multiple ensembles containing realizations, use DataArrays outside a Dataset"
                 )
             for k, sub_arr in arr.data_vars.items():
@@ -293,10 +293,10 @@ def timeseries(
             )
 
         else:
-            raise Exception(
+            raise ValueError(
                 "Data structure not supported"
             )  # can probably be removed along with elif logic above,
-            # given that get_array_categ() checks also
+            # given that get_array_categ() also does this check
 
     #  add/modify plot elements according to the first entry.
     set_plot_attrs(use_attrs, list(data.values())[0], ax)
@@ -387,7 +387,7 @@ def gridmap(
     # checks
     if levels:
         if type(levels) != int or levels < 2 or levels > 21:
-            raise Exception(
+            raise ValueError(
                 'levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.'
             )
 
@@ -410,7 +410,7 @@ def gridmap(
         if len(data) == 1:
             data = list(data.values())[0]
         else:
-            raise Exception("`data` must be a dict of len=1, a DataArray or a Dataset")
+            raise ValueError("If `data` is a dict, it must be of length 1.")
 
     # select data to plot
     if isinstance(data, xr.DataArray):

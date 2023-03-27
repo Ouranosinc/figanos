@@ -47,7 +47,7 @@ def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
                 conv_obj = xr_obj.convert_calendar("standard", use_cftime=None)
                 xr_dict[name] = conv_obj
         else:
-            raise ValueError(f'"time" dimension not found in {xr_obj}')
+            raise AttributeError(f'"time" dimension not found in {xr_obj}')
     return xr_dict
 
 
@@ -203,7 +203,7 @@ def get_suffix(string: str) -> str:
         suffix = re.search("[0-9]{1,2}$|[Mm]ax$|[Mm]in$|[Mm]ean$", string).group()
         return suffix
     else:
-        raise Exception(f"No suffix found in {string}")
+        raise ValueError(f"Mean, min or max not found in {string}")
 
 
 def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
@@ -242,7 +242,7 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
             elif int(suffix) == 50:
                 sorted_lines["middle"] = name
         else:
-            raise Exception('Arrays names must end in format "_mean" or "_p50" ')
+            raise ValueError('Arrays names must end in format "_mean" or "_p50" ')
     return sorted_lines
 
 
@@ -500,8 +500,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
         )
         return rotpole
 
-    # FIXME: what kinds of exceptions can be raised here?
-    except:  # noqa
+    except AttributeError:  # noqa
         warnings.warn("Rotated pole not found. Specify a transform if necessary.")
         return None
 
