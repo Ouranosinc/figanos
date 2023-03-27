@@ -1,4 +1,6 @@
 """Console script for spirograph."""
+from __future__ import annotations
+
 import sys
 
 import click

@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import cartopy.feature as cfeature  # noqa
 import matplotlib.axes
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import xarray as xr
 from cartopy import crs as ccrs
@@ -34,9 +37,9 @@ def _plot_realizations(
     ax: matplotlib.axes.Axes,
     da: xr.DataArray,
     name: str,
-    plot_kw: Dict[str, Any],
-    non_dict_data: Dict[str, Any],
-):
+    plot_kw: dict[str, Any],
+    non_dict_data: dict[str, Any],
+) -> matplotlib.axes.Axes:
     """Plot realizations from a DataArray, inside or outside a Dataset.
 
     Parameters
@@ -78,14 +81,14 @@ def _plot_realizations(
 
 
 def timeseries(
-    data: Union[Dict[str, Any], xr.DataArray, xr.Dataset],
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes = None,
-    use_attrs: Dict[str, Any] = None,
-    fig_kw: Dict[str, Any] = None,
-    plot_kw: Dict[str, Any] = None,
+    use_attrs: dict[str, Any] = None,
+    fig_kw: dict[str, Any] = None,
+    plot_kw: dict[str, Any] = None,
     legend: str = "lines",
     show_lat_lon: bool = True,
-):
+) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
@@ -317,22 +320,22 @@ def timeseries(
 
 
 def gridmap(
-    data,
-    ax=None,
-    use_attrs=None,
-    fig_kw=None,
-    plot_kw=None,
-    projection=ccrs.LambertConformal(),
-    transform=None,
-    features=None,
-    geometries_kw=None,
-    contourf=False,
-    cmap=None,
-    levels=None,
-    divergent=False,
-    show_time=False,
-    frame=False,
-):
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes = None,
+    use_attrs: dict[str, Any] = None,
+    fig_kw: dict[str, Any] = None,
+    plot_kw: dict[str, Any] = None,
+    projection: ccrs.Projection = ccrs.LambertConformal(),
+    transform: ccrs.Projection = None,
+    features: list | dict[str, Any] = None,
+    geometries_kw: dict[str, Any] = None,
+    contourf: bool = False,
+    cmap: str | matplotlib.colors.Colormap = None,
+    levels: int = None,
+    divergent: bool | int | float = False,
+    show_time: bool = False,
+    frame: bool = False,
+) -> matplotlib.axes.Axes:
     """Create map from 2D data.
 
     Parameters

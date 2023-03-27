@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import json
+import pathlib
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Callable
 
 import cartopy.crs as ccrs
+import geopandas
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
@@ -23,7 +27,7 @@ def empty_dict(param):
     return param
 
 
-def check_timeindex(xr_dict: Dict[str, Any]) -> Dict[str, Any]:
+def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
     """Check if the time index of Xarray objects in a dict is CFtime
     and convert to pd.DatetimeIndex if True.
 
@@ -47,7 +51,7 @@ def check_timeindex(xr_dict: Dict[str, Any]) -> Dict[str, Any]:
     return xr_dict
 
 
-def get_array_categ(array: Union[xr.DataArray, xr.Dataset]) -> str:
+def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
     """Return an array category, which determines how to plot.
 
     Parameters
@@ -69,12 +73,16 @@ def get_array_categ(array: Union[xr.DataArray, xr.Dataset]) -> str:
     """
     if isinstance(array, xr.Dataset):
         if (
-            pd.notnull([re.search("_p[0-9]{1,2}", v) for v in array.data_vars]).sum()
+            pd.notnull(
+                [re.search("_p[0-9]{1,2}", var) for var in array.data_vars]
+            ).sum()
             >= 2
         ):
             cat = "ENS_PCT_VAR_DS"
         elif (
-            pd.notnull([re.search("_[Mm]ax|_[Mm]in", v) for v in array.data_vars]).sum()
+            pd.notnull(
+                [re.search("_[Mm]ax|_[Mm]in", var) for var in array.data_vars]
+            ).sum()
             >= 2
         ):
             cat = "ENS_STATS_VAR_DS"
@@ -98,7 +106,7 @@ def get_array_categ(array: Union[xr.DataArray, xr.Dataset]) -> str:
     return cat
 
 
-def get_attributes(string: str, xr_obj: Union[xr.DataArray, xr.Dataset]) -> str:
+def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
     """
     Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
     then the first variable (DataArray) of the Dataset, then the Dataset attributes.
@@ -133,8 +141,8 @@ def get_attributes(string: str, xr_obj: Union[xr.DataArray, xr.Dataset]) -> str:
 
 
 def set_plot_attrs(
-    attr_dict: Dict[str, Any],
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    attr_dict: dict[str, Any],
+    xr_obj: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes,
 ) -> matplotlib.axes.Axes:
     """
@@ -198,7 +206,7 @@ def get_suffix(string: str) -> str:
         raise Exception(f"No suffix found in {string}")
 
 
-def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
+def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
     """Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
 
     Parameters
@@ -240,7 +248,7 @@ def sort_lines(array_dict: Dict[str, Any]) -> Dict[str, str]:
 
 def plot_coords(
     ax: matplotlib.axes.Axes,
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    xr_obj: xr.DataArray | xr.Dataset,
     param: str = None,
     backgroundalpha: int = 0,
 ) -> matplotlib.axes.Axes:
@@ -334,7 +342,7 @@ def split_legend(
 
 
 def fill_between_label(
-    sorted_lines: Dict[str, Any], name: str, array_categ: Dict[str, Any], legend: str
+    sorted_lines: dict[str, Any], name: str, array_categ: dict[str, Any], legend: str
 ) -> str:
     """Create label for shading in line plots."""
     if legend != "full":
@@ -351,7 +359,7 @@ def fill_between_label(
     return label
 
 
-def get_var_group(da: xr.DataArray, path_to_json: Union[str, Path]) -> str:
+def get_var_group(da: xr.DataArray, path_to_json: str | pathlib.Path) -> str:
     """Get IPCC variable group from DataArray using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
 
     # create dict
@@ -393,7 +401,7 @@ def get_var_group(da: xr.DataArray, path_to_json: Union[str, Path]) -> str:
 def create_cmap(
     var_group: str = None,
     levels: int = None,
-    divergent: Union[int, float, bool] = False,
+    divergent: int | float | bool = False,
     filename: str = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable group.
@@ -469,7 +477,7 @@ def create_cmap(
     return cmap
 
 
-def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int):
+def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int) -> list:
     """create list of ticks for colorbar based on DataArray values, to avoid crowded ax."""
     vmin = plot_obj.colorbar.vmin
     vmax = plot_obj.colorbar.vmax
@@ -483,7 +491,7 @@ def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int):
     return ticks
 
 
-def get_rotpole(xr_obj: Union[xr.DataArray, xr.Dataset]):
+def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
     try:
         rotpole = ccrs.RotatedPole(
             pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
@@ -527,19 +535,19 @@ def wrap_text(text: str, threshold: int = 30, min_line_len: int = 12) -> str:
     return text
 
 
-def gpd_to_ccrs(df, proj):
+def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> geopandas.GeoDataFrame:
     """Opens shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
-    df: GeoDataFrame
+    df : gpd.GeoDataFrame
         GeoDataFrame (geopandas) geometry to be added to axis.
-    proj: ccrs projection
+    proj : ccrs.CRS
         Projection to use, taken from the cartopy.crs options.
 
     Returns
     --------
-    GeoDataFrame
+    gpd.GeoDataFrame
         GeoDataFrame adjusted to given projection
     """
     prj4 = proj.proj4_init
@@ -571,7 +579,7 @@ def convert_scen_name(name: str) -> str:
         return name
 
 
-def get_scen_color(name, path_to_dict):
+def get_scen_color(name: str, path_to_dict: str | pathlib.Path) -> str:
     """Get color corresponding to SSP,RCP, model or CMIP substring."""
     with open(path_to_dict) as f:
         color_dict = json.load(f)
@@ -585,15 +593,16 @@ def get_scen_color(name, path_to_dict):
     return color
 
 
-def process_keys(dict, function):
-    old_keys = [key for key in dict]
+def process_keys(dct: dict[str, Any], func: Callable) -> dict[str, Any]:
+    """Apply function to dictionary keys."""
+    old_keys = [key for key in dct]
     for old_key in old_keys:
-        new_key = function(old_key)
-        dict[new_key] = dict.pop(old_key)
-    return dict
+        new_key = func(old_key)
+        dct[new_key] = dct.pop(old_key)
+    return dct
 
 
-def categorical_colors():
+def categorical_colors() -> dict[str, str]:
     """Return a list of the categorical colors associated with certain strings (SSP,RCP,CMIP)."""
     path = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
     with open(path) as f:
@@ -602,7 +611,7 @@ def categorical_colors():
         return cat
 
 
-def get_mpl_styles():
+def get_mpl_styles() -> dict[str, str]:
     """Get the available matplotlib styles and their paths, as a dictionary."""
     folder = Path(__file__).parent / "style/"
     paths = sorted(folder.glob("*.mplstyle"))
@@ -612,7 +621,7 @@ def get_mpl_styles():
     return styles
 
 
-def set_mpl_style(*args: str, reset: bool = False):
+def set_mpl_style(*args: str, reset: bool = False) -> None:
     """Set the matplotlib style using one or more stylesheets.
 
     Parameters
@@ -621,6 +630,10 @@ def set_mpl_style(*args: str, reset: bool = False):
         Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
     reset: bool
         If True, reset style to matplotlib default before applying the stylesheets.
+
+    Returns
+    -------
+    None
     """
     if reset is True:
         mpl.style.use("default")
