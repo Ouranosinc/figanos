@@ -118,9 +118,9 @@ def timeseries(
         matplotlib axis object.
     """
     # convert SSP, RCP, CMIP formats in keys
-    if type(data) == dict:
+    if isinstance(data, dict):
         data = process_keys(data, convert_scen_name)
-    if type(plot_kw) == dict:
+    if isinstance(plot_kw, dict):
         plot_kw = process_keys(plot_kw, convert_scen_name)
 
     # create empty dicts if None
@@ -130,7 +130,7 @@ def timeseries(
 
     # if only one data input, insert in dict.
     non_dict_data = False
-    if type(data) != dict:
+    if not isinstance(data, dict):
         non_dict_data = True
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
@@ -450,7 +450,7 @@ def gridmap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     # colormap
-    if type(cmap) == str:
+    if isinstance(cmap, str):
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(levels=levels, filename=cmap)
@@ -467,7 +467,7 @@ def gridmap(
 
     # set defaults
     if divergent is not False:
-        if type(divergent) in [int, float]:
+        if isinstance(divergent, (int, float)):
             plot_kw.setdefault("center", divergent)
         else:
             plot_kw.setdefault("center", 0)
