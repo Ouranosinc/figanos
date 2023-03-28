@@ -33,7 +33,7 @@ def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
 
     Parameters
     ----------
-    xr_dict: dict
+    xr_dict : dict
         Dictionary containing Xarray DataArrays or Datasets.
 
     Returns
@@ -57,7 +57,7 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
 
     Parameters
     __________
-    array: Dataset or DataArray
+    array : Dataset or DataArray
         The array being categorized.
 
     Returns
@@ -114,9 +114,9 @@ def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
 
     Parameters
     ----------
-    string: str
+    string : str
         String corresponding to an attribute name.
-    xr_obj: DataArray or Dataset
+    xr_obj : DataArray or Dataset
         The Xarray object containing the attributes.
 
     Returns
@@ -154,15 +154,15 @@ def set_plot_attrs(
 
     Parameters
     ----------
-    attr_dict: dict
+    attr_dict : dict
         Dictionary containing specified attribute keys.
-    xr_obj: Dataset or DataArray
+    xr_obj : Dataset or DataArray
         The Xarray object containing the attributes.
-    ax: matplotlib axis
+    ax : matplotlib axis
         The matplotlib axis of the plot.
-    title_loc: str
+    title_loc : str
         Location of the title.
-    wrap_kw: dict, optional
+    wrap_kw : dict, optional
         Arguments to pass to the wrap_text function for the title.
 
     Returns
@@ -220,7 +220,7 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 
     Parameters
     ----------
-    array_dict: dict
+    array_dict : dict
         Dictionary of format {'name': array...}.
 
     Returns
@@ -312,13 +312,13 @@ def split_legend(
 
     Parameters
     ----------
-    ax: matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes
         The axis containing the legend.
-    in_plot: bool
+    in_plot : bool
         If True, prolong plot area to fit labels. If False, print labels outside of plot area. Default: False.
-    axis_factor: float
+    axis_factor : float
         If in_plot is True, fraction of the x-axis length to add at the far right of the plot. Default: 0.15.
-    label_gap: float
+    label_gap : float
         If in_plot is True, fraction of the x-axis length to add as a gap between line and label. Default: 0.02.
 
     Returns
@@ -377,7 +377,7 @@ def fill_between_label(
         Dictionary created by the sort_lines() function.
     name : str
         Key associated with the object being plotted in the 'data' argument of the timeseries() function.
-    array_categ: dict
+    array_categ : dict
         The categories of the array, as created by the get_array_categ function.
     legend : str
         Legend mode.
@@ -450,13 +450,13 @@ def create_cmap(
 
     Parameters
     ----------
-    var_group: str, optional
+    var_group : str, optional
         Variable group from IPCC scheme.
-    levels: int, optional
+    levels : int, optional
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
-    divergent: bool or int, float
+    divergent : bool or int, float
         Diverging colormap. If False, use sequential colormap.
-    filename: str, optional
+    filename : str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
 
     Returns
@@ -539,7 +539,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
 
     Parameters
     ----------
-    xr_obj: xr.DataArray or xr.Dataset
+    xr_obj : xr.DataArray or xr.Dataset
         The xarray object from which to look for the attributes.
 
     Returns
@@ -564,11 +564,11 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
 
     Arguments
     ---------
-    text: str
+    text : str
         The text to wrap.
-    min_line_len: int
+    min_line_len : int
         Minimum length of each line.
-    max_line_len: int
+    max_line_len : int
         Maximum length of each line.
 
     Returns
@@ -693,9 +693,9 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
 
     Parameters
     ----------
-    args: str
+    args : str
         Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
-    reset: bool
+    reset : bool
         If True, reset style to matplotlib default before applying the stylesheets.
 
     Returns

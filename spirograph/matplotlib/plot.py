@@ -44,15 +44,17 @@ def _plot_realizations(
 
     Parameters
     ----------
-    ax: matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes
         The Matplotlib axis object.
-    da: DataArray
+    da : DataArray
         The DataArray containing the realizations.
-    name: str
+    name : str
         The label to be used in the first part of a composite label.
         Can be the name of the parent Dataset or that of the DataArray.
-    plot_kw: dict
+    plot_kw : dict
         Dictionary of kwargs coming from the timeseries() input.
+    non_dict_data : dict
+        TBD.
 
     Returns
     -------
@@ -93,23 +95,23 @@ def timeseries(
 
     Parameters
     ----------
-    data: dict or Dataset/DataArray
+    data : dict or Dataset/DataArray
         Input data to plot. It can be a DataArray, Dataset or a dictionary of DataArrays and/or Datasets.
-    ax: matplotlib.axes.Axes, optional
+    ax : matplotlib.axes.Axes, optional
         Matplotlib axis on which to plot.
-    use_attrs: dict, optional
+    use_attrs : dict, optional
         A dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'title': 'description', 'ylabel': 'long_name', 'yunits': 'units'}.
         Only the keys found in the default dict can be used.
-    fig_kw: dict, optional
+    fig_kw : dict, optional
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
-    plot_kw: dict, optional
+    plot_kw : dict, optional
         Arguments to pass to the `plot()` function. Changes how the line looks.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
-    legend: str (default 'lines')
+    legend : str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_lat_lon: bool (default True)
+    show_lat_lon : bool (default True)
         If True, show latitude and longitude coordinates at the bottom right of the figure.
 
     Returns
@@ -345,43 +347,43 @@ def gridmap(
 
     Parameters
     ----------
-    data: dict, DataArray or Dataset
+    data : dict, DataArray or Dataset
         Input data do plot. If dictionary, must have only one entry.
-    ax: matplotlib axis, optional
+    ax : matplotlib axis, optional
         Matplotlib axis on which to plot, with the same projection as the one specified.
-    use_attrs: dict, optional
+    use_attrs : dict, optional
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
         Only the keys found in the default dict can be used.
-    fig_kw: dict, optional
+    fig_kw : dict, optional
         Arguments to pass to `plt.figure()`.
-    plot_kw: dict, optional
+    plot_kw:  dict, optional
         Arguments to pass to the `xarray.plot.pcolormesh()` or 'xarray.plot.contourf()' function.
         If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
-    projection: ccrs projection
-        Projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
-    transform: ccrs transform, optional
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    transform : ccrs.Projection, optional
         Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
         ccrs.PlateCarree() or ccrs.RotatedPole().
-    features: list or dict, optional
+    features : list or dict, optional
         Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    contourf: bool
+    contourf : bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
-    cmap: colormap or str, optional
+    cmap : colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    levels: int, optional
+    levels : int, optional
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
-    divergent: bool or int or float
+    divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    show_time:bool
+    show_time : bool
         Show time (as date) at bottom right of plot.
-    frame: bool
+    frame : bool
         Show or hide frame. Default False.
 
     Returns
