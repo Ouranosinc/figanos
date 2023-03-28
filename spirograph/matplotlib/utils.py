@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
 
 import cartopy.crs as ccrs
+import geopandas
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
@@ -25,18 +27,19 @@ def empty_dict(param):
     return param
 
 
-def check_timeindex(xr_dict: dict[str, Any]):
+def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
     """Check if the time index of Xarray objects in a dict is CFtime
     and convert to pd.DatetimeIndex if True.
 
     Parameters
     ----------
-    xr_dict: dict
+    xr_dict : dict
         Dictionary containing Xarray DataArrays or Datasets.
 
     Returns
     -------
     dict
+        Dictionary of xarray objects with a pandas DatetimeIndex
     """
 
     for name, xr_obj in xr_dict.items():
@@ -45,21 +48,21 @@ def check_timeindex(xr_dict: dict[str, Any]):
                 conv_obj = xr_obj.convert_calendar("standard", use_cftime=None)
                 xr_dict[name] = conv_obj
         else:
-            raise ValueError(f'"time" dimension not found in {xr_obj}')
+            raise AttributeError(f'"time" dimension not found in {xr_obj}')
     return xr_dict
 
 
-def get_array_categ(array: xr.DataArray | xr.Dataset):
-    """Return an array category, which determines how to plot.
+def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
+    """Get an array category, which determines how to plot the array.
 
     Parameters
     __________
-    array: Dataset or DataArray
+    array : Dataset or DataArray
         The array being categorized.
 
     Returns
     _________
-    array: str
+    str
         ENS_PCT_VAR_DS: ensemble percentiles stored as variables
         ENS_PCT_DIM_DA: ensemble percentiles stored as dimension coordinates, DataArray
         ENS_PCT_DIM_DS: ensemble percentiles stored as dimension coordinates, DataSet
@@ -111,9 +114,9 @@ def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
 
     Parameters
     ----------
-    string: str
+    string : str
         String corresponding to an attribute name.
-    xr_obj: DataArray or Dataset
+    xr_obj : DataArray or Dataset
         The Xarray object containing the attributes.
 
     Returns
@@ -143,23 +146,23 @@ def set_plot_attrs(
     xr_obj: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes,
     title_loc: str = "center",
-    wrap_kw: dict[str, Any] = None,
+    wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
     """
     Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
-    to check for and return the string.
+    to check for and get the string.
 
     Parameters
     ----------
-    attr_dict: dict
+    attr_dict : dict
         Dictionary containing specified attribute keys.
-    xr_obj: Dataset or DataArray
+    xr_obj : Dataset or DataArray
         The Xarray object containing the attributes.
-    ax: matplotlib axis
+    ax : matplotlib axis
         The matplotlib axis of the plot.
-    title_loc: str
+    title_loc : str
         Location of the title.
-    wrap_kw: dict
+    wrap_kw : dict, optional
         Arguments to pass to the wrap_text function for the title.
 
     Returns
@@ -203,13 +206,13 @@ def set_plot_attrs(
     return ax
 
 
-def get_suffix(string: str):
+def get_suffix(string: str) -> str:
     """Get suffix of typical Xclim variable names."""
     if re.search("[0-9]{1,2}$|_[Mm]ax$|_[Mm]in$|_[Mm]ean$", string):
         suffix = re.search("[0-9]{1,2}$|[Mm]ax$|[Mm]in$|[Mm]ean$", string).group()
         return suffix
     else:
-        raise Exception(f"No suffix found in {string}")
+        raise ValueError(f"Mean, min or max not found in {string}")
 
 
 def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
@@ -217,7 +220,7 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 
     Parameters
     ----------
-    array_dict: dict
+    array_dict : dict
         Dictionary of format {'name': array...}.
 
     Returns
@@ -248,20 +251,35 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
             elif int(suffix) == 50:
                 sorted_lines["middle"] = name
         else:
-            raise Exception('Arrays names must end in format "_mean" or "_p50" ')
+            raise ValueError('Arrays names must end in format "_mean" or "_p50" ')
     return sorted_lines
 
 
-# FIXME: `type` is already a python base function. Try not to overload it.
 def plot_coords(
     ax: matplotlib.axes.Axes,
     xr_obj: xr.DataArray | xr.Dataset,
-    type: str = None,
+    param: str | None = None,
     backgroundalpha: int = 0,
-):
-    """Place coordinates on bottom right of plot area. Types are 'location' or 'time'."""
+) -> matplotlib.axes.Axes:
+    """Place coordinates on bottom right of plot area.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object on which to place the text.
+    xr_obj : xr.DataArray or xr.Dataset
+        The xarray object from which to fetch the text content.
+    param : {"location", "time"}, optional
+        The parameter used.
+    backgroundalpha : int
+        Transparency of the text background. 1 is opaque, 0 is transparent.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
     text = None
-    if type == "location":
+    if param == "location":
         if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
             text = "lat={:.2f}, lon={:.2f}".format(
                 float(xr_obj["lat"]), float(xr_obj["lon"])
@@ -270,7 +288,7 @@ def plot_coords(
             warnings.warn(
                 'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
             )
-    if type == "time":
+    if param == "time":
         if "time" in xr_obj.coords:
             text = np.datetime_as_string(xr_obj.time.values, unit="D")
         else:
@@ -290,17 +308,17 @@ def split_legend(
     label_gap: float = 0.02,
 ) -> matplotlib.axes.Axes:
     #  TODO: check for and fix overlapping labels
-    """Drawline labels at the end of each line, or outside the plot.
+    """Draw line labels at the end of each line, or outside the plot.
 
     Parameters
     ----------
-    ax: matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes
         The axis containing the legend.
-    in_plot: bool
+    in_plot : bool
         If True, prolong plot area to fit labels. If False, print labels outside of plot area. Default: False.
-    axis_factor: float
+    axis_factor : float
         If in_plot is True, fraction of the x-axis length to add at the far right of the plot. Default: 0.15.
-    label_gap: float
+    label_gap : float
         If in_plot is True, fraction of the x-axis length to add as a gap between line and label. Default: 0.02.
 
     Returns
@@ -351,7 +369,24 @@ def split_legend(
 def fill_between_label(
     sorted_lines: dict[str, Any], name: str, array_categ: dict[str, Any], legend: str
 ) -> str:
-    """Create label for shading in line plots."""
+    """Create a label for the shading around a line in line plots.
+
+    Parameters
+    ----------
+    sorted_lines : dict
+        Dictionary created by the sort_lines() function.
+    name : str
+        Key associated with the object being plotted in the 'data' argument of the timeseries() function.
+    array_categ : dict
+        The categories of the array, as created by the get_array_categ function.
+    legend : str
+        Legend mode.
+
+    Returns
+    -------
+    str
+        Label to be applied to the legend element representing the shading.
+    """
     if legend != "full":
         label = None
     elif array_categ[name] in ["ENS_PCT_VAR_DS", "ENS_PCT_DIM_DS", "ENS_PCT_DIM_DA"]:
@@ -366,7 +401,7 @@ def fill_between_label(
     return label
 
 
-def get_var_group(da, path_to_json):
+def get_var_group(da: xr.DataArray, path_to_json: str | pathlib.Path) -> str:
     """Get IPCC variable group from DataArray using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
 
     # create dict
@@ -393,12 +428,12 @@ def get_var_group(da, path_to_json):
 
     if len(matches) == 0:
         warnings.warn(
-            "Colormap warning: Variable type not found. Use the cmap argument."
+            "Colormap warning: Variable group not found. Use the cmap argument."
         )
         return "misc"
     elif len(matches) >= 2:
         warnings.warn(
-            "Colormap warning: More than one variable type found. Use the cmap argument."
+            "Colormap warning: More than one variable group found. Use the cmap argument."
         )
         return "misc"
     else:
@@ -406,22 +441,22 @@ def get_var_group(da, path_to_json):
 
 
 def create_cmap(
-    var_group: str = None,
-    levels: int = None,
+    var_group: str | None = None,
+    levels: int | None = None,
     divergent: int | float | bool = False,
-    filename: str = None,
+    filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
-    """Create colormap according to variable type.
+    """Create colormap according to variable group.
 
     Parameters
     ----------
-    var_group: str
+    var_group : str, optional
         Variable group from IPCC scheme.
-    levels: int
+    levels : int, optional
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
-    divergent: bool or int, float
+    divergent : bool or int, float
         Diverging colormap. If False, use sequential colormap.
-    filename: str
+    filename : str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
 
     Returns
@@ -430,7 +465,8 @@ def create_cmap(
     """
 
     # func to get position of sequential cmap in txt file
-    def skip_rows(levels):
+    def skip_rows(levels: int) -> int:
+        """Get number of rows to skip depending on levels."""
         skiprows = 1
 
         if levels > 5:
@@ -484,8 +520,8 @@ def create_cmap(
     return cmap
 
 
-def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int):
-    """create list of ticks for colorbar based on DataArray values, to avoid crowded ax."""
+def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int) -> list:
+    """Create a list of ticks for the colorbar based on data, to avoid crowded ax."""
     vmin = plot_obj.colorbar.vmin
     vmax = plot_obj.colorbar.vmax
 
@@ -498,7 +534,18 @@ def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int):
     return ticks
 
 
-def get_rotpole(xr_obj: xr.DataArray | xr.Dataset):
+def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
+    """Create a Cartopy crs rotated pole projection/transform from DataArray or Dataset attributes.
+
+    Parameters
+    ----------
+    xr_obj : xr.DataArray or xr.Dataset
+        The xarray object from which to look for the attributes.
+
+    Returns
+    -------
+    ccrs.RotatedPole or None
+    """
     try:
         rotpole = ccrs.RotatedPole(
             pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
@@ -507,8 +554,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset):
         )
         return rotpole
 
-    # FIXME: what kinds of exceptions can be raised here?
-    except:  # noqa
+    except AttributeError:  # noqa
         warnings.warn("Rotated pole not found. Specify a transform if necessary.")
         return None
 
@@ -518,16 +564,17 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
 
     Arguments
     ---------
-    text: str
+    text : str
         The text to wrap.
-    min_line_len: int
+    min_line_len : int
         Minimum length of each line.
-    max_line_len: int
+    max_line_len : int
         Maximum length of each line.
 
     Returns
     -------
     str
+        Wrapped text
     """
     start = min_line_len
     stop = max_line_len
@@ -555,8 +602,8 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
     return text
 
 
-def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS):
-    """Opens shapefile with geopandas and convert to cartopy projection.
+def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
+    """Open shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
@@ -575,7 +622,7 @@ def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS):
 
 
 def convert_scen_name(name: str) -> str:
-    """Convert SSP, RCP, CMIP strings to proper format"""
+    """Convert strings containing SSP, RCP or CMIP to their proper format."""
 
     matches = re.findall(r"(?:SSP|RCP|CMIP)[0-9]{1,3}", name, flags=re.I)
     if matches:
@@ -599,8 +646,8 @@ def convert_scen_name(name: str) -> str:
         return name
 
 
-def get_scen_color(name, path_to_dict):
-    """Get color corresponding to SSP,RCP, model or CMIP substring."""
+def get_scen_color(name: str, path_to_dict: str | pathlib.Path) -> str:
+    """Get color corresponding to SSP,RCP, model or CMIP substring from a dictionary."""
     with open(path_to_dict) as f:
         color_dict = json.load(f)
 
@@ -613,16 +660,17 @@ def get_scen_color(name, path_to_dict):
     return color
 
 
-def process_keys(dict, function):
-    old_keys = [key for key in dict]
+def process_keys(dct: dict[str, Any], func: Callable) -> dict[str, Any]:
+    """Apply function to dictionary keys."""
+    old_keys = [key for key in dct]
     for old_key in old_keys:
-        new_key = function(old_key)
-        dict[new_key] = dict.pop(old_key)
-    return dict
+        new_key = func(old_key)
+        dct[new_key] = dct.pop(old_key)
+    return dct
 
 
-def categorical_colors():
-    """Return a list of the categorical colors associated with certain strings (SSP,RCP,CMIP)."""
+def categorical_colors() -> dict[str, str]:
+    """Get a list of the categorical colors associated with certain substrings (SSP,RCP,CMIP)."""
     path = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
     with open(path) as f:
         cat = json.load(f)
@@ -630,7 +678,7 @@ def categorical_colors():
         return cat
 
 
-def get_mpl_styles():
+def get_mpl_styles() -> dict[str, str]:
     """Get the available matplotlib styles and their paths, as a dictionary."""
     folder = Path(__file__).parent / "style/"
     paths = sorted(folder.glob("*.mplstyle"))
@@ -640,15 +688,19 @@ def get_mpl_styles():
     return styles
 
 
-def set_mpl_style(*args: str, reset: bool = False):
+def set_mpl_style(*args: str, reset: bool = False) -> None:
     """Set the matplotlib style using one or more stylesheets.
 
     Parameters
     ----------
-    args: str
+    args : str
         Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
-    reset: bool
+    reset : bool
         If True, reset style to matplotlib default before applying the stylesheets.
+
+    Returns
+    -------
+    None
     """
     if reset is True:
         mpl.style.use("default")

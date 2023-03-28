@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import cartopy.feature as cfeature  # noqa
 import matplotlib.axes
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import xarray as xr
 from cartopy import crs as ccrs
@@ -38,20 +39,22 @@ def _plot_realizations(
     name: str,
     plot_kw: dict[str, Any],
     non_dict_data: dict[str, Any],
-):
+) -> matplotlib.axes.Axes:
     """Plot realizations from a DataArray, inside or outside a Dataset.
 
     Parameters
     ----------
-    ax: matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes
         The Matplotlib axis object.
-    da: DataArray
+    da : DataArray
         The DataArray containing the realizations.
-    name: str
+    name : str
         The label to be used in the first part of a composite label.
         Can be the name of the parent Dataset or that of the DataArray.
-    plot_kw: dict
+    plot_kw : dict
         Dictionary of kwargs coming from the timeseries() input.
+    non_dict_data : dict
+        TBD.
 
     Returns
     -------
@@ -81,45 +84,44 @@ def _plot_realizations(
 
 def timeseries(
     data: dict[str, Any] | xr.DataArray | xr.Dataset,
-    ax: matplotlib.axes.Axes = None,
-    use_attrs: dict[str, Any] = None,
-    fig_kw: dict[str, Any] = None,
-    plot_kw: dict[str, Any] = None,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
     legend: str = "lines",
     show_lat_lon: bool = True,
-):
+) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
     ----------
-    data: dict or Dataset/DataArray
+    data : dict or Dataset/DataArray
         Input data to plot. It can be a DataArray, Dataset or a dictionary of DataArrays and/or Datasets.
-    ax: matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes, optional
         Matplotlib axis on which to plot.
-    use_attrs: dict
+    use_attrs : dict, optional
         A dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'title': 'description', 'ylabel': 'long_name', 'yunits': 'units'}.
         Only the keys found in the default dict can be used.
-    fig_kw: dict
+    fig_kw : dict, optional
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
-    plot_kw: dict
+    plot_kw : dict, optional
         Arguments to pass to the `plot()` function. Changes how the line looks.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
-    legend: str (default 'lines')
+    legend : str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_lat_lon: bool (default True)
+    show_lat_lon : bool (default True)
         If True, show latitude and longitude coordinates at the bottom right of the figure.
 
     Returns
     -------
     matplotlib.axes.Axes
-        matplotlib axis object.
     """
     # convert SSP, RCP, CMIP formats in keys
-    if type(data) == dict:
+    if isinstance(data, dict):
         data = process_keys(data, convert_scen_name)
-    if type(plot_kw) == dict:
+    if isinstance(plot_kw, dict):
         plot_kw = process_keys(plot_kw, convert_scen_name)
 
     # create empty dicts if None
@@ -129,7 +131,7 @@ def timeseries(
 
     # if only one data input, insert in dict.
     non_dict_data = False
-    if type(data) != dict:
+    if not isinstance(data, dict):
         non_dict_data = True
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
@@ -141,7 +143,7 @@ def timeseries(
                 plot_kw[name] = {}
         for key in plot_kw:
             if key not in data:
-                raise Exception(
+                raise KeyError(
                     'plot_kw must be a nested dictionary with keys corresponding to the keys in "data"'
                 )
 
@@ -149,7 +151,7 @@ def timeseries(
     for name, arr in data.items():
         if not isinstance(arr, (xr.Dataset, xr.DataArray)):
             raise TypeError(
-                '"data" must contain a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
+                '"data" must be a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
             )
 
     # check: 'time' dimension and calendar format
@@ -188,7 +190,7 @@ def timeseries(
 
         elif array_categ[name] == "ENS_REALS_DS":
             if len(arr.data_vars) >= 2:
-                raise Exception(
+                raise TypeError(
                     "To plot multiple ensembles containing realizations, use DataArrays outside a Dataset"
                 )
             for k, sub_arr in arr.data_vars.items():
@@ -292,10 +294,10 @@ def timeseries(
             )
 
         else:
-            raise Exception(
+            raise ValueError(
                 "Data structure not supported"
             )  # can probably be removed along with elif logic above,
-            # given that get_array_categ() checks also
+            # given that get_array_categ() also does this check
 
     #  add/modify plot elements according to the first entry.
     set_plot_attrs(
@@ -309,7 +311,7 @@ def timeseries(
 
     # other plot elements
     if show_lat_lon:
-        plot_coords(ax, list(data.values())[0], type="location", backgroundalpha=1)
+        plot_coords(ax, list(data.values())[0], param="location", backgroundalpha=1)
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -325,74 +327,74 @@ def timeseries(
 
 
 def gridmap(
-    data,
-    ax=None,
-    use_attrs=None,
-    fig_kw=None,
-    plot_kw=None,
-    projection=ccrs.LambertConformal(),
-    transform=None,
-    features=None,
-    geometries_kw=None,
-    contourf=False,
-    cmap=None,
-    levels=None,
-    divergent=False,
-    show_time=False,
-    frame=False,
-):
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    projection: ccrs.Projection = ccrs.LambertConformal(),
+    transform: ccrs.Projection | None = None,
+    features: list | dict[str, Any] | None = None,
+    geometries_kw: dict[str, Any] | None = None,
+    contourf: bool = False,
+    cmap: str | matplotlib.colors.Colormap | None = None,
+    levels: int | None = None,
+    divergent: bool | int | float = False,
+    show_time: bool = False,
+    frame: bool = False,
+) -> matplotlib.axes.Axes:
     """Create map from 2D data.
 
     Parameters
     ----------
-    data: dict, DataArray or Dataset
+    data : dict, DataArray or Dataset
         Input data do plot. If dictionary, must have only one entry.
-    ax: matplotlib axis
+    ax : matplotlib axis, optional
         Matplotlib axis on which to plot, with the same projection as the one specified.
-    use_attrs: dict
+    use_attrs : dict, optional
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
         Only the keys found in the default dict can be used.
-    fig_kw: dict
+    fig_kw : dict, optional
         Arguments to pass to `plt.figure()`.
-    plot_kw: dict
+    plot_kw:  dict, optional
         Arguments to pass to the `xarray.plot.pcolormesh()` or 'xarray.plot.contourf()' function.
         If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
-    projection: ccrs projection
-        Projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
-    transform: ccrs transform
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    transform : ccrs.Projection, optional
         Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
         ccrs.PlateCarree() or ccrs.RotatedPole().
-    features: list or dict
+    features : list or dict, optional
         Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
-    geometries_kw : dict
+    geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    contourf: bool
+    contourf : bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
-    cmap: colormap or str
+    cmap : colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    levels: int
+    levels : int, optional
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
-    divergent: bool or int or float
+    divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    show_time:bool
+    show_time : bool
         Show time (as date) at bottom right of plot.
-    frame: bool
+    frame : bool
         Show or hide frame. Default False.
 
     Returns
     -------
-        matplotlib axis
+    matplotlib.axes.Axes
     """
 
     # checks
     if levels:
         if type(levels) != int or levels < 2 or levels > 21:
-            raise Exception(
+            raise ValueError(
                 'levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.'
             )
 
@@ -415,7 +417,7 @@ def gridmap(
         if len(data) == 1:
             data = list(data.values())[0]
         else:
-            raise Exception("`data` must be a dict of len=1, a DataArray or a Dataset")
+            raise ValueError("If `data` is a dict, it must be of length 1.")
 
     # select data to plot
     if isinstance(data, xr.DataArray):
@@ -455,7 +457,7 @@ def gridmap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     # colormap
-    if type(cmap) == str:
+    if isinstance(cmap, str):
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(levels=levels, filename=cmap)
@@ -472,7 +474,7 @@ def gridmap(
 
     # set defaults
     if divergent is not False:
-        if type(divergent) in [int, float]:
+        if isinstance(divergent, (int, float)):
             plot_kw.setdefault("center", divergent)
         else:
             plot_kw.setdefault("center", 0)
@@ -498,7 +500,7 @@ def gridmap(
             ax.add_feature(getattr(cfeature, f.upper()), **features[f])
 
     if show_time is True:
-        plot_coords(ax, plot_data, type="time", backgroundalpha=0)
+        plot_coords(ax, plot_data, param="time", backgroundalpha=0)
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
