@@ -5,7 +5,7 @@ import pathlib
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import cartopy.crs as ccrs
 import geopandas
@@ -146,7 +146,7 @@ def set_plot_attrs(
     xr_obj: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes,
     title_loc: str = "center",
-    wrap_kw: dict[str, Any] = None,
+    wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
     """
     Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
@@ -162,7 +162,7 @@ def set_plot_attrs(
         The matplotlib axis of the plot.
     title_loc: str
         Location of the title.
-    wrap_kw: dict
+    wrap_kw: dict, optional
         Arguments to pass to the wrap_text function for the title.
 
     Returns
@@ -258,7 +258,7 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 def plot_coords(
     ax: matplotlib.axes.Axes,
     xr_obj: xr.DataArray | xr.Dataset,
-    param: str = None,
+    param: str | None = None,
     backgroundalpha: int = 0,
 ) -> matplotlib.axes.Axes:
     """Place coordinates on bottom right of plot area.
@@ -269,7 +269,7 @@ def plot_coords(
         Matplotlib axes object on which to place the text.
     xr_obj : xr.DataArray or xr.Dataset
         The xarray object from which to fetch the text content.
-    param : {"location", "time"}
+    param : {"location", "time"}, optional
         The parameter used.
     backgroundalpha : int
         Transparency of the text background. 1 is opaque, 0 is transparent.
@@ -377,6 +377,8 @@ def fill_between_label(
         Dictionary created by the sort_lines() function.
     name : str
         Key associated with the object being plotted in the 'data' argument of the timeseries() function.
+    array_categ: dict
+        The categories of the array, as created by the get_array_categ function.
     legend : str
         Legend mode.
 
@@ -439,22 +441,22 @@ def get_var_group(da: xr.DataArray, path_to_json: str | pathlib.Path) -> str:
 
 
 def create_cmap(
-    var_group: str = None,
-    levels: int = None,
+    var_group: str | None = None,
+    levels: int | None = None,
     divergent: int | float | bool = False,
-    filename: str = None,
+    filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable group.
 
     Parameters
     ----------
-    var_group: str
+    var_group: str, optional
         Variable group from IPCC scheme.
-    levels: int
+    levels: int, optional
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
     divergent: bool or int, float
         Diverging colormap. If False, use sequential colormap.
-    filename: str
+    filename: str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
 
     Returns
