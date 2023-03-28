@@ -325,21 +325,21 @@ def timeseries(
 
 
 def gridmap(
-    data: dict[str, Any] | xr.DataArray | xr.Dataset,
-    ax: matplotlib.axes.Axes = None,
-    use_attrs: dict[str, Any] = None,
-    fig_kw: dict[str, Any] = None,
-    plot_kw: dict[str, Any] = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
-    transform: ccrs.Projection = None,
-    features: list | dict[str, Any] = None,
-    geometries_kw: dict[str, Any] = None,
-    contourf: bool = False,
-    cmap: str | matplotlib.colors.Colormap = None,
-    levels: int = None,
-    divergent: bool | int | float = False,
-    show_time: bool = False,
-    frame: bool = False,
+    data : dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax : matplotlib.axes.Axes = None,
+    use_attrs : dict[str, Any] = None,
+    fig_kw : dict[str, Any] = None,
+    plot_kw : dict[str, Any] = None,
+    projection : ccrs.Projection = ccrs.LambertConformal(),
+    transform : ccrs.Projection = None,
+    features : list | dict[str, Any] = None,
+    geometries_kw : dict[str, Any] = None,
+    contourf : bool = False,
+    cmap : str | matplotlib.colors.Colormap = None,
+    levels : int = None,
+    divergent : bool | int | float = False,
+    show_time : bool = False,
+    frame : bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map from 2D data.
 

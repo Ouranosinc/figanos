@@ -261,17 +261,17 @@ def plot_coords(
     param: str = None,
     backgroundalpha: int = 0,
 ) -> matplotlib.axes.Axes:
-    """Place coordinates on bottom right of plot area. Param options are 'location' or 'time'.
+    """Place coordinates on bottom right of plot area.
 
     Parameters
     ----------
-    ax: matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes
         Matplotlib axes object on which to place the text.
-    xr_obj: xr.DataArray or xr.Dataset
+    xr_obj : xr.DataArray or xr.Dataset
         The xarray object from which to fetch the text content.
-    param: str
-        The parameter used.Options are "location" and "time".
-    backgroundalpha: int
+    param : {"location", "time"}
+        The parameter used.
+    backgroundalpha : int
         Transparency of the text background. 1 is opaque, 0 is transparent.
 
     Returns
@@ -373,11 +373,11 @@ def fill_between_label(
 
     Parameters
     ----------
-    sorted_lines: dict
+    sorted_lines : dict
         Dictionary created by the sort_lines() function.
-    name: str
+    name : str
         Key associated with the object being plotted in the 'data' argument of the timeseries() function.
-    legend: str
+    legend : str
         Legend mode.
 
     Returns
@@ -600,7 +600,7 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
     return text
 
 
-def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> geopandas.GeoDataFrame:
+def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
     """Open shapefile with geopandas and convert to cartopy projection.
 
     Parameters
