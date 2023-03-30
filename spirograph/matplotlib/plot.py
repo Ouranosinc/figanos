@@ -2,16 +2,20 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import cartopy.feature as cfeature  # noqa
+import cartopy.mpl.geoaxes
+import geopandas as gpd
 import matplotlib.axes
+import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import xarray as xr
 from cartopy import crs as ccrs
 
 from spirograph.matplotlib.utils import (
+    add_cartopy_features,
     cbar_ticks,
     check_timeindex,
     convert_scen_name,
@@ -334,7 +338,7 @@ def gridmap(
     plot_kw: dict[str, Any] | None = None,
     projection: ccrs.Projection = ccrs.LambertConformal(),
     transform: ccrs.Projection | None = None,
-    features: list | dict[str, Any] | None = None,
+    features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
     contourf: bool = False,
     cmap: str | matplotlib.colors.Colormap | None = None,
@@ -367,12 +371,12 @@ def gridmap(
         ccrs.PlateCarree() or ccrs.RotatedPole().
     features : list or dict, optional
         Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
-        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers'].
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
     contourf : bool
         By default False, use plt.pcolormesh(). If True, use plt.contourf().
-    cmap : colormap or str, optional
+    cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
@@ -492,12 +496,8 @@ def gridmap(
         pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     # add features
-    if isinstance(features, list):
-        for f in features:
-            ax.add_feature(getattr(cfeature, f.upper()))
-    if isinstance(features, dict):
-        for f in features:
-            ax.add_feature(getattr(cfeature, f.upper()), **features[f])
+    if features:
+        add_cartopy_features(ax, features)
 
     if show_time is True:
         plot_coords(ax, plot_data, param="time", backgroundalpha=0)
@@ -530,5 +530,125 @@ def gridmap(
         } | geometries_kw
 
         ax.add_geometries(**geometries_kw)
+
+    return ax
+
+
+def gdfmap(
+    df: gpd.GeoDataFrame,
+    data_col: str,
+    ax: cartopy.mpl.geoaxes.GeoAxes | cartopy.mpl.geoaxes.GeoAxesSubplot | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    projection: ccrs.Projection = ccrs.PlateCarree(),
+    features: list[str] | dict[str, dict[str, Any]] | None = None,
+    cmap: str | matplotlib.colors.Colormap | None = "slev_seq",
+    cmap_bounds: list[int | float] | None = None,
+    cbar: bool = True,
+    cbar_kw: dict[str, Any] | None = None,
+    frame: bool = False,
+) -> matplotlib.axes.Axes:
+    """
+    Create a map plot from geometries.
+
+    Parameters
+    ----------
+    df: geopandas.GeoDataFrame
+        Dataframe containing the geometries and the data to plot. Must have a column named 'geometry'.
+    data_col: str
+        Name of the column of 'df' containing the data to plot using the colorscale.
+    ax: cartopy.mpl.geoaxes.GeoAxes or cartopy.mpl.geoaxes.GeoaxesSubplot, optional
+        Matplotlib axis built with a projection, on which to plot.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    plot_kw:  dict, optional
+        Arguments to pass to the GeoDataFrame.plot() method.
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options.
+    features : list or dict, optional
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
+    cmap : matplotlib.colors.Colormap or str
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    cmap_bounds : list, optional
+        Boundaries (in data units) to use to divide the colormap.
+    cbar : bool
+        Show colorbar. Default 'True'.
+    cbar_kw : dict
+        Colorbar kwargs.
+    frame : bool
+        Show or hide frame. Default False.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    # create empty dicts if None
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+    features = empty_dict(features)
+    cbar_kw = empty_dict(cbar_kw)
+
+    # checks
+    if not isinstance(df, gpd.GeoDataFrame):
+        raise TypeError("df myst be an instance of class geopandas.GeoDataFrame")
+
+    if "geometry" not in df.columns:
+        raise ValueError("column 'geometry' not found in GeoDataFrame")
+
+    # convert to projection
+    df = gpd_to_ccrs(df=df, proj=projection)
+
+    # setup fig, ax
+    if not ax:
+        fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+        ax.set_aspect("equal")  # recommended by geopandas
+
+    # add features and defaults
+    default_features = {
+        "land": {"color": "#f0f0f0"},
+        "rivers": {"edgecolor": "#cfd3d4"},
+        "lakes": {"facecolor": "#cfd3d4"},
+        "coastline": {"edgecolor": "black"},
+    }
+    features = default_features | features
+    add_cartopy_features(ax, features)
+
+    # colormap
+    if isinstance(cmap, str):
+        if cmap in plt.colormaps():
+            cmap = matplotlib.cm.get_cmap(cmap)
+        else:
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                warnings.warn("invalid cmap, using default")
+                cmap = create_cmap(filename="slev_seq")
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(get_var_group(unique_str=data_col, path_to_json=cdata))
+
+    # create normalization for colormap
+    if cmap_bounds:
+        norm = matplotlib.colors.BoundaryNorm(boundaries=cmap_bounds, ncolors=cmap.N)
+        plot_kw.setdefault("norm", norm)
+
+    # colorbar
+    if cbar:
+        plot_kw.setdefault("legend", True)
+        plot_kw.setdefault("legend_kwds", cbar_kw)
+        plot_kw["legend_kwds"].setdefault("label", data_col)
+        plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
+        plot_kw["legend_kwds"].setdefault("pad", 0.02)
+
+    # plot
+    df.plot(column=data_col, ax=ax, cmap=cmap, **plot_kw)
+
+    if frame is False:
+        ax.spines["geo"].set_visible(False)
 
     return ax

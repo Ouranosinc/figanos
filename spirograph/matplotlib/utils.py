@@ -5,9 +5,10 @@ import pathlib
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature  # noqa
 import geopandas
 import geopandas as gpd
 import matplotlib as mpl
@@ -401,8 +402,12 @@ def fill_between_label(
     return label
 
 
-def get_var_group(da: xr.DataArray, path_to_json: str | pathlib.Path) -> str:
-    """Get IPCC variable group from DataArray using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
+def get_var_group(
+    path_to_json: str | pathlib.Path,
+    da: xr.DataArray | None = None,
+    unique_str: str = None,
+) -> str:
+    """Get IPCC variable group from DataArray or a string using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
 
     # create dict
     with open(path_to_json) as f:
@@ -410,19 +415,26 @@ def get_var_group(da: xr.DataArray, path_to_json: str | pathlib.Path) -> str:
 
     matches = []
 
-    # look in DataArray name
-    if hasattr(da, "name"):
-        for v in var_dict:
-            regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"
-            if re.search(regex, da.name):
-                matches.append(var_dict[v])
-
-    # look in history
-    if hasattr(da, "history") and len(matches) == 0:
+    if unique_str:
         for v in var_dict:
             regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"  # matches when variable is not inside word
-            if re.search(regex, da.history):
+            if re.search(regex, unique_str):
                 matches.append(var_dict[v])
+
+    elif da:
+        # look in DataArray name
+        if hasattr(da, "name"):
+            for v in var_dict:
+                regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"
+                if re.search(regex, da.name):
+                    matches.append(var_dict[v])
+
+        # look in history
+        if hasattr(da, "history") and len(matches) == 0:
+            for v in var_dict:
+                regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"
+                if re.search(regex, da.history):
+                    matches.append(var_dict[v])
 
     matches = np.unique(matches)
 
@@ -711,3 +723,32 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
             mpl.style.use(get_mpl_styles()[s])
         else:
             warnings.warn(f"Style {s} not found.")
+
+
+def add_cartopy_features(
+    ax: matplotlib.axes.Axes, features: list[str] | dict[str, dict[str, Any]]
+) -> matplotlib.axes.Axes:
+    """
+    Add cartopy features to matplotlib axes.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes on which to add the features.
+
+    features : list or dict
+        List of features, or nested dictionary of format {'feature': {'kwarg':'value'}}
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axis with added features.
+    """
+
+    if isinstance(features, list):
+        features = {f: {} for f in features}
+
+    for f in features:
+        ax.add_feature(getattr(cfeature, f.upper()), **features[f])
+
+    return ax
