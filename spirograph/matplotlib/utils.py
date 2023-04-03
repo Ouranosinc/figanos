@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import pathlib
 import re
 import warnings
@@ -752,3 +753,22 @@ def add_cartopy_features(
         ax.add_feature(getattr(cfeature, f.upper()), **features[f])
 
     return ax
+
+
+def clean_cmap_bounds(min: int | float, max: int | float, levels: int) -> np.ndarray:
+    """Get nicer cmap boundaries to use in a BoundaryNorm."""
+
+    if (max - min) >= 10:
+        rmax = np.round(math.ceil(max), -1)
+        rmin = np.round(math.floor(min), -1)
+    elif 1 <= (max - min) < 10:
+        rmax = np.round(math.ceil(max), 0)
+        rmin = np.round(math.floor(min), 0)
+    elif 0.1 <= (max - min) < 1:
+        rmax = np.round(math.ceil(max), 1)
+        rmin = np.round(math.floor(min), 1)
+    else:
+        rmax = np.round(math.ceil(max), 2)
+        rmin = np.round(math.floor(min), 2)
+
+    return np.linspace(rmin, rmax, num=levels + 1)

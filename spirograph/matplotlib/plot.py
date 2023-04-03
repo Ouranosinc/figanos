@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import warnings
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ import matplotlib.axes
 import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
+import numpy as np
 import xarray as xr
 from cartopy import crs as ccrs
 
@@ -18,6 +20,7 @@ from spirograph.matplotlib.utils import (
     add_cartopy_features,
     cbar_ticks,
     check_timeindex,
+    clean_cmap_bounds,
     convert_scen_name,
     create_cmap,
     empty_dict,
@@ -536,16 +539,15 @@ def gridmap(
 
 def gdfmap(
     df: gpd.GeoDataFrame,
-    data_col: str,
+    df_col: str,
     ax: cartopy.mpl.geoaxes.GeoAxes | cartopy.mpl.geoaxes.GeoAxesSubplot | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     projection: ccrs.Projection = ccrs.PlateCarree(),
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     cmap: str | matplotlib.colors.Colormap | None = "slev_seq",
-    cmap_bounds: list[int | float] | None = None,
+    levels: int | list[int | float] | None = None,
     cbar: bool = True,
-    cbar_kw: dict[str, Any] | None = None,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
     """
@@ -555,7 +557,7 @@ def gdfmap(
     ----------
     df: geopandas.GeoDataFrame
         Dataframe containing the geometries and the data to plot. Must have a column named 'geometry'.
-    data_col: str
+    df_col: str
         Name of the column of 'df' containing the data to plot using the colorscale.
     ax: cartopy.mpl.geoaxes.GeoAxes or cartopy.mpl.geoaxes.GeoaxesSubplot, optional
         Matplotlib axis built with a projection, on which to plot.
@@ -570,15 +572,13 @@ def gdfmap(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     cmap : matplotlib.colors.Colormap or str
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
-        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
-        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of df_col
+        and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    cmap_bounds : list, optional
-        Boundaries (in data units) to use to divide the colormap.
+    levels : int or list, optional
+        Number of  levels or list of level boundaries (in data units) to use to divide the colormap.
     cbar : bool
         Show colorbar. Default 'True'.
-    cbar_kw : dict
-        Colorbar kwargs.
     frame : bool
         Show or hide frame. Default False.
 
@@ -590,7 +590,6 @@ def gdfmap(
     fig_kw = empty_dict(fig_kw)
     plot_kw = empty_dict(plot_kw)
     features = empty_dict(features)
-    cbar_kw = empty_dict(cbar_kw)
 
     # checks
     if not isinstance(df, gpd.GeoDataFrame):
@@ -630,25 +629,36 @@ def gdfmap(
 
     elif cmap is None:
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
-        cmap = create_cmap(get_var_group(unique_str=data_col, path_to_json=cdata))
+        cmap = create_cmap(get_var_group(unique_str=df_col, path_to_json=cdata))
 
     # create normalization for colormap
-    if cmap_bounds:
-        norm = matplotlib.colors.BoundaryNorm(boundaries=cmap_bounds, ncolors=cmap.N)
+    if levels:
+        if isinstance(levels, int):
+            lin_levels = clean_cmap_bounds(
+                df[df_col].min(), df[df_col].max(), levels=levels
+            )
+            norm = matplotlib.colors.BoundaryNorm(boundaries=lin_levels, ncolors=cmap.N)
+        elif isinstance(levels, list):
+            norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
+        else:
+            raise TypeError("levels must be int or list")
         plot_kw.setdefault("norm", norm)
 
     # colorbar
     if cbar:
         plot_kw.setdefault("legend", True)
-        plot_kw.setdefault("legend_kwds", cbar_kw)
-        plot_kw["legend_kwds"].setdefault("label", data_col)
+        plot_kw["legend_kwds"].setdefault("label", df_col)
         plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
         plot_kw["legend_kwds"].setdefault("pad", 0.02)
 
     # plot
-    df.plot(column=data_col, ax=ax, cmap=cmap, **plot_kw)
+    plot = df.plot(column=df_col, ax=ax, cmap=cmap, **plot_kw)
 
     if frame is False:
+        # cbar
+        plot.figure.axes[1].spines["outline"].set_visible(False)
+        plot.figure.axes[1].tick_params(size=0)
+        # main axes
         ax.spines["geo"].set_visible(False)
 
     return ax
