@@ -12,6 +12,12 @@ To install spirograph, run these commands in your terminal:
     $ conda env create -f environment.yml
     $ pip install . # add -e if you want the develop mode
 
+Note:
+When working in a Jupyter Notebook launched from an environment
+that is not spirograph, problems may arise with certain functions,
+such as gdfmap(). Installing PyProj to this environment should resolve
+this issue.
+
 .. comment out for now
     Stable release
     --------------
