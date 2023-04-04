@@ -474,7 +474,7 @@ def gridmap(
     elif cmap is None:
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(plot_data, path_to_json=cdata),
+            get_var_group(path_to_json=cdata, da=plot_data),
             levels=levels,
             divergent=divergent,
         )

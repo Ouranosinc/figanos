@@ -422,7 +422,7 @@ def get_var_group(
             if re.search(regex, unique_str):
                 matches.append(var_dict[v])
 
-    elif da:
+    else:
         # look in DataArray name
         if hasattr(da, "name"):
             for v in var_dict:
