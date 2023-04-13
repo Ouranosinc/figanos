@@ -787,6 +787,16 @@ def stripes(
                 bounds=(divide_ax, 1),
                 transform=subaxes[name].transAxes,
             )
+            # circles
+            circle = matplotlib.patches.Ellipse(
+                xy=(divide_ax, y),
+                width=0.01,
+                height=0.03,
+                color="w",
+                transform=ax_0.transAxes,
+                zorder=10,
+            )
+            ax_0.add_patch(circle)
 
     # get max and min of all data
     data_min = 1e6
