@@ -13,6 +13,8 @@ import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import xarray as xr
 from cartopy import crs as ccrs
 
@@ -555,15 +557,15 @@ def gdfmap(
 
     Parameters
     ----------
-    df: geopandas.GeoDataFrame
+    df : geopandas.GeoDataFrame
         Dataframe containing the geometries and the data to plot. Must have a column named 'geometry'.
-    df_col: str
+    df_col : str
         Name of the column of 'df' containing the data to plot using the colorscale.
-    ax: cartopy.mpl.geoaxes.GeoAxes or cartopy.mpl.geoaxes.GeoaxesSubplot, optional
+    ax : cartopy.mpl.geoaxes.GeoAxes or cartopy.mpl.geoaxes.GeoaxesSubplot, optional
         Matplotlib axis built with a projection, on which to plot.
     fig_kw : dict, optional
         Arguments to pass to `plt.figure()`.
-    plot_kw:  dict, optional
+    plot_kw :  dict, optional
         Arguments to pass to the GeoDataFrame.plot() method.
     projection : ccrs.Projection
         The projection to use, taken from the cartopy.crs options.
@@ -660,5 +662,121 @@ def gdfmap(
         plot.figure.axes[1].tick_params(size=0)
         # main axes
         ax.spines["geo"].set_visible(False)
+
+    return ax
+
+
+def violin(
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    one_color: int | bool = False,
+) -> matplotlib.axes.Axes:
+    """Make violin plot using seaborn.
+
+    Parameters
+    ----------
+    data : dict or Dataset/DataArray
+        Input data to plot. If a dict, must contain DataArrays and/or Datasets.
+    ax : matplotlib.axes.Axes, optional
+        Matplotlib axis on which to plot.
+    use_attrs : dict, optional
+        A dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description', 'ylabel': 'long_name', 'yunits': 'units'}.
+        Only the keys found in the default dict can be used.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
+    plot_kw : dict, optional
+        Arguments to pass to the `seaborn.violinplot()` function.
+    one_color : bool or int
+        Use one of the applied stylesheet colors. If True, the first color in the cycler will be used.
+        If an int, must be between 0 and 6, inclusively. Passing 'color' in plot_kw overrides this argument.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+
+    # if data is dict, assemble into one DataFrame
+    non_dict_data = True
+    if isinstance(data, dict):
+        non_dict_data = False
+        df = pd.DataFrame()
+        for key, xr_obj in data.items():
+            if isinstance(xr_obj, xr.Dataset):
+                # if one data var, use key
+                if len(list(xr_obj.data_vars)) == 1:
+                    df[key] = xr_obj[list(xr_obj.data_vars)[0]].values
+                # if more than one data var (not recommended), use key + name of var
+                else:
+                    for data_var in list(xr_obj.data_vars):
+                        df[key + "_" + data_var] = xr_obj[data_var].values
+
+            elif isinstance(xr_obj, xr.DataArray):
+                df[key] = xr_obj.values
+
+            else:
+                raise TypeError(
+                    '"data" must be a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
+                )
+
+    elif isinstance(data, xr.Dataset):
+        # create dataframe
+        df = data.to_dataframe()
+        df = df[data.data_vars]
+
+    elif isinstance(data, xr.DataArray):
+        # create dataframe
+        df = data.to_dataframe()
+
+    else:
+        raise TypeError(
+            '"data" must be a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
+        )
+
+    # set fig, ax if not provided
+    if not ax:
+        fig, ax = plt.subplots(**fig_kw)
+
+    # set default use_attrs values
+    if "orient" in plot_kw and plot_kw["orient"] == "h":
+        use_attrs = {"xlabel": "long_name", "xunits": "units"} | use_attrs
+    else:
+        use_attrs = {"ylabel": "long_name", "yunits": "units"} | use_attrs
+
+    #  add/modify plot elements according to the first entry.
+    if non_dict_data:
+        set_plot_obj = data
+    else:
+        set_plot_obj = list(data.values())[0]
+
+    set_plot_attrs(
+        use_attrs,
+        xr_obj=set_plot_obj,
+        ax=ax,
+        title_loc="left",
+        wrap_kw={"min_line_len": 35, "max_line_len": 48},
+    )
+
+    # color
+    if one_color:
+        style_colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
+        if one_color is True:
+            plot_kw.setdefault("color", style_colors[0])
+        elif isinstance(one_color, int):
+            try:
+                plot_kw.setdefault("color", style_colors[one_color])
+            except IndexError:
+                raise IndexError("Index out of range of stylesheet colors")
+
+    # plot
+    sns.violinplot(df, ax=ax, **plot_kw)
 
     return ax

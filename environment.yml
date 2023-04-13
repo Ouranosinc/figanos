@@ -20,6 +20,7 @@ dependencies:
   - cartopy
   - geoviews
   - matplotlib
+  - seaborn
 #  - bokeh
 #  - holoviews
 #  - hvplot
