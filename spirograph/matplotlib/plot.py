@@ -674,6 +674,7 @@ def stripes(
     divide: int | None = None,
     cmap: str | matplotlib.colors.Colormap | None = None,
     cmap_center: int | float = 0,
+    cbar: bool = True,
     cbar_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
     """
@@ -697,8 +698,10 @@ def stripes(
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     cmap_center: int or float
         Center of the colormap in data coordinates. Default is 0.
+    cbar: bool
+        Show colorbar.
     cbar_kw: dict, optional
-        Arguments to pass to plt.colorbar
+        Arguments to pass to plt.colorbar.
 
     Returns
     -------
@@ -828,27 +831,28 @@ def stripes(
                 weight="bold",
             )
 
-    # colorscale
-    sm = ScalarMappable(cmap=cmap, norm=norm)
-    cax = ax.inset_axes([0.01, 0.05, 0.35, 0.06])
-    cbar_tcks = np.arange(math.floor(data_min), math.ceil(data_max), 2)
-    # label
-    label = ""
-    if "long_name" in list(data.values())[0].attrs:
-        label = list(data.values())[0].long_name
-        if "units" in list(data.values())[0].attrs:
-            u = list(data.values())[0].units
-            label += f" ({u})"
-        label = wrap_text(label, max_line_len=48)
+    # colorbar
+    if cbar is True:
+        sm = ScalarMappable(cmap=cmap, norm=norm)
+        cax = ax.inset_axes([0.01, 0.05, 0.35, 0.06])
+        cbar_tcks = np.arange(math.floor(data_min), math.ceil(data_max), 2)
+        # label
+        label = ""
+        if "long_name" in list(data.values())[0].attrs:
+            label = list(data.values())[0].long_name
+            if "units" in list(data.values())[0].attrs:
+                u = list(data.values())[0].units
+                label += f" ({u})"
+            label = wrap_text(label, max_line_len=48)
 
-    cbar_kw = {
-        "cax": cax,
-        "orientation": "horizontal",
-        "ticks": cbar_tcks,
-        "label": label,
-    } | cbar_kw
-    plt.colorbar(sm, **cbar_kw)
-    cax.spines["outline"].set_visible(False)
-    cax.set_xscale("linear")
+        cbar_kw = {
+            "cax": cax,
+            "orientation": "horizontal",
+            "ticks": cbar_tcks,
+            "label": label,
+        } | cbar_kw
+        plt.colorbar(sm, **cbar_kw)
+        cax.spines["outline"].set_visible(False)
+        cax.set_xscale("linear")
 
     return ax
