@@ -714,7 +714,7 @@ def violin(
                 # if one data var, use key
                 if len(list(xr_obj.data_vars)) == 1:
                     df[key] = xr_obj[list(xr_obj.data_vars)[0]].values
-                # if more than one data var (not recommended), use key + name of var
+                # if more than one data var, use key + name of var
                 else:
                     for data_var in list(xr_obj.data_vars):
                         df[key + "_" + data_var] = xr_obj[data_var].values
@@ -786,5 +786,9 @@ def violin(
 
     # plot
     sns.violinplot(df, ax=ax, **plot_kw)
+
+    # grid
+    if "orient" in plot_kw and plot_kw["orient"] == "h":
+        ax.grid(visible=True, axis="x")
 
     return ax
