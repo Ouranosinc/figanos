@@ -735,6 +735,9 @@ def violin(
     elif isinstance(data, xr.DataArray):
         # create dataframe
         df = data.to_dataframe()
+        for coord in list(data.coords):
+            if coord in df.columns:
+                df = df.drop(columns=coord)
 
     else:
         raise TypeError(
