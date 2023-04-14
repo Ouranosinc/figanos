@@ -672,7 +672,7 @@ def violin(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    one_color: int | bool = False,
+    color: str | int | list[str | int] | None = None,
 ) -> matplotlib.axes.Axes:
     """Make violin plot using seaborn.
 
@@ -690,9 +690,9 @@ def violin(
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
     plot_kw : dict, optional
         Arguments to pass to the `seaborn.violinplot()` function.
-    one_color : bool or int
-        Use one of the applied stylesheet colors. If True, the first color in the cycler will be used.
-        If an int, must be between 0 and 6, inclusively. Passing 'color' in plot_kw overrides this argument.
+    color :  str, int or list, optional
+        Unique color or list of colors to use. Integers point to the applied stylesheet's colors, in zero-indexed order.
+        Passing 'color' or 'palette' in plot_kw overrides this argument.
 
     Returns
     -------
@@ -766,15 +766,23 @@ def violin(
     )
 
     # color
-    if one_color:
+    if color:
         style_colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
-        if one_color is True:
-            plot_kw.setdefault("color", style_colors[0])
-        elif isinstance(one_color, int):
+        if isinstance(color, str):
+            plot_kw.setdefault("color", color)
+        elif isinstance(color, int):
             try:
-                plot_kw.setdefault("color", style_colors[one_color])
+                plot_kw.setdefault("color", style_colors[color])
             except IndexError:
                 raise IndexError("Index out of range of stylesheet colors")
+        elif isinstance(color, list):
+            for c, i in zip(color, np.arange(len(color))):
+                if isinstance(c, int):
+                    try:
+                        color[i] = style_colors[c]
+                    except IndexError:
+                        raise IndexError("Index out of range of stylesheet colors")
+            plot_kw.setdefault("palette", color)
 
     # plot
     sns.violinplot(df, ax=ax, **plot_kw)
