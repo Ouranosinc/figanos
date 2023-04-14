@@ -689,8 +689,8 @@ def stripes(
     fig_kw: : dict, optional
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
     divide: int, optional
-        Year at which the plot is divided into scenarios. If not provided, the entire graph is separated based
-        on the number of arrays passed in the data argument.
+        Year at which the plot is divided into scenarios. If not provided, the horizontal separators
+        will extent over the full time axis.
     cmap: matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
@@ -723,10 +723,11 @@ def stripes(
     # init plot axis
     ax_0 = ax.inset_axes([0, 0.15, 1, 0.70])
 
-    n = len(data)
     # handle non-dict data
     if not isinstance(data, dict):
         data = {"_no_label": data}
+
+    n = len(data)
 
     # extract DataArrays from datasets
     for key, obj in data.items():
@@ -788,15 +789,16 @@ def stripes(
                 transform=subaxes[name].transAxes,
             )
             # circles
-            circle = matplotlib.patches.Ellipse(
-                xy=(divide_ax, y),
-                width=0.01,
-                height=0.03,
-                color="w",
-                transform=ax_0.transAxes,
-                zorder=10,
-            )
-            ax_0.add_patch(circle)
+            if divide:
+                circle = matplotlib.patches.Ellipse(
+                    xy=(divide_ax, y),
+                    width=0.01,
+                    height=0.03,
+                    color="w",
+                    transform=ax_0.transAxes,
+                    zorder=10,
+                )
+                ax_0.add_patch(circle)
 
     # get max and min of all data
     data_min = 1e6
@@ -831,15 +833,16 @@ def stripes(
     for (name, subax), (key, da) in zip(subaxes.items(), data.items()):
         subax.bar(da.time.dt.year, height=1, width=dtime, color=cmap(norm(da.values)))
         if divide:
-            subax.text(
-                0.99,
-                0.5,
-                key,
-                transform=subax.transAxes,
-                ha="right",
-                c="w",
-                weight="bold",
-            )
+            if key != "_no_label":
+                subax.text(
+                    0.99,
+                    0.5,
+                    key,
+                    transform=subax.transAxes,
+                    ha="right",
+                    c="w",
+                    weight="bold",
+                )
 
     # colorbar
     if cbar is True:
@@ -853,7 +856,7 @@ def stripes(
             if "units" in list(data.values())[0].attrs:
                 u = list(data.values())[0].units
                 label += f" ({u})"
-            label = wrap_text(label, max_line_len=48)
+            label = wrap_text(label, max_line_len=40)
 
         cbar_kw = {
             "cax": cax,
