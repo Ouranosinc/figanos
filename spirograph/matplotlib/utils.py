@@ -175,7 +175,15 @@ def set_plot_attrs(
 
     #  check
     for key in attr_dict:
-        if key not in ["title", "ylabel", "yunits", "cbar_label", "cbar_units"]:
+        if key not in [
+            "title",
+            "ylabel",
+            "yunits",
+            "xlabel",
+            "xunits",
+            "cbar_label",
+            "cbar_units",
+        ]:
             warnings.warn(f'Use_attrs element "{key}" not supported')
 
     if "title" in attr_dict:
@@ -197,6 +205,22 @@ def set_plot_attrs(
             ylabel = wrap_text(get_attributes(attr_dict["ylabel"], xr_obj))
 
         ax.set_ylabel(ylabel)
+
+    if "xlabel" in attr_dict:
+        if (
+            "xunits" in attr_dict
+            and len(get_attributes(attr_dict["xunits"], xr_obj)) >= 1
+        ):  # second condition avoids '[]' as label
+            xlabel = wrap_text(
+                get_attributes(attr_dict["xlabel"], xr_obj)
+                + " ("
+                + get_attributes(attr_dict["xunits"], xr_obj)
+                + ")"
+            )
+        else:
+            xlabel = wrap_text(get_attributes(attr_dict["xlabel"], xr_obj))
+
+        ax.set_xlabel(xlabel)
 
     # cbar label has to be assigned in main function, ignore.
     if "cbar_label" in attr_dict:
