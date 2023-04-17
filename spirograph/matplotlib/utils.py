@@ -432,7 +432,8 @@ def get_var_group(
     da: xr.DataArray | None = None,
     unique_str: str = None,
 ) -> str:
-    """Get IPCC variable group from DataArray or a string using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
+    """Get IPCC variable group from DataArray or a string using a json file (spirograph/data/ipcc_colors/variable_groups.json).
+    If da is a Dataset,  look in the DataArray of the first variable."""
 
     # create dict
     with open(path_to_json) as f:
@@ -447,6 +448,8 @@ def get_var_group(
                 matches.append(var_dict[v])
 
     else:
+        if isinstance(da, xr.Dataset):
+            da = da[list(da.data_vars)[0]]
         # look in DataArray name
         if hasattr(da, "name") and isinstance(da.name, str):
             for v in var_dict:

@@ -623,7 +623,7 @@ def gdfmap(
     # colormap
     if isinstance(cmap, str):
         if cmap in plt.colormaps():
-            cmap = matplotlib.cm.get_cmap(cmap)
+            cmap = matplotlib.colormaps[cmap]
         else:
             try:
                 cmap = create_cmap(filename=cmap)
@@ -815,25 +815,25 @@ def stripes(
 
     Parameters
     ----------
-    data: dict or DataArray or Dataset
+    data : dict or DataArray or Dataset
         Data to plot. If a dictionary of xarray objects, each will correspond to a scenario.
-    ax: matplotlib.axes.Axes, optional
+    ax : matplotlib.axes.Axes, optional
         Matplotlib axis on which to plot.
-    fig_kw: : dict, optional
+    fig_kw : : dict, optional
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
-    divide: int, optional
+    divide : int, optional
         Year at which the plot is divided into scenarios. If not provided, the horizontal separators
         will extent over the full time axis.
-    cmap: matplotlib.colors.Colormap or str, optional
+    cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding diverging colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    cmap_center: int or float
+    cmap_center : int or float
         Center of the colormap in data coordinates. Default is 0.
-    cbar: bool
+    cbar : bool
         Show colorbar.
-    cbar_kw: dict, optional
+    cbar_kw : dict, optional
         Arguments to pass to plt.colorbar.
 
     Returns
@@ -854,11 +854,14 @@ def stripes(
     ax.spines[["top", "bottom", "left", "right"]].set_visible(False)
 
     # init plot axis
-    ax_0 = ax.inset_axes([0, 0.15, 1, 0.70])
+    ax_0 = ax.inset_axes([0, 0.15, 1, 0.75])
 
     # handle non-dict data
     if not isinstance(data, dict):
         data = {"_no_label": data}
+
+    # convert SSP, RCP, CMIP formats in keys
+    data = process_keys(data, convert_scen_name)
 
     n = len(data)
 
@@ -888,6 +891,7 @@ def stripes(
     ax_0.set_ylim(0, 1)
     ax_0.set_yticks([])
     ax_0.xaxis.set_ticks_position("top")
+    ax_0.tick_params(axis="x", direction="out", zorder=10)
     ax_0.spines[["top", "left", "right", "bottom"]].set_visible(False)
 
     # width of bars, to fill x axis limits
@@ -944,7 +948,9 @@ def stripes(
 
     # colormap
     if isinstance(cmap, str):
-        if cmap not in plt.colormaps():
+        if cmap in plt.colormaps():
+            cmap = matplotlib.colormaps[cmap]
+        else:
             try:
                 cmap = create_cmap(filename=cmap)
             except FileNotFoundError:
