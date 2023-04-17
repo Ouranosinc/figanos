@@ -432,7 +432,8 @@ def get_var_group(
     da: xr.DataArray | None = None,
     unique_str: str = None,
 ) -> str:
-    """Get IPCC variable group from DataArray or a string using a json file (spirograph/data/ipcc_colors/variable_groups.json)."""
+    """Get IPCC variable group from DataArray or a string using a json file (spirograph/data/ipcc_colors/variable_groups.json).
+    If da is a Dataset,  look in the DataArray of the first variable."""
 
     # create dict
     with open(path_to_json) as f:
@@ -447,8 +448,10 @@ def get_var_group(
                 matches.append(var_dict[v])
 
     else:
+        if isinstance(da, xr.Dataset):
+            da = da[list(da.data_vars)[0]]
         # look in DataArray name
-        if hasattr(da, "name"):
+        if hasattr(da, "name") and isinstance(da.name, str):
             for v in var_dict:
                 regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"
                 if re.search(regex, da.name):
@@ -480,7 +483,7 @@ def get_var_group(
 def create_cmap(
     var_group: str | None = None,
     levels: int | None = None,
-    divergent: int | float | bool = False,
+    divergent: bool = False,
     filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable group.
@@ -491,7 +494,7 @@ def create_cmap(
         Variable group from IPCC scheme.
     levels : int, optional
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
-    divergent : bool or int, float
+    divergent : bool
         Diverging colormap. If False, use sequential colormap.
     filename : str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.

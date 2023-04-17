@@ -8,6 +8,7 @@ from typing import Any
 import cartopy.feature as cfeature  # noqa
 import cartopy.mpl.geoaxes
 import geopandas as gpd
+import matplotlib
 import matplotlib.axes
 import matplotlib.cm
 import matplotlib.colors
@@ -17,6 +18,7 @@ import pandas as pd
 import seaborn as sns
 import xarray as xr
 from cartopy import crs as ccrs
+from matplotlib.cm import ScalarMappable
 
 from spirograph.matplotlib.utils import (
     add_cartopy_features,
@@ -621,7 +623,7 @@ def gdfmap(
     # colormap
     if isinstance(cmap, str):
         if cmap in plt.colormaps():
-            cmap = matplotlib.cm.get_cmap(cmap)
+            cmap = matplotlib.colormaps[cmap]
         else:
             try:
                 cmap = create_cmap(filename=cmap)
@@ -649,6 +651,7 @@ def gdfmap(
     # colorbar
     if cbar:
         plot_kw.setdefault("legend", True)
+        plot_kw.setdefault("legend_kwds", {})
         plot_kw["legend_kwds"].setdefault("label", df_col)
         plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
         plot_kw["legend_kwds"].setdefault("pad", 0.02)
@@ -793,5 +796,217 @@ def violin(
     # grid
     if "orient" in plot_kw and plot_kw["orient"] == "h":
         ax.grid(visible=True, axis="x")
+
+    return ax
+
+
+def stripes(
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    divide: int | None = None,
+    cmap: str | matplotlib.colors.Colormap | None = None,
+    cmap_center: int | float = 0,
+    cbar: bool = True,
+    cbar_kw: dict[str, Any] | None = None,
+) -> matplotlib.axes.Axes:
+    """
+    Create stripes plot with or without multiple scenarios.
+
+    Parameters
+    ----------
+    data : dict or DataArray or Dataset
+        Data to plot. If a dictionary of xarray objects, each will correspond to a scenario.
+    ax : matplotlib.axes.Axes, optional
+        Matplotlib axis on which to plot.
+    fig_kw : : dict, optional
+        Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
+    divide : int, optional
+        Year at which the plot is divided into scenarios. If not provided, the horizontal separators
+        will extent over the full time axis.
+    cmap : matplotlib.colors.Colormap or str, optional
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding diverging colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    cmap_center : int or float
+        Center of the colormap in data coordinates. Default is 0.
+    cbar : bool
+        Show colorbar.
+    cbar_kw : dict, optional
+        Arguments to pass to plt.colorbar.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    # create empty dicts if None
+    fig_kw = empty_dict(fig_kw)
+    cbar_kw = empty_dict(cbar_kw)
+
+    # init main (figure) axis
+    if not ax:
+        fig_kw.setdefault("figsize", (10, 5))
+        fig, ax = plt.subplots(**fig_kw)
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.spines[["top", "bottom", "left", "right"]].set_visible(False)
+
+    # init plot axis
+    ax_0 = ax.inset_axes([0, 0.15, 1, 0.75])
+
+    # handle non-dict data
+    if not isinstance(data, dict):
+        data = {"_no_label": data}
+
+    # convert SSP, RCP, CMIP formats in keys
+    data = process_keys(data, convert_scen_name)
+
+    n = len(data)
+
+    # extract DataArrays from datasets
+    for key, obj in data.items():
+        if isinstance(obj, xr.DataArray):
+            pass
+        elif isinstance(obj, xr.Dataset):
+            data[key] = obj[list(obj.data_vars)[0]]
+        else:
+            raise TypeError("data must contain xarray DataArrays or Datasets")
+
+    # get time interval
+    time_index = list(data.values())[0].time.dt.year.values
+    delta_time = [
+        time_index[i] - time_index[i - 1] for i in np.arange(1, len(time_index), 1)
+    ]
+
+    if all(i == delta_time[0] for i in delta_time):
+        dtime = delta_time[0]
+    else:
+        raise ValueError("Time delta between each array element must be constant")
+
+    # modify axes
+    ax.set_xlim(min(time_index) - 0.5 * dtime, max(time_index) + 0.5 * dtime)
+    ax_0.set_xlim(min(time_index) - 0.5 * dtime, max(time_index) + 0.5 * dtime)
+    ax_0.set_ylim(0, 1)
+    ax_0.set_yticks([])
+    ax_0.xaxis.set_ticks_position("top")
+    ax_0.tick_params(axis="x", direction="out", zorder=10)
+    ax_0.spines[["top", "left", "right", "bottom"]].set_visible(False)
+
+    # width of bars, to fill x axis limits
+    width = (max(time_index) + 0.5 - min(time_index) - 0.5) / len(time_index)
+
+    # create historical/projection divide
+    if divide is not None:
+        # convert divide year to transAxes
+        divide_disp = ax_0.transData.transform(
+            (divide - width * 0.5, 1)
+        )  # left limit of stripe, 1 is placeholder
+        divide_ax = ax_0.transAxes.inverted().transform(divide_disp)
+        divide_ax = divide_ax[0]
+    else:
+        divide_ax = 0
+
+    # create an inset ax for each da in data
+    subaxes = {}
+    for i in np.arange(n):
+        name = "subax_" + str(i)
+        y = (1 / n) * i
+        subaxes[name] = ax_0.inset_axes([0, y, 1, 1 / n], transform=ax_0.transAxes)
+        subaxes[name].set(xlim=ax_0.get_xlim(), ylim=(0, 1), xticks=[], yticks=[])
+        subaxes[name].spines[["top", "bottom", "left", "right"]].set_visible(False)
+        # lines separating axes
+        if i > 0:
+            subaxes[name].spines["bottom"].set_visible(True)
+            subaxes[name].spines["bottom"].set(
+                lw=2,
+                color="w",
+                bounds=(divide_ax, 1),
+                transform=subaxes[name].transAxes,
+            )
+            # circles
+            if divide:
+                circle = matplotlib.patches.Ellipse(
+                    xy=(divide_ax, y),
+                    width=0.01,
+                    height=0.03,
+                    color="w",
+                    transform=ax_0.transAxes,
+                    zorder=10,
+                )
+                ax_0.add_patch(circle)
+
+    # get max and min of all data
+    data_min = 1e6
+    data_max = -1e6
+    for da in data.values():
+        if min(da.values) < data_min:
+            data_min = min(da.values)
+        if max(da.values) > data_max:
+            data_max = max(da.values)
+
+    # colormap
+    if isinstance(cmap, str):
+        if cmap in plt.colormaps():
+            cmap = matplotlib.colormaps[cmap]
+        else:
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=list(data.values())[0]), divergent=True
+        )
+
+    # create cmap norm
+    if cmap_center is not None:
+        norm = matplotlib.colors.TwoSlopeNorm(cmap_center, vmin=data_min, vmax=data_max)
+    else:
+        norm = matplotlib.colors.Normalize(data_min, data_max)
+
+    # plot
+    for (name, subax), (key, da) in zip(subaxes.items(), data.items()):
+        subax.bar(da.time.dt.year, height=1, width=dtime, color=cmap(norm(da.values)))
+        if divide:
+            if key != "_no_label":
+                subax.text(
+                    0.99,
+                    0.5,
+                    key,
+                    transform=subax.transAxes,
+                    fontsize=14,
+                    ha="right",
+                    va="center",
+                    c="w",
+                    weight="bold",
+                )
+
+    # colorbar
+    if cbar is True:
+        sm = ScalarMappable(cmap=cmap, norm=norm)
+        cax = ax.inset_axes([0.01, 0.05, 0.35, 0.06])
+        cbar_tcks = np.arange(math.floor(data_min), math.ceil(data_max), 2)
+        # label
+        label = ""
+        if "long_name" in list(data.values())[0].attrs:
+            label = list(data.values())[0].long_name
+            if "units" in list(data.values())[0].attrs:
+                u = list(data.values())[0].units
+                label += f" ({u})"
+            label = wrap_text(label, max_line_len=40)
+
+        cbar_kw = {
+            "cax": cax,
+            "orientation": "horizontal",
+            "ticks": cbar_tcks,
+            "label": label,
+        } | cbar_kw
+        plt.colorbar(sm, **cbar_kw)
+        cax.spines["outline"].set_visible(False)
+        cax.set_xscale("linear")
 
     return ax
