@@ -978,6 +978,7 @@ def stripes(
                     0.5,
                     key,
                     transform=subax.transAxes,
+                    fontsize=14,
                     ha="right",
                     c="w",
                     weight="bold",
