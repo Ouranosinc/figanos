@@ -777,8 +777,13 @@ def add_cartopy_features(
         features = {f: {} for f in features}
 
     for f in features:
-        ax.add_feature(getattr(cfeature, f.upper()), **features[f])
-
+        if "scale" not in features[f]:
+            ax.add_feature(getattr(cfeature, f.upper()), **features[f])
+        else:
+            scale = features[f].pop("scale")
+            ax.add_feature(
+                getattr(cfeature, f.upper()).with_scale(scale), **features[f]
+            )
     return ax
 
 
