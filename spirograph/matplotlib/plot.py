@@ -100,7 +100,7 @@ def timeseries(
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     legend: str = "lines",
-    show_lat_lon: bool = True,
+    show_lat_lon: bool | str | tuple[float, float] = True,
 ) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
@@ -122,8 +122,9 @@ def timeseries(
     legend : str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_lat_lon : bool (default True)
-        If True, show latitude and longitude coordinates at the bottom right of the figure.
+    show_lat_lon : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show latitude and longitude at the bottom right of the figure.
+        If a string or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
 
     Returns
     -------
@@ -174,7 +175,7 @@ def timeseries(
     use_attrs.setdefault("yunits", "units")
 
     # set fig, ax if not provided
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(**fig_kw)
 
     # dict of array 'categories'
@@ -322,7 +323,16 @@ def timeseries(
 
     # other plot elements
     if show_lat_lon:
-        plot_coords(ax, list(data.values())[0], param="location", backgroundalpha=1)
+        if isinstance(show_lat_lon, (str, tuple)):
+            plot_coords(
+                ax,
+                list(data.values())[0],
+                param="location",
+                loc=show_lat_lon,
+                backgroundalpha=1,
+            )
+        else:
+            plot_coords(ax, list(data.values())[0], param="location", backgroundalpha=1)
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -351,7 +361,7 @@ def gridmap(
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | None = None,
     divergent: bool | int | float = False,
-    show_time: bool = False,
+    show_time: bool | str | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map from 2D data.
@@ -392,8 +402,9 @@ def gridmap(
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    show_time : bool
-        Show time (as date) at bottom right of plot.
+    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show time (as date) at the bottom right of the figure.
+        If a string or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
     frame : bool
         Show or hide frame. Default False.
 
@@ -450,7 +461,7 @@ def gridmap(
                 transform = get_rotpole(data)
 
     # setup fig, ax
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
 
     # create cbar label
@@ -506,8 +517,11 @@ def gridmap(
     if features:
         add_cartopy_features(ax, features)
 
-    if show_time is True:
-        plot_coords(ax, plot_data, param="time", backgroundalpha=0)
+    if show_time:
+        if isinstance(show_time, (str, tuple)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            plot_coords(ax, plot_data, param="time", backgroundalpha=1)
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
@@ -606,7 +620,7 @@ def gdfmap(
     df = gpd_to_ccrs(df=df, proj=projection)
 
     # setup fig, ax
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
         ax.set_aspect("equal")  # recommended by geopandas
 
@@ -748,7 +762,7 @@ def violin(
         )
 
     # set fig, ax if not provided
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(**fig_kw)
 
     # set default use_attrs values
@@ -846,7 +860,7 @@ def stripes(
     cbar_kw = empty_dict(cbar_kw)
 
     # init main (figure) axis
-    if not ax:
+    if ax is not None:
         fig_kw.setdefault("figsize", (10, 5))
         fig, ax = plt.subplots(**fig_kw)
     ax.set_yticks([])

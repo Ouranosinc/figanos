@@ -285,7 +285,8 @@ def plot_coords(
     ax: matplotlib.axes.Axes,
     xr_obj: xr.DataArray | xr.Dataset,
     param: str | None = None,
-    backgroundalpha: int = 0,
+    loc: str | tuple[float, float] = "bottom right",
+    backgroundalpha: float = 1,
 ) -> matplotlib.axes.Axes:
     """Place coordinates on bottom right of plot area.
 
@@ -297,7 +298,9 @@ def plot_coords(
         The xarray object from which to fetch the text content.
     param : {"location", "time"}, optional
         The parameter used.
-    backgroundalpha : int
+    loc: {'top left', 'top right', 'bottom left', 'bottom right'} or tuple
+        Location of text, as a string or a tuple, in axis coordinates (0 to 1).
+    backgroundalpha : float
         Transparency of the text background. 1 is opaque, 0 is transparent.
 
     Returns
@@ -320,8 +323,30 @@ def plot_coords(
         else:
             warnings.warn('show_time set to True, but "time" not found in coords')
 
+    # location
+    ha = "left"
+    va = "center"
+    if isinstance(loc, str):
+        ha = loc.split(sep=" ")[1]
+        va = loc.split(sep=" ")[0]
+
+        if loc == "top left":
+            loc = (0.03, 0.97)
+        elif loc == "top right":
+            loc = (0.97, 0.97)
+        elif loc == "bottom left":
+            loc = (0.03, 0.03)
+        elif loc == "bottom right":
+            loc = (0.97, 0.03)
+    elif isinstance(loc, tuple):
+        for i in loc:
+            if i > 1 or i < 0:
+                raise ValueError(
+                    "Text location coordinates must be between 0 and 1, inclusively"
+                )
+
     if text:
-        t = ax.text(0.98, 0.03, text, transform=ax.transAxes, ha="right", va="bottom")
+        t = ax.text(loc[0], loc[1], text, transform=ax.transAxes, ha=ha, va=va)
         t.set_bbox(dict(facecolor="w", alpha=backgroundalpha, edgecolor="w"))
 
     return ax
