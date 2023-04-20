@@ -1061,10 +1061,7 @@ def heatmap(
     plot_kw = empty_dict(plot_kw)
 
     # set default use_attrs values
-    use_attrs = {
-        "title": "description",
-        "cbar_label": "long_name",
-    } | use_attrs
+    use_attrs.setdefault("cbar_label", "long_name")
 
     # if data is dict, extract
     if isinstance(data, dict):
