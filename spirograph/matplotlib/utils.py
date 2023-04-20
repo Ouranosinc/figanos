@@ -29,7 +29,9 @@ def empty_dict(param):
     return param
 
 
-def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
+def check_timeindex(
+    xr_objs: xr.DataArray | xr.Dataset | dict[str, Any]
+) -> xr.DataArray | xr.Dataset | dict[str, Any]:
     """Check if the time index of Xarray objects in a dict is CFtime
     and convert to pd.DatetimeIndex if True.
 
@@ -43,15 +45,20 @@ def check_timeindex(xr_dict: dict[str, Any]) -> dict[str, Any]:
     dict
         Dictionary of xarray objects with a pandas DatetimeIndex
     """
+    if isinstance(xr_objs, dict):
+        for name, obj in xr_objs.items():
+            if "time" in obj.dims:
+                if isinstance(obj.get_index("time"), xr.CFTimeIndex):
+                    conv_obj = obj.convert_calendar("standard", use_cftime=None)
+                    xr_objs[name] = conv_obj
 
-    for name, xr_obj in xr_dict.items():
-        if "time" in xr_obj.dims:
-            if isinstance(xr_obj.get_index("time"), xr.CFTimeIndex):
-                conv_obj = xr_obj.convert_calendar("standard", use_cftime=None)
-                xr_dict[name] = conv_obj
-        else:
-            raise AttributeError(f'"time" dimension not found in {xr_obj}')
-    return xr_dict
+    else:
+        if "time" in xr_objs.dims:
+            if isinstance(xr_objs.get_index("time"), xr.CFTimeIndex):
+                conv_obj = xr_objs.convert_calendar("standard", use_cftime=None)
+                xr_objs = conv_obj
+
+    return xr_objs
 
 
 def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
