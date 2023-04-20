@@ -174,7 +174,7 @@ def timeseries(
     use_attrs.setdefault("yunits", "units")
 
     # set fig, ax if not provided
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(**fig_kw)
 
     # dict of array 'categories'
@@ -451,7 +451,7 @@ def gridmap(
                 transform = get_rotpole(data)
 
     # setup fig, ax
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
 
     # create cbar label
@@ -607,7 +607,7 @@ def gdfmap(
     df = gpd_to_ccrs(df=df, proj=projection)
 
     # setup fig, ax
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
         ax.set_aspect("equal")  # recommended by geopandas
 
@@ -749,7 +749,7 @@ def violin(
         )
 
     # set fig, ax if not provided
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(**fig_kw)
 
     # set default use_attrs values
@@ -847,7 +847,7 @@ def stripes(
     cbar_kw = empty_dict(cbar_kw)
 
     # init main (figure) axis
-    if not ax:
+    if ax is not None:
         fig_kw.setdefault("figsize", (10, 5))
         fig, ax = plt.subplots(**fig_kw)
     ax.set_yticks([])
@@ -1085,7 +1085,7 @@ def heatmap(
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
     # setup fig, axis
-    if not ax:
+    if ax is not None:
         fig, ax = plt.subplots(**fig_kw)
 
     # create cbar label
