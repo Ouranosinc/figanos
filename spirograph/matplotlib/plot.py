@@ -122,9 +122,11 @@ def timeseries(
     legend : str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_lat_lon : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_lat_lon : bool, tuple, str or int
         If True, show latitude and longitude at the bottom right of the figure.
-        If a string or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
+        If a string, int or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
+        The placement options are the same as those described at
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
 
     Returns
     -------
@@ -175,7 +177,7 @@ def timeseries(
     use_attrs.setdefault("yunits", "units")
 
     # set fig, ax if not provided
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
     # dict of array 'categories'
@@ -323,7 +325,7 @@ def timeseries(
 
     # other plot elements
     if show_lat_lon:
-        if isinstance(show_lat_lon, (str, tuple)):
+        if isinstance(show_lat_lon, (str, tuple, int)):
             plot_coords(
                 ax,
                 list(data.values())[0],
@@ -404,7 +406,9 @@ def gridmap(
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
         If True, show time (as date) at the bottom right of the figure.
-        If a string or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
+        If a string, int or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
+        The placement options are the same as those described at
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
     frame : bool
         Show or hide frame. Default False.
 
@@ -461,7 +465,7 @@ def gridmap(
                 transform = get_rotpole(data)
 
     # setup fig, ax
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
 
     # create cbar label
@@ -518,7 +522,7 @@ def gridmap(
         add_cartopy_features(ax, features)
 
     if show_time:
-        if isinstance(show_time, (str, tuple)):
+        if isinstance(show_time, (str, tuple, int)):
             plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
         else:
             plot_coords(ax, plot_data, param="time", backgroundalpha=1)
@@ -620,7 +624,7 @@ def gdfmap(
     df = gpd_to_ccrs(df=df, proj=projection)
 
     # setup fig, ax
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
         ax.set_aspect("equal")  # recommended by geopandas
 
@@ -762,7 +766,7 @@ def violin(
         )
 
     # set fig, ax if not provided
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
     # set default use_attrs values
@@ -860,7 +864,7 @@ def stripes(
     cbar_kw = empty_dict(cbar_kw)
 
     # init main (figure) axis
-    if ax is not None:
+    if ax is None:
         fig_kw.setdefault("figsize", (10, 5))
         fig, ax = plt.subplots(**fig_kw)
     ax.set_yticks([])

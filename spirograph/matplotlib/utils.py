@@ -285,7 +285,7 @@ def plot_coords(
     ax: matplotlib.axes.Axes,
     xr_obj: xr.DataArray | xr.Dataset,
     param: str | None = None,
-    loc: str | tuple[float, float] = "bottom right",
+    loc: str | tuple[float, float] | int = "lower right",
     backgroundalpha: float = 1,
 ) -> matplotlib.axes.Axes:
     """Place coordinates on bottom right of plot area.
@@ -298,8 +298,9 @@ def plot_coords(
         The xarray object from which to fetch the text content.
     param : {"location", "time"}, optional
         The parameter used.
-    loc: {'top left', 'top right', 'bottom left', 'bottom right'} or tuple
-        Location of text, as a string or a tuple, in axis coordinates (0 to 1).
+    loc : string, int or tuple
+        Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        If a tuple, must be in axes coordinates.
     backgroundalpha : float
         Transparency of the text background. 1 is opaque, 0 is transparent.
 
@@ -326,18 +327,65 @@ def plot_coords(
     # location
     ha = "left"
     va = "center"
-    if isinstance(loc, str):
-        ha = loc.split(sep=" ")[1]
-        va = loc.split(sep=" ")[0]
 
-        if loc == "top left":
-            loc = (0.03, 0.97)
-        elif loc == "top right":
+    loc_strings = [
+        "upper right",
+        "upper left",
+        "lower left",
+        "lower right",
+        "right",
+        "center left",
+        "center right",
+        "lower center",
+        "upper center",
+        "center",
+    ]
+
+    if isinstance(loc, int):
+        try:
+            loc = loc_strings[loc - 1]
+        except IndexError:
+            raise ValueError("loc must be between 1 and 10, inclusively")
+
+    if loc in loc_strings:
+        # ha
+        if "left" in loc:
+            ha = "left"
+        elif "right" in loc:
+            ha = "right"
+        else:
+            ha = "center"
+
+        # va
+        if "lower" in loc:
+            va = "bottom"
+        elif "upper" in loc:
+            va = "top"
+        else:
+            va = "center"
+
+        # transAxes
+        if loc == "upper right":
             loc = (0.97, 0.97)
-        elif loc == "bottom left":
+        elif loc == "upper left":
+            loc = (0.03, 0.97)
+        elif loc == "lower left":
             loc = (0.03, 0.03)
-        elif loc == "bottom right":
+        elif loc == "lower right":
             loc = (0.97, 0.03)
+        elif loc == "right":
+            loc = (0.97, 0.5)
+        elif loc == "center left":
+            loc = (0.03, 0.5)
+        elif loc == "center right":
+            loc = (0.97, 0.5)
+        elif loc == "lower center":
+            loc = (0.5, 0.03)
+        elif loc == "upper center":
+            loc = (0.5, 0.97)
+        elif loc == "center":
+            loc = (0.5, 0.5)
+
     elif isinstance(loc, tuple):
         for i in loc:
             if i > 1 or i < 0:
