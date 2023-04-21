@@ -174,7 +174,7 @@ def timeseries(
     use_attrs.setdefault("yunits", "units")
 
     # set fig, ax if not provided
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
     # dict of array 'categories'
@@ -451,7 +451,7 @@ def gridmap(
                 transform = get_rotpole(data)
 
     # setup fig, ax
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
 
     # create cbar label
@@ -607,7 +607,7 @@ def gdfmap(
     df = gpd_to_ccrs(df=df, proj=projection)
 
     # setup fig, ax
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
         ax.set_aspect("equal")  # recommended by geopandas
 
@@ -749,7 +749,7 @@ def violin(
         )
 
     # set fig, ax if not provided
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
     # set default use_attrs values
@@ -847,7 +847,7 @@ def stripes(
     cbar_kw = empty_dict(cbar_kw)
 
     # init main (figure) axis
-    if ax is not None:
+    if ax is None:
         fig_kw.setdefault("figsize", (10, 5))
         fig, ax = plt.subplots(**fig_kw)
     ax.set_yticks([])
@@ -1033,13 +1033,13 @@ def heatmap(
         Matplotlib axis on which to plot, with the same projection as the one specified.
     use_attrs : dict, optional
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
-        Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
+        Default value is {'cbar_label': 'long_name'}.
         Only the keys found in the default dict can be used.
     fig_kw : dict, optional
         Arguments to pass to `plt.figure()`.
     plot_kw :  dict, optional
-        Arguments to pass to the `xarray.plot.pcolormesh()` or 'xarray.plot.contourf()' function.
-        If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
+        Arguments to pass to the 'seaborn.heatmap()' function.
+        If 'data' is a dictionary, can be a nested dictionary with the same key as 'data'.
     transpose : bool
         If true, the 2D data will be transposed, so that the original x-axis becomes the y-axis and vice versa.
     cmap : matplotlib.colors.Colormap or str, optional
@@ -1085,7 +1085,7 @@ def heatmap(
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
     # setup fig, axis
-    if ax is not None:
+    if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
     # create cbar label
