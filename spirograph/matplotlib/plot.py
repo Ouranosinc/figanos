@@ -455,9 +455,10 @@ def gridmap(
     if isinstance(data, xr.DataArray):
         plot_data = data
     elif isinstance(data, xr.Dataset):
-        warnings.warn(
-            "data is xr.Dataset; only the first variable will be used in plot"
-        )
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
+            )
         plot_data = data[list(data.keys())[0]]
     else:
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
@@ -1034,5 +1035,147 @@ def stripes(
         plt.colorbar(sm, **cbar_kw)
         cax.spines["outline"].set_visible(False)
         cax.set_xscale("linear")
+
+    return ax
+
+
+def heatmap(
+    data: xr.DataArray | xr.Dataset | dict[str, Any],
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    transpose: bool = False,
+    cmap: str | matplotlib.colors.Colormap | None = "RdBu",
+    divergent: bool | int | float = False,
+) -> matplotlib.axes.Axes:
+    """Create heatmap from a DataArray.
+
+    Parameters
+    ----------
+    data : dict or DataArray or Dataset
+        Input data do plot. If dictionary, must have only one entry.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict, optional
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'cbar_label': 'long_name'}.
+        Only the keys found in the default dict can be used.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    plot_kw :  dict, optional
+        Arguments to pass to the 'seaborn.heatmap()' function.
+        If 'data' is a dictionary, can be a nested dictionary with the same key as 'data'.
+    transpose : bool
+        If true, the 2D data will be transposed, so that the original x-axis becomes the y-axis and vice versa.
+    cmap : matplotlib.colors.Colormap or str, optional
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+
+    # set default use_attrs values
+    use_attrs.setdefault("cbar_label", "long_name")
+
+    # if data is dict, extract
+    if isinstance(data, dict):
+        if plot_kw and list(data.keys())[0] in plot_kw.keys():
+            plot_kw = plot_kw[list(data.keys())[0]]
+        if len(data) == 1:
+            data = list(data.values())[0]
+        else:
+            raise ValueError("If `data` is a dict, it must be of length 1.")
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        da = data
+    elif isinstance(data, xr.Dataset):
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
+            )
+        da = list(data.values())[0]
+    else:
+        raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
+
+    # setup fig, axis
+    if ax is None:
+        fig, ax = plt.subplots(**fig_kw)
+
+    # create cbar label
+    if (
+        "cbar_units" in use_attrs
+        and len(get_attributes(use_attrs["cbar_units"], data)) >= 1
+    ):  # avoids '()' as label
+        cbar_label = (
+            get_attributes(use_attrs["cbar_label"], data)
+            + " ("
+            + get_attributes(use_attrs["cbar_units"], data)
+            + ")"
+        )
+    else:
+        cbar_label = get_attributes(use_attrs["cbar_label"], data)
+
+    # colormap
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=da),
+            divergent=divergent,
+        )
+
+    # convert data to DataFrame
+    if len(da.coords) != 2:
+        raise ValueError("DataArray must have exactly two dimensions")
+    if transpose:
+        da = da.transpose()
+    df = da.to_pandas()
+
+    # set defaults
+    if divergent is not False:
+        if isinstance(divergent, (int, float)):
+            plot_kw.setdefault("center", divergent)
+        else:
+            plot_kw.setdefault("center", 0)
+
+    if "cbar" not in plot_kw or plot_kw["cbar"] is not False:
+        plot_kw.setdefault("cbar_kws", {})
+        plot_kw["cbar_kws"].setdefault("label", wrap_text(cbar_label))
+
+    plot_kw.setdefault("cmap", cmap)
+
+    # plot
+    sns.heatmap(df, ax=ax, **plot_kw)
+
+    # format
+    plt.xticks(rotation=45, ha="right", rotation_mode="anchor")
+    ax.tick_params(axis="both", direction="out")
+
+    set_plot_attrs(
+        use_attrs,
+        da,
+        ax,
+        title_loc="center",
+        wrap_kw={"min_line_len": 35, "max_line_len": 44},
+    )
 
     return ax
