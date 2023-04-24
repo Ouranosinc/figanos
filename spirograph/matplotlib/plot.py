@@ -124,9 +124,24 @@ def timeseries(
          'edge' (out of plot), 'none' (no legend).
     show_lat_lon : bool, tuple, str or int
         If True, show latitude and longitude at the bottom right of the figure.
-        If a string, int or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
-        The placement options are the same as those described at
-        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        Can be a tuple of axis coordinates (from 0 to 1, as a fraction of the axis length) representing
+        the location of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
 
     Returns
     -------
@@ -325,7 +340,15 @@ def timeseries(
 
     # other plot elements
     if show_lat_lon:
-        if isinstance(show_lat_lon, (str, tuple, int)):
+        if show_lat_lon is True:
+            plot_coords(
+                ax,
+                list(data.values())[0],
+                param="location",
+                loc="lower right",
+                backgroundalpha=1,
+            )
+        elif isinstance(show_lat_lon, (str, tuple, int)):
             plot_coords(
                 ax,
                 list(data.values())[0],
@@ -334,13 +357,7 @@ def timeseries(
                 backgroundalpha=1,
             )
         else:
-            plot_coords(
-                ax,
-                list(data.values())[0],
-                param="location",
-                loc="lower right",
-                backgroundalpha=1,
-            )
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -412,9 +429,24 @@ def gridmap(
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
         If True, show time (as date) at the bottom right of the figure.
-        If a string, int or a tuple of axis coordinates(0 to 1, inclusively), place this label accordingly.
-        The placement options are the same as those described at
-        https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
+        of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
     frame : bool
         Show or hide frame. Default False.
 
@@ -529,12 +561,14 @@ def gridmap(
         add_cartopy_features(ax, features)
 
     if show_time:
-        if isinstance(show_time, (str, tuple, int)):
-            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
-        else:
+        if show_time is True:
             plot_coords(
                 ax, plot_data, param="time", loc="lower right", backgroundalpha=1
             )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:

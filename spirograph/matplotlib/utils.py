@@ -340,7 +340,7 @@ def plot_coords(
 
     # location
     ha = "left"
-    va = "center"
+    va = "bottom"
 
     loc_strings = [
         "upper right",
