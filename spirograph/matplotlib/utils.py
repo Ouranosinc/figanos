@@ -284,8 +284,8 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 def plot_coords(
     ax: matplotlib.axes.Axes,
     xr_obj: xr.DataArray | xr.Dataset,
+    loc: str | tuple[float, float] | int,
     param: str | None = None,
-    loc: str | tuple[float, float] | int = "lower right",
     backgroundalpha: float = 1,
 ) -> matplotlib.axes.Axes:
     """Place coordinates on bottom right of plot area.

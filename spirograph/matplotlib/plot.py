@@ -100,7 +100,7 @@ def timeseries(
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     legend: str = "lines",
-    show_lat_lon: bool | str | tuple[float, float] = True,
+    show_lat_lon: bool | str | int | tuple[float, float] = True,
 ) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
@@ -334,7 +334,13 @@ def timeseries(
                 backgroundalpha=1,
             )
         else:
-            plot_coords(ax, list(data.values())[0], param="location", backgroundalpha=1)
+            plot_coords(
+                ax,
+                list(data.values())[0],
+                param="location",
+                loc="lower right",
+                backgroundalpha=1,
+            )
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -363,7 +369,7 @@ def gridmap(
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | None = None,
     divergent: bool | int | float = False,
-    show_time: bool | str | tuple[float, float] = False,
+    show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map from 2D data.
@@ -525,7 +531,9 @@ def gridmap(
         if isinstance(show_time, (str, tuple, int)):
             plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
         else:
-            plot_coords(ax, plot_data, param="time", backgroundalpha=1)
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
