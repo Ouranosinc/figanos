@@ -51,12 +51,18 @@ def check_timeindex(
                 if isinstance(obj.get_index("time"), xr.CFTimeIndex):
                     conv_obj = obj.convert_calendar("standard", use_cftime=None)
                     xr_objs[name] = conv_obj
+                    warnings.warn(
+                        "CFTimeIndex converted to pandas DatetimeIndex. Check for issues in the new time index."
+                    )
 
     else:
         if "time" in xr_objs.dims:
             if isinstance(xr_objs.get_index("time"), xr.CFTimeIndex):
                 conv_obj = xr_objs.convert_calendar("standard", use_cftime=None)
                 xr_objs = conv_obj
+                warnings.warn(
+                    "CFTimeIndex converted to pandas DatetimeIndex. Check for issues in the new time index."
+                )
 
     return xr_objs
 
