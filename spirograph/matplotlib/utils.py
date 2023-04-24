@@ -52,7 +52,7 @@ def check_timeindex(
                     conv_obj = obj.convert_calendar("standard", use_cftime=None)
                     xr_objs[name] = conv_obj
                     warnings.warn(
-                        "CFTimeIndex converted to pandas DatetimeIndex with a "standard" calendar. 
+                        "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar."
                     )
 
     else:
@@ -61,7 +61,7 @@ def check_timeindex(
                 conv_obj = xr_objs.convert_calendar("standard", use_cftime=None)
                 xr_objs = conv_obj
                 warnings.warn(
-                    "CFTimeIndex converted to pandas DatetimeIndex. Check for issues in the new time index."
+                    "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar."
                 )
 
     return xr_objs
