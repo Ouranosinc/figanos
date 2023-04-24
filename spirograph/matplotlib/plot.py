@@ -430,9 +430,6 @@ def gridmap(
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
 
-    # check: 'time' dimension and calendar format
-    data = check_timeindex(data)
-
     # select data to plot
     if isinstance(data, xr.DataArray):
         plot_data = data

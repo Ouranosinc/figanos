@@ -323,7 +323,8 @@ def plot_coords(
             )
     if param == "time":
         if "time" in xr_obj.coords:
-            text = np.datetime_as_string(xr_obj.time.values, unit="D")
+            text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
+
         else:
             warnings.warn('show_time set to True, but "time" not found in coords')
 
