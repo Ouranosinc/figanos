@@ -100,7 +100,7 @@ def timeseries(
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     legend: str = "lines",
-    show_lat_lon: bool = True,
+    show_lat_lon: bool | str | int | tuple[float, float] = True,
 ) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
@@ -122,8 +122,26 @@ def timeseries(
     legend : str (default 'lines')
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
          'edge' (out of plot), 'none' (no legend).
-    show_lat_lon : bool (default True)
-        If True, show latitude and longitude coordinates at the bottom right of the figure.
+    show_lat_lon : bool, tuple, str or int
+        If True, show latitude and longitude at the bottom right of the figure.
+        Can be a tuple of axis coordinates (from 0 to 1, as a fraction of the axis length) representing
+        the location of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
 
     Returns
     -------
@@ -322,7 +340,24 @@ def timeseries(
 
     # other plot elements
     if show_lat_lon:
-        plot_coords(ax, list(data.values())[0], param="location", backgroundalpha=1)
+        if show_lat_lon is True:
+            plot_coords(
+                ax,
+                list(data.values())[0],
+                param="location",
+                loc="lower right",
+                backgroundalpha=1,
+            )
+        elif isinstance(show_lat_lon, (str, tuple, int)):
+            plot_coords(
+                ax,
+                list(data.values())[0],
+                param="location",
+                loc=show_lat_lon,
+                backgroundalpha=1,
+            )
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
     if legend is not None:
         if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
@@ -351,7 +386,7 @@ def gridmap(
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | None = None,
     divergent: bool | int | float = False,
-    show_time: bool = False,
+    show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map from 2D data.
@@ -392,8 +427,26 @@ def gridmap(
         Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    show_time : bool
-        Show time (as date) at bottom right of plot.
+    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show time (as date) at the bottom right of the figure.
+        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
+        of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
     frame : bool
         Show or hide frame. Default False.
 
@@ -507,8 +560,15 @@ def gridmap(
     if features:
         add_cartopy_features(ax, features)
 
-    if show_time is True:
-        plot_coords(ax, plot_data, param="time", backgroundalpha=0)
+    if show_time:
+        if show_time is True:
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
     # remove some labels to avoid overcrowding, when levels are used with pcolormesh
     if contourf is False and levels is not None:
