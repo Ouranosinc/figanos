@@ -871,6 +871,7 @@ def add_cartopy_features(
             ax.add_feature(
                 getattr(cfeature, f.upper()).with_scale(scale), **features[f]
             )
+            features[f]["scale"] = scale  # put back
     return ax
 
 
