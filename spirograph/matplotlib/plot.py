@@ -703,7 +703,7 @@ def gdfmap(
             divergent=divergent,
         )
 
-    # create normalization for colormap Todo: check if works when cmap=None
+    # create normalization for colormap
     if levels or divergent:
         norm = custom_cmap_norm(
             cmap, df[df_col].min(), df[df_col].max(), levels=levels, divergent=divergent
