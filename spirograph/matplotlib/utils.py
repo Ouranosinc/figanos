@@ -875,20 +875,81 @@ def add_cartopy_features(
     return ax
 
 
-def clean_cmap_bounds(min: int | float, max: int | float, levels: int) -> np.ndarray:
-    """Get nicer cmap boundaries to use in a BoundaryNorm."""
+def custom_cmap_norm(
+    cmap,
+    vmin: int | float,
+    vmax: int | float,
+    levels: int | list[int | float] | None = None,
+    divergent: bool | int | float = False,
+) -> matplotlib.colors.Normalize:
+    """
+    Get matplotlib normalization according to main function arguments.
 
-    if (max - min) >= 10:
-        rmax = np.round(math.ceil(max), -1)
-        rmin = np.round(math.floor(min), -1)
-    elif 1 <= (max - min) < 10:
-        rmax = np.round(math.ceil(max), 0)
-        rmin = np.round(math.floor(min), 0)
-    elif 0.1 <= (max - min) < 1:
-        rmax = np.round(math.ceil(max), 1)
-        rmin = np.round(math.floor(min), 1)
+    Parameters
+    ----------
+    cmap: matplotlib.colormap
+        Colormap to be used with the normalization.
+    vmin: int or float
+        Minimum of the data to be plotted with the colormap.
+    vmax: int or float
+        Maximum of the data to be plotted with the colormap.
+    levels : int or list, optional
+        Number of  levels or list of level boundaries (in data units) to use to divide the colormap.
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
+
+    Returns
+    -------
+    matplotlib.colors.Normalize
+
+    """
+
+    # make vmin and vmax prettier
+    if (vmax - vmin) >= 25:
+        rvmax = np.round(math.ceil(vmax), -1)
+        rvmin = np.round(math.floor(vmin), -1)
+    elif 1 <= (vmax - vmin) < 25:
+        rvmax = np.round(math.ceil(vmax), 0)
+        rvmin = np.round(math.floor(vmin), 0)
+    elif 0.1 <= (vmax - vmin) < 1:
+        rvmax = np.round(math.ceil(vmax), 1)
+        rvmin = np.round(math.floor(vmin), 1)
     else:
-        rmax = np.round(math.ceil(max), 2)
-        rmin = np.round(math.floor(min), 2)
+        rvmax = np.round(math.ceil(vmax), 2)
+        rvmin = np.round(math.floor(vmin), 2)
 
-    return np.linspace(rmin, rmax, num=levels + 1)
+    # center
+    center = None
+    if divergent:
+        if divergent is True:
+            center = 0
+        else:
+            center = divergent
+
+    # build norm with options
+    if levels and center:
+        if levels % 2 == 1:
+            half_levels = int((levels + 1) / 2) + 1
+        else:
+            half_levels = int(levels / 2) + 1
+
+        lin = np.concatenate(
+            (
+                np.linspace(rvmin, center, num=half_levels),
+                np.linspace(center, rvmax, num=half_levels)[1:],
+            )
+        )
+        norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+    elif levels:
+        if isinstance(levels, list):
+            norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
+        else:
+            lin = np.linspace(rvmin, rvmax, num=levels + 1)
+            norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+
+    elif center:
+        norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)
+    else:
+        norm = matplotlib.colors.Normalize(rvmin, rvmax)
+
+    return norm

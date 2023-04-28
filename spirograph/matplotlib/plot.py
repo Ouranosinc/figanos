@@ -24,9 +24,9 @@ from spirograph.matplotlib.utils import (
     add_cartopy_features,
     cbar_ticks,
     check_timeindex,
-    clean_cmap_bounds,
     convert_scen_name,
     create_cmap,
+    custom_cmap_norm,
     empty_dict,
     fill_between_label,
     get_array_categ,
@@ -610,8 +610,9 @@ def gdfmap(
     plot_kw: dict[str, Any] | None = None,
     projection: ccrs.Projection = ccrs.PlateCarree(),
     features: list[str] | dict[str, dict[str, Any]] | None = None,
-    cmap: str | matplotlib.colors.Colormap | None = "slev_seq",
+    cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | list[int | float] | None = None,
+    divergent: bool | int | float = False,
     cbar: bool = True,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
@@ -642,6 +643,8 @@ def gdfmap(
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int or list, optional
         Number of  levels or list of level boundaries (in data units) to use to divide the colormap.
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
     cbar : bool
         Show colorbar. Default 'True'.
     frame : bool
@@ -694,19 +697,17 @@ def gdfmap(
 
     elif cmap is None:
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
-        cmap = create_cmap(get_var_group(unique_str=df_col, path_to_json=cdata))
+        cmap = create_cmap(
+            get_var_group(unique_str=df_col, path_to_json=cdata),
+            levels=levels,
+            divergent=divergent,
+        )
 
-    # create normalization for colormap
-    if levels:
-        if isinstance(levels, int):
-            lin_levels = clean_cmap_bounds(
-                df[df_col].min(), df[df_col].max(), levels=levels
-            )
-            norm = matplotlib.colors.BoundaryNorm(boundaries=lin_levels, ncolors=cmap.N)
-        elif isinstance(levels, list):
-            norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
-        else:
-            raise TypeError("levels must be int or list")
+    # create normalization for colormap Todo: check if works when cmap=None
+    if levels or divergent:
+        norm = custom_cmap_norm(
+            cmap, df[df_col].min(), df[df_col].max(), levels=levels, divergent=divergent
+        )
         plot_kw.setdefault("norm", norm)
 
     # colorbar
