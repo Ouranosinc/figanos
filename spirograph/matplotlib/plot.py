@@ -1419,4 +1419,4 @@ def taylordiagram(
     legend_kw.setdefault("loc", "upper right")
     fig.legend(points, [pt.get_label() for pt in points])
 
-    return ax
+    return floating_ax
