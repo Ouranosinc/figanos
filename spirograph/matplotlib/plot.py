@@ -1220,7 +1220,7 @@ def heatmap(
 
 
 def taylordiagram(
-    data: xr.Dataset | dict[str, xr.Dataset],
+    data: xr.DataArray | dict[str, xr.DataArray],
     plot_kw: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     std_range: tuple = (0, 1.5),
@@ -1231,12 +1231,12 @@ def taylordiagram(
     corr_label: str | None = None,
 ):
     """
-    Build a Taylor diagram. Reference: https://gist.github.com/ycopin/3342888.
+    Build a Taylor diagram. Based on the following code: https://gist.github.com/ycopin/3342888.
 
     Parameters
     ----------
-    data : xr.Dataset or dict
-        Dataset or dictionary of datasets created by xclim.sdba.measures.taylordiagram, each corresponding
+    data : xr.DataArray or dict
+        DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
         to a point on the diagram. The dictionary keys will become their labels.
     plot_kw : dict, optional
         Arguments to pass to the `plot()` function. Changes how the line looks.
@@ -1283,34 +1283,37 @@ def taylordiagram(
 
     # check type
     for key, v in data.items():
-        if not isinstance(v, xr.Dataset):
-            raise TypeError("All objects in 'data' must be xarray Datasets")
-        if not all(
-            attr in list(v.data_vars) for attr in ["ref_std", "sim_std", "corr"]
-        ):
-            raise ValueError(
-                "All Datasets must contain the variables 'ref_std', 'sim_std' and 'corr'."
-            )
+        if not isinstance(v, xr.DataArray):
+            raise TypeError("All objects in 'data' must be xarray DataArrays")
+        if "taylor_param" not in v.dims:
+            raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
 
     # extract ref to be used in plot
-    ref_std = list(data.values())[0].ref_std.values
-    # check if ref is the same in all Datasets and get the highest std (for ax limits)
+    ref_std = list(data.values())[0].sel(taylor_param="ref_std").values
+    # check if ref is the same in all DataArrays and get the highest std (for ax limits)
     if len(data) > 1:
-        for key, ds in data.items():
-            if ds.ref_std.values != ref_std:
+        for key, da in data.items():
+            if da.sel(taylor_param="ref_std").values != ref_std:
                 raise ValueError(
                     "All reference standard deviation values must be identical"
                 )
 
     # get highest std for axis limits
     max_std = [ref_std]
-    for key, ds in data.items():
-        max_std.append(float(max(ds.ref_std.values, ds.sim_std.values)))
+    for key, da in data.items():
+        max_std.append(
+            float(
+                max(
+                    da.sel(taylor_param="ref_std").values,
+                    da.sel(taylor_param="sim_std").values,
+                )
+            )
+        )
 
     # make labels
     if not std_label:
         try:
-            std_label = "standard deviation" + f" ({list(data.values())[0].std_units})"
+            std_label = "standard deviation" + f" ({list(data.values())[0].units})"
         except AttributeError:
             std_label = "Standard deviation"
 
@@ -1398,7 +1401,7 @@ def taylordiagram(
     cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
 
     # plot scatter
-    for (key, ds), i in zip(data.items(), range(len(data))):
+    for (key, da), i in zip(data.items(), range(len(data))):
         # look for SSP, RCP, CMIP model color
         if get_scen_color(key, cat_colors):
             plot_kw[key].setdefault("color", get_scen_color(key, cat_colors))
@@ -1406,13 +1409,15 @@ def taylordiagram(
             plot_kw[key].setdefault("color", style_colors[i])
 
         # convert corr to polar coordinates
-        plot_corr = (1 - ds.corr.values) * 90 * np.pi / 180
+        plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
 
         # set defaults
         plot_kw[key] = {"label": key} | plot_kw[key]
 
         # plot
-        pt = ax.scatter(plot_corr, ds.sim_std.values, **plot_kw[key])
+        pt = ax.scatter(
+            plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
+        )
         points.append(pt)
 
     # legend
