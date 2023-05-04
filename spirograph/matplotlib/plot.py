@@ -1081,7 +1081,7 @@ def heatmap(
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     transpose: bool = False,
-    cmap: str | matplotlib.colors.Colormap | None = "temp_div_r",
+    cmap: str | matplotlib.colors.Colormap | None = "RdBu",
     divergent: bool | int | float = False,
 ) -> matplotlib.axes.Axes:
     """Create heatmap from a DataArray.
