@@ -974,17 +974,22 @@ def norm2range(
 
 
 def size_legend_elements(
-    data: np.ndarray, sizes: np.ndarray
+    data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
 ) -> list[matplotlib.lines.Line2D]:
     """
     Create handles to use in a point-size legend.
 
     Parameters
     ----------
-    data: np.ndarray
+    data : np.ndarray
         Data used to determine the point sizes.
-    sizes: np.ndarray
+    sizes : np.ndarray
         Array of point sizes.
+    max_entries : int
+        Maximum number of entries in the legend.
+    marker: str
+        Marker to use in legend.
+
 
     Returns
     -------
@@ -1030,7 +1035,7 @@ def size_legend_elements(
             Line2D(
                 [0],
                 [0],
-                marker="o",
+                marker=marker,
                 color="k",
                 lw=0,
                 markerfacecolor="w",
@@ -1039,4 +1044,7 @@ def size_legend_elements(
             )
         )
 
-    return legend_elements
+    if len(legend_elements) > max_entries:
+        return [legend_elements[i] for i in np.arange(0, max_entries + 1, 2)]
+    else:
+        return legend_elements
