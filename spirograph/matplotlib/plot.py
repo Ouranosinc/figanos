@@ -1409,14 +1409,18 @@ def scattermap(
             raise TypeError("sizes must be a string or a list")
 
     # norm
+    plot_kw.setdefault("vmin", min(plot_data.values))
+    plot_kw.setdefault("vmax", max(plot_data.values))
+
     norm = custom_cmap_norm(
         cmap,
-        vmin=min(plot_data.values),
-        vmax=max(plot_data.values),
+        vmin=plot_kw["vmin"],
+        vmax=plot_kw["vmax"],
         levels=levels,
         divergent=divergent,
     )
-    # set defaults
+
+    # set defaults and create copy without vmin, vmax (conflicts with norm)
     plot_kw = {
         "cmap": cmap,
         "norm": norm,
@@ -1425,9 +1429,16 @@ def scattermap(
         "marker": "o",
     } | plot_kw
 
+    plot_kw_pop = plot_kw.copy()
+    for key in ["vmin", "vmax"]:
+        plot_kw_pop.pop(key)
+
     # plot
     ax.scatter(
-        x=plot_data.lon.values, y=plot_data.lat.values, c=plot_data.values, **plot_kw
+        x=plot_data.lon.values,
+        y=plot_data.lat.values,
+        c=plot_data.values,
+        **plot_kw_pop,
     )
 
     # colorbar
