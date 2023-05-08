@@ -1031,6 +1031,11 @@ def size_legend_elements(
     legend_elements = []
 
     for s, d in zip(lgd_sizes, lgd_data):
+        if isinstance(d, float) and d.is_integer():
+            label = str(int(d))
+        else:
+            label = str(d)
+
         legend_elements.append(
             Line2D(
                 [0],
@@ -1039,7 +1044,7 @@ def size_legend_elements(
                 color="k",
                 lw=0,
                 markerfacecolor="w",
-                label=str(d),
+                label=label,
                 markersize=np.sqrt(s),
             )
         )

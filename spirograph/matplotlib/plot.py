@@ -1460,14 +1460,14 @@ def scattermap(
         } | legend_kw
         lgd = ax.legend(handles=legend_elements, **legend_kw)
         lgd.set_zorder(11)
+        if "title" not in legend_kw:
+            if hasattr(getattr(data, sizes), "units"):
+                sunits = getattr(getattr(data, sizes), "units")
+                lgd_title = f"{sizes} ({sunits})"
+            else:
+                lgd_title = sizes
 
-        if hasattr(getattr(data, sizes), "units"):
-            sunits = getattr(getattr(data, sizes), "units")
-            lgd_title = f"{sizes} ({sunits})"
-        else:
-            lgd_title = sizes
-
-        lgd.set_title(lgd_title)
+            lgd.set_title(lgd_title)
 
     if show_time:
         if show_time is True:
