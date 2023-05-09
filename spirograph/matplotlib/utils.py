@@ -1006,7 +1006,11 @@ def size_legend_elements(
     # round according to range
     ratio = abs(max(data) - min(data) / n)
 
-    if ratio >= 10:
+    if ratio >= 1000:
+        rounding = 1000
+    elif 100 <= ratio < 1000:
+        rounding = 100
+    elif 10 <= ratio < 100:
         rounding = 10
     elif 5 <= ratio < 10:
         rounding = 5

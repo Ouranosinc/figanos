@@ -380,7 +380,7 @@ def gridmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
+    projection: ccrs.Projection = ccrs.PlateCarree(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
@@ -1225,11 +1225,11 @@ def scattermap(
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     projection: ccrs.Projection = ccrs.PlateCarree(),
-    transform: ccrs.Projection | None = None,
+    transform: ccrs.Projection | None = ccrs.PlateCarree(),
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
-    sizes: str | None = None,
-    size_range: tuple = (6, 50),
+    sizes: str | bool | None = None,
+    size_range: tuple = (10, 50),
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | None = None,
     divergent: bool | int | float = False,
@@ -1265,10 +1265,10 @@ def scattermap(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    sizes : str
-        Name of the variable to use for determining point size.
+    sizes : bool or str, optional
+        Name of the variable to use for determining point size. If True, use the same data as in the colorbar.
     size_range : tuple
-        Tuple of the minimum and maximum size of the points, in points ** 2.
+        Tuple of the minimum and maximum size of the points.
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
@@ -1310,13 +1310,6 @@ def scattermap(
     matplotlib.axes.Axes
     """
 
-    # checks
-    if levels:
-        if type(levels) != int or levels < 2 or levels > 21:
-            raise ValueError(
-                'levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.'
-            )
-
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
@@ -1348,8 +1341,8 @@ def scattermap(
     else:
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
-    if np.sum(np.isnan(plot_data.values)) > 0:
-        raise ValueError("nan values must be removed from the array before plotting")
+    # nans
+    mask = ~np.isnan(plot_data.values)
 
     # setup transform
     if transform is None:
@@ -1394,23 +1387,28 @@ def scattermap(
 
     # point sizes
     if sizes:
-        if isinstance(sizes, str):
-            if hasattr(data, sizes):
-                sdata = getattr(data, sizes).values
-                pt_sizes = norm2range(
-                    data=sdata, target_range=size_range, data_range=None
-                )
-                plot_kw.setdefault("s", pt_sizes)
+        if sizes is True:
+            sdata = plot_data
 
+        elif isinstance(sizes, str):
+            if hasattr(data, "name") and getattr(data, "name") == sizes:
+                sdata = plot_data
+            elif hasattr(data, sizes):
+                sdata = getattr(data, sizes)
             else:
                 raise ValueError(f"{sizes} not found")
 
         else:
-            raise TypeError("sizes must be a string or a list")
+            raise TypeError("sizes must be a string or a bool")
+
+        pt_sizes = norm2range(
+            data=sdata.values[mask], target_range=size_range, data_range=None
+        )
+        plot_kw.setdefault("s", pt_sizes)
 
     # norm
-    plot_kw.setdefault("vmin", min(plot_data.values))
-    plot_kw.setdefault("vmax", max(plot_data.values))
+    plot_kw.setdefault("vmin", min(plot_data.values[mask]))
+    plot_kw.setdefault("vmax", max(plot_data.values[mask]))
 
     norm = custom_cmap_norm(
         cmap,
@@ -1435,9 +1433,9 @@ def scattermap(
 
     # plot
     ax.scatter(
-        x=plot_data.lon.values,
-        y=plot_data.lat.values,
-        c=plot_data.values,
+        x=plot_data.lon.values[mask],
+        y=plot_data.lat.values[mask],
+        c=plot_data.values[mask],
         **plot_kw_pop,
     )
 
@@ -1450,20 +1448,31 @@ def scattermap(
     # size legend
     if sizes:
         legend_elements = size_legend_elements(
-            sdata, pt_sizes, max_entries=6, marker=plot_kw["marker"]
+            sdata.values[mask], pt_sizes, max_entries=6, marker=plot_kw["marker"]
         )
+        # legend spacing
+        if size_range[1] > 200:
+            ls = 0.5 + size_range[1] / 100 * 0.125
+        else:
+            ls = 0.5
+
         legend_kw = {
             "loc": "lower left",
             "facecolor": "w",
             "framealpha": 1,
             "edgecolor": "w",
+            "labelspacing": ls,
         } | legend_kw
+
         lgd = ax.legend(handles=legend_elements, **legend_kw)
         lgd.set_zorder(11)
         if "title" not in legend_kw:
-            if hasattr(getattr(data, sizes), "units"):
-                sunits = getattr(getattr(data, sizes), "units")
-                lgd_title = f"{sizes} ({sunits})"
+            if hasattr(sdata, "long_name"):
+                lgd_title = wrap_text(
+                    getattr(sdata, "long_name"), min_line_len=1, max_line_len=15
+                )
+                if hasattr(sdata, "units"):
+                    lgd_title += f" ({getattr(sdata,'units')})"
             else:
                 lgd_title = sizes
 
