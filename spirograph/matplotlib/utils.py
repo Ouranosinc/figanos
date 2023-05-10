@@ -602,6 +602,8 @@ def create_cmap(
                 skiprows += i + 1
         return skiprows
 
+    reverse = False
+
     if filename:
         if "disc" in filename:
             folder = "discrete_colormaps_rgb_0-255"
@@ -609,6 +611,10 @@ def create_cmap(
             folder = "continuous_colormaps_rgb_0-255"
 
         filename = filename.replace(".txt", "")
+
+        if filename.endswith("_r"):
+            reverse = True
+            filename = filename[:-2]
 
     else:
         # filename
@@ -644,6 +650,8 @@ def create_cmap(
         N = 256  # default value
 
     cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=N)
+    if reverse is True:
+        cmap = cmap.reversed()
 
     return cmap
 
