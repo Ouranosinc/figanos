@@ -35,9 +35,11 @@ from spirograph.matplotlib.utils import (
     get_scen_color,
     get_var_group,
     gpd_to_ccrs,
+    norm2range,
     plot_coords,
     process_keys,
     set_plot_attrs,
+    size_legend_elements,
     sort_lines,
     split_legend,
     wrap_text,
@@ -378,7 +380,7 @@ def gridmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
+    projection: ccrs.Projection = ccrs.PlateCarree(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
@@ -1212,5 +1214,322 @@ def heatmap(
         title_loc="center",
         wrap_kw={"min_line_len": 35, "max_line_len": 44},
     )
+
+    return ax
+
+
+def scattermap(
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    projection: ccrs.Projection = ccrs.PlateCarree(),
+    transform: ccrs.Projection | None = ccrs.PlateCarree(),
+    features: list[str] | dict[str, dict[str, Any]] | None = None,
+    geometries_kw: dict[str, Any] | None = None,
+    sizes: str | bool | None = None,
+    size_range: tuple = (10, 60),
+    cmap: str | matplotlib.colors.Colormap | None = None,
+    levels: int | None = None,
+    divergent: bool | int | float = False,
+    cbar_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | None = None,
+    show_time: bool | str | int | tuple[float, float] = False,
+    frame: bool = False,
+) -> matplotlib.axes.Axes:
+    """Make a scatter plot of georeferenced data on a map.
+
+    Parameters
+    ----------
+    data : dict, DataArray or Dataset
+        Input data do plot. If dictionary, must have only one entry.
+        If a Dataset with multiple variables, the first one will be plotted against the colormap.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict, optional
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
+        Only the keys found in the default dict can be used.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    plot_kw :  dict, optional
+        Arguments to pass to `plt.scatter()`.
+        If 'data' is a dictionary, can be a dictionary with the same key as 'data'.
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    transform : ccrs.Projection, optional
+        Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
+        ccrs.PlateCarree() or ccrs.RotatedPole().
+    features : list or dict, optional
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
+    geometries_kw : dict, optional
+        Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
+    sizes : bool or str, optional
+        Name of the variable to use for determining point size. If True, use the same data as in the colorbar.
+    size_range : tuple
+        Tuple of the minimum and maximum size of the points.
+    cmap : matplotlib.colors.Colormap or str, optional
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    levels : int, optional
+        Levels to use to divide the colormap.
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
+    cbar_kw : dict, optional
+        Arguments to pass to plt.colorbar().
+    legend_kw : dict, optional
+        Arguments to pass to plt.legend().
+    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show time (as date) at the bottom right of the figure.
+        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
+        of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
+    frame : bool
+        Show or hide frame. Default False.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+    cbar_kw = empty_dict(cbar_kw)
+    legend_kw = empty_dict(legend_kw)
+
+    # set default use_attrs values
+    use_attrs.setdefault("title", "description")
+    use_attrs.setdefault("cbar_label", "long_name")
+    use_attrs.setdefault("cbar_units", "units")
+
+    # extract plot_kw from dict if needed
+    if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
+        plot_kw = plot_kw[list(data.keys())[0]]
+
+    # if data is dict, extract
+    if isinstance(data, dict):
+        if len(data) == 1:
+            data = list(data.values())[0]
+        else:
+            raise ValueError("If `data` is a dict, it must be of length 1.")
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        plot_data = data
+    elif isinstance(data, xr.Dataset):
+        plot_data = data[list(data.keys())[0]]
+    else:
+        raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
+
+    # setup transform
+    if transform is None:
+        if "lat" in data.dims and "lon" in data.dims:
+            transform = ccrs.PlateCarree()
+        elif "rlat" in data.dims and "rlon" in data.dims:
+            if hasattr(data, "rotated_pole"):
+                transform = get_rotpole(data)
+
+    # setup fig, ax
+    if ax is None:
+        fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+
+    # create cbar label
+    if (
+        "cbar_units" in use_attrs
+        and len(get_attributes(use_attrs["cbar_units"], data)) >= 1
+    ):  # avoids '[]' as label
+        cbar_label = (
+            get_attributes(use_attrs["cbar_label"], data)
+            + " ("
+            + get_attributes(use_attrs["cbar_units"], data)
+            + ")"
+        )
+    else:
+        cbar_label = get_attributes(use_attrs["cbar_label"], data)
+
+    # colormap
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=plot_data),
+            divergent=divergent,
+        )
+
+    # nans
+    mask = ~np.isnan(plot_data.values)
+    if np.sum(mask) < len(mask):
+        warnings.warn(
+            f"{len(mask)-np.sum(mask)} nan values were dropped when plotting the color values"
+        )
+
+    # point sizes
+    if sizes:
+        if sizes is True:
+            sdata = plot_data
+
+        elif isinstance(sizes, str):
+            if hasattr(data, "name") and getattr(data, "name") == sizes:
+                sdata = plot_data
+            elif hasattr(data, sizes):
+                sdata = getattr(data, sizes)
+            else:
+                raise ValueError(f"{sizes} not found")
+
+        else:
+            raise TypeError("sizes must be a string or a bool")
+
+        smask = ~np.isnan(sdata.values) & mask
+        if np.sum(smask) < np.sum(mask):
+            warnings.warn(
+                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size"
+            )
+            mask = smask
+
+        pt_sizes = norm2range(
+            data=sdata.values[mask], target_range=size_range, data_range=None
+        )
+        plot_kw.setdefault("s", pt_sizes)
+
+    # norm
+    plot_kw.setdefault("vmin", min(plot_data.values[mask]))
+    plot_kw.setdefault("vmax", max(plot_data.values[mask]))
+
+    norm = custom_cmap_norm(
+        cmap,
+        vmin=plot_kw["vmin"],
+        vmax=plot_kw["vmax"],
+        levels=levels,
+        divergent=divergent,
+    )
+
+    # set defaults and create copy without vmin, vmax (conflicts with norm)
+    plot_kw = {
+        "cmap": cmap,
+        "norm": norm,
+        "transform": transform,
+        "zorder": 8,
+        "marker": "o",
+    } | plot_kw
+
+    plot_kw_pop = plot_kw.copy()
+    for key in ["vmin", "vmax"]:
+        plot_kw_pop.pop(key)
+
+    # plot
+    ax.scatter(
+        x=plot_data.lon.values[mask],
+        y=plot_data.lat.values[mask],
+        c=plot_data.values[mask],
+        **plot_kw_pop,
+    )
+
+    # colorbar
+    cbar_kw.setdefault("label", wrap_text(cbar_label))
+    cb = plt.colorbar(
+        mappable=matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, **cbar_kw
+    )
+
+    # size legend
+    if sizes:
+        legend_elements = size_legend_elements(
+            sdata.values[mask], pt_sizes, max_entries=6, marker=plot_kw["marker"]
+        )
+        # legend spacing
+        if size_range[1] > 200:
+            ls = 0.5 + size_range[1] / 100 * 0.125
+        else:
+            ls = 0.5
+
+        legend_kw = {
+            "loc": "lower left",
+            "facecolor": "w",
+            "framealpha": 1,
+            "edgecolor": "w",
+            "labelspacing": ls,
+        } | legend_kw
+
+        lgd = ax.legend(handles=legend_elements, **legend_kw)
+        lgd.set_zorder(11)
+        if "title" not in legend_kw:
+            if hasattr(sdata, "long_name"):
+                lgd_title = wrap_text(
+                    getattr(sdata, "long_name"), min_line_len=1, max_line_len=15
+                )
+                if hasattr(sdata, "units"):
+                    lgd_title += f" ({getattr(sdata,'units')})"
+            else:
+                lgd_title = sizes
+
+            lgd.set_title(lgd_title)
+
+    if show_time:
+        if show_time is True:
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
+
+    set_plot_attrs(use_attrs, plot_data, ax)
+
+    if frame is False:
+        # cbar
+        cb.outline.set_visible(False)
+        # main ax
+        ax.spines["geo"].set_visible(False)
+
+    # add geometries
+    if geometries_kw:
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
+        else:
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
+
+        ax.add_geometries(**geometries_kw)
 
     return ax

@@ -18,6 +18,7 @@ import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
 import xarray as xr
+from matplotlib.lines import Line2D
 
 warnings.simplefilter("always", UserWarning)
 
@@ -961,3 +962,106 @@ def custom_cmap_norm(
         norm = matplotlib.colors.Normalize(rvmin, rvmax)
 
     return norm
+
+
+def norm2range(
+    data: np.ndarray, target_range: tuple, data_range: tuple | None = None
+) -> np.ndarray:
+    """
+    Normalize data across a specific range.
+    """
+    if data_range is None:
+        if len(data) > 1:
+            data_range = (min(data), max(data))
+        else:
+            raise ValueError(" if data is not an array, data_range must be specified")
+
+    norm = (data - data_range[0]) / (data_range[1] - data_range[0])
+
+    return target_range[0] + (norm * (target_range[1] - target_range[0]))
+
+
+def size_legend_elements(
+    data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
+) -> list[matplotlib.lines.Line2D]:
+    """
+    Create handles to use in a point-size legend.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Data used to determine the point sizes.
+    sizes : np.ndarray
+        Array of point sizes.
+    max_entries : int
+        Maximum number of entries in the legend.
+    marker: str
+        Marker to use in legend.
+
+
+    Returns
+    -------
+    list of matplotlib.lines.Line2D
+
+    """
+
+    # how many increments of 10 pts**2 are there in the sizes
+    n = int(np.round(max(sizes) - min(sizes), -1) / 10)
+
+    # divide data in those increments
+    lgd_data = np.linspace(min(data), max(data), n)
+
+    # round according to range
+    ratio = abs(max(data) - min(data) / n)
+
+    if ratio >= 1000:
+        rounding = 1000
+    elif 100 <= ratio < 1000:
+        rounding = 100
+    elif 10 <= ratio < 100:
+        rounding = 10
+    elif 5 <= ratio < 10:
+        rounding = 5
+    elif 1 <= ratio < 5:
+        rounding = 1
+    elif 0.1 <= ratio < 1:
+        rounding = 0.1
+    elif 0.01 <= ratio < 0.1:
+        rounding = 0.01
+    else:
+        rounding = 0.001
+
+    lgd_data = np.unique(rounding * np.round(lgd_data / rounding))
+
+    # convert back to sizes
+    lgd_sizes = norm2range(
+        data=lgd_data,
+        data_range=(min(data), max(data)),
+        target_range=(min(sizes), max(sizes)),
+    )
+
+    legend_elements = []
+
+    for s, d in zip(lgd_sizes, lgd_data):
+        if isinstance(d, float) and d.is_integer():
+            label = str(int(d))
+        else:
+            label = str(d)
+
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker=marker,
+                color="k",
+                lw=0,
+                markerfacecolor="w",
+                label=label,
+                markersize=np.sqrt(s),
+            )
+        )
+
+    if len(legend_elements) > max_entries:
+        return [legend_elements[i] for i in np.arange(0, max_entries + 1, 2)]
+    else:
+        return legend_elements
