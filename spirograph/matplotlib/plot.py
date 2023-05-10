@@ -1229,7 +1229,7 @@ def scattermap(
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
     sizes: str | bool | None = None,
-    size_range: tuple = (10, 50),
+    size_range: tuple = (10, 60),
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | None = None,
     divergent: bool | int | float = False,
@@ -1244,6 +1244,7 @@ def scattermap(
     ----------
     data : dict, DataArray or Dataset
         Input data do plot. If dictionary, must have only one entry.
+        If a Dataset with multiple variables, the first one will be plotted against the colormap.
     ax : matplotlib axis, optional
         Matplotlib axis on which to plot, with the same projection as the one specified.
     use_attrs : dict, optional
@@ -1341,9 +1342,6 @@ def scattermap(
     else:
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
-    # nans
-    mask = ~np.isnan(plot_data.values)
-
     # setup transform
     if transform is None:
         if "lat" in data.dims and "lon" in data.dims:
@@ -1385,6 +1383,13 @@ def scattermap(
             divergent=divergent,
         )
 
+    # nans
+    mask = ~np.isnan(plot_data.values)
+    if np.sum(mask) < len(mask):
+        warnings.warn(
+            f"{len(mask)-np.sum(mask)} nan values were dropped when plotting the color values"
+        )
+
     # point sizes
     if sizes:
         if sizes is True:
@@ -1400,6 +1405,13 @@ def scattermap(
 
         else:
             raise TypeError("sizes must be a string or a bool")
+
+        smask = ~np.isnan(sdata.values) & mask
+        if np.sum(smask) < np.sum(mask):
+            warnings.warn(
+                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size"
+            )
+            mask = smask
 
         pt_sizes = norm2range(
             data=sdata.values[mask], target_range=size_range, data_range=None
