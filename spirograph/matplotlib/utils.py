@@ -451,7 +451,7 @@ def plot_logo(
         If a tuple, must be in axes coordinates.
     path: str or None
         Path to picture of logo, must be a png.
-        If none, Ouranos new logo is used by default.
+        If none, Ouranos logo is used by default.
     offsetim_kw: dict
         Arugments to pass to matplotlib.offsetbox.OffsetImage().
 
