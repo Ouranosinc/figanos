@@ -439,7 +439,6 @@ def plot_logo(
     loc: str | tuple[float, float] | int,
     path: str | None = None,
     offsetim_kw: dict = {"zoom": 0.2, "alpha": 1},
-    backgroundalpha: float = 1,
 ) -> matplotlib.axes.Axes:
     """Place logo of plot area.
 
@@ -455,8 +454,6 @@ def plot_logo(
         If none, Ouranos new logo is used by default.
     offsetim_kw: dict
         Arugments to pass to matplotlib.offsetbox.OffsetImage().
-    backgroundalpha : float
-        Transparency of the text background. 1 is opaque, 0 is transparent.
 
     Returns
     -------
