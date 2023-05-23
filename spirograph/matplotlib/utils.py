@@ -10,15 +10,18 @@ from typing import Any, Callable
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature  # noqa
+import cv2
 import geopandas
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
 from matplotlib.lines import Line2D
+from PIL import Image, ImageFilter
 
 warnings.simplefilter("always", UserWarning)
 
@@ -297,7 +300,7 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 
 def loc_mpl(
     loc: str | tuple[float, float] | int,
-) -> tuple[tuple[float, float], str, str]:
+) -> tuple[tuple[float, float], tuple[float, float], str, str]:
     """Returns coordinates and alignment associated to loc.
 
     Parameters
@@ -352,24 +355,34 @@ def loc_mpl(
         # transAxes
         if loc == "upper right":
             loc = (0.97, 0.97)
+            box_a = (1, 1)
         elif loc == "upper left":
             loc = (0.03, 0.97)
+            box_a = (0, 1)
         elif loc == "lower left":
             loc = (0.03, 0.03)
+            box_a = (0, 0)
         elif loc == "lower right":
             loc = (0.97, 0.03)
+            box_a = (1, 0)
         elif loc == "right":
             loc = (0.97, 0.5)
+            box_a = (1, 0.5)
         elif loc == "center left":
             loc = (0.03, 0.5)
+            box_a = (0, 0.5)
         elif loc == "center right":
             loc = (0.97, 0.5)
+            box_a = (1, 0.5)
         elif loc == "lower center":
             loc = (0.5, 0.03)
+            box_a = (0.5, 0)
         elif loc == "upper center":
             loc = (0.5, 0.97)
+            box_a = (0.5, 1)
         elif loc == "center":
             loc = (0.5, 0.5)
+            box_a = (0.5, 0.5)
 
     elif isinstance(loc, tuple):
         for i in loc:
@@ -378,7 +391,7 @@ def loc_mpl(
                     "Text location coordinates must be between 0 and 1, inclusively"
                 )
 
-    return loc, ha, va
+    return loc, box_a, ha, va
 
 
 def plot_coords(
@@ -425,20 +438,35 @@ def plot_coords(
         else:
             warnings.warn('show_time set to True, but "time" not found in coords')
 
-    loc, ha, va = loc_mpl(loc)
+    loc, box_a, ha, va = loc_mpl(loc)
 
     if text:
-        t = ax.text(loc[0], loc[1], text, transform=ax.transAxes, ha=ha, va=va)
-        t.set_bbox(dict(facecolor="w", alpha=backgroundalpha, edgecolor="w"))
+        t = mpl.offsetbox.TextArea(
+            text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
+        )
 
+        tt = mpl.offsetbox.AnnotationBbox(
+            t,
+            loc,
+            xycoords="axes fraction",
+            box_alignment=box_a,
+            pad=0.05,
+            bboxprops=dict(
+                facecolor="white",
+                alpha=backgroundalpha,
+                edgecolor="w",
+                boxstyle="Square, pad=0.5",
+            ),
+        )
+        ax.add_artist(tt)
     return ax
 
 
 def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
-    path: str | None = None,
-    offsetim_kw: dict = {"zoom": 0.2, "alpha": 1},
+    path_png: str | None = None,
+    offsetim_kw: None | dict = {"alpha": 1, "zoom": 0.5},
 ) -> matplotlib.axes.Axes:
     """Place logo of plot area.
 
@@ -449,7 +477,7 @@ def plot_logo(
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    path: str or None
+    path_png: str or None
         Path to picture of logo, must be a png.
         If none, Ouranos logo is used by default.
     offsetim_kw: dict
@@ -459,13 +487,20 @@ def plot_logo(
     -------
     matplotlib.axes.Axes
     """
-    if path is None:
-        path = Path(__file__).parents[1] / "data/ouranos_logo.png"
-    image = mpl.pyplot.imread(path)
+    if path_png is None:
+        path_png = Path(__file__).parents[1] / "data/ouranos_logo_25.png"
+
+    image = mpl.pyplot.imread(path_png)
     imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
-    loc, ha, va = loc_mpl(loc)
+    loc, box_a, ha, va = loc_mpl(loc)
+
     ab = mpl.offsetbox.AnnotationBbox(
-        imagebox, loc, frameon=False, xycoords="axes fraction"
+        imagebox,
+        loc,
+        frameon=False,
+        xycoords="axes fraction",
+        box_alignment=box_a,
+        pad=0.05,
     )
     ax.add_artist(ab)
     return ax
