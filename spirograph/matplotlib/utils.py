@@ -10,7 +10,6 @@ from typing import Any, Callable
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature  # noqa
-import cv2
 import geopandas
 import geopandas as gpd
 import matplotlib as mpl
@@ -21,7 +20,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from matplotlib.lines import Line2D
-from PIL import Image, ImageFilter
 
 warnings.simplefilter("always", UserWarning)
 
