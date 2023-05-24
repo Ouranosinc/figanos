@@ -1559,7 +1559,7 @@ def taylordiagram(
         DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
         to a point on the diagram. The dictionary keys will become their labels.
     plot_kw : dict, optional
-        Arguments to pass to the `plot()` function. Changes how the line looks.
+        Arguments to pass to the `plot()` function. Changes how the markers look.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
     fig_kw : dict, optional
         Arguments to pass to `plt.figure()`.
@@ -1568,7 +1568,7 @@ def taylordiagram(
     contours : int, optional
         Number of rsme contours to plot.
     contours_kw : dict, optional
-        Arguments to pass to `plt.contour()`.
+        Arguments to pass to `plt.contour()` for the rmse contours.
     legend_kw : dict, optional
         Arguments to pass to `plt.legend()`.
     std_label : str, optional
