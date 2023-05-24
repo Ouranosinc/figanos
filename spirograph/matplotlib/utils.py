@@ -371,7 +371,7 @@ def loc_mpl(
             box_a = (0, 0.5)
         elif loc == "center right":
             loc = (0.97, 0.5)
-            box_a = (1, 0.5)
+            box_a = (0.97, 0.5)
         elif loc == "lower center":
             loc = (0.5, 0.03)
             box_a = (0.5, 0)
@@ -383,11 +383,17 @@ def loc_mpl(
             box_a = (0.5, 0.5)
 
     elif isinstance(loc, tuple):
+        box_a = []
         for i in loc:
             if i > 1 or i < 0:
                 raise ValueError(
                     "Text location coordinates must be between 0 and 1, inclusively"
                 )
+            elif i > 0.5:
+                box_a.append(1)
+            else:
+                box_a.append(0)
+        box_a = tuple(box_a)
 
     return loc, box_a, ha, va
 
