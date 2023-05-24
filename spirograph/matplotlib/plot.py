@@ -1544,7 +1544,7 @@ def taylordiagram(
     plot_kw: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     std_range: tuple = (0, 1.5),
-    contours: int | None = None,
+    contours: int | None = 4,
     contours_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
@@ -1651,6 +1651,8 @@ def taylordiagram(
         try:
             if "Pearson" in list(data.values())[0].correlation_type:
                 corr_label = "Pearson correlation"
+            else:
+                corr_label = "Correlation"
         except AttributeError:
             corr_label = "Correlation"
 
@@ -1721,7 +1723,14 @@ def taylordiagram(
 
         ax.clabel(ct, ct.levels, fontsize=8)
 
-        ct_line = Line2D([0], [0], ls="--", lw=1, c="k", alpha=0.4, label="rmse")
+        ct_line = Line2D(
+            [0],
+            [0],
+            ls=contours_kw["linestyles"],
+            lw=1,
+            c="k" if "colors" not in contours_kw else contours_kw["colors"],
+            label="rmse",
+        )
         points.append(ct_line)
 
     # get color options
@@ -1752,6 +1761,6 @@ def taylordiagram(
 
     # legend
     legend_kw.setdefault("loc", "upper right")
-    fig.legend(points, [pt.get_label() for pt in points])
+    fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
 
     return floating_ax
