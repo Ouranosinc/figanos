@@ -8,6 +8,7 @@
   "tx": "temp",
   "pr": "prec",
   "prc": "prec",
+  "evspsblpot": "prec",
   "humidity": "prec",
   "hurs": "prec",
   "huss": "prec",

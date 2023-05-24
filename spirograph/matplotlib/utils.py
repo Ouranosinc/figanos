@@ -18,6 +18,7 @@ import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
 import xarray as xr
+from matplotlib.lines import Line2D
 
 warnings.simplefilter("always", UserWarning)
 
@@ -601,6 +602,8 @@ def create_cmap(
                 skiprows += i + 1
         return skiprows
 
+    reverse = False
+
     if filename:
         if "disc" in filename:
             folder = "discrete_colormaps_rgb_0-255"
@@ -608,6 +611,10 @@ def create_cmap(
             folder = "continuous_colormaps_rgb_0-255"
 
         filename = filename.replace(".txt", "")
+
+        if filename.endswith("_r"):
+            reverse = True
+            filename = filename[:-2]
 
     else:
         # filename
@@ -643,6 +650,8 @@ def create_cmap(
         N = 256  # default value
 
     cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=N)
+    if reverse is True:
+        cmap = cmap.reversed()
 
     return cmap
 
@@ -875,20 +884,184 @@ def add_cartopy_features(
     return ax
 
 
-def clean_cmap_bounds(min: int | float, max: int | float, levels: int) -> np.ndarray:
-    """Get nicer cmap boundaries to use in a BoundaryNorm."""
+def custom_cmap_norm(
+    cmap,
+    vmin: int | float,
+    vmax: int | float,
+    levels: int | list[int | float] | None = None,
+    divergent: bool | int | float = False,
+) -> matplotlib.colors.Normalize:
+    """
+    Get matplotlib normalization according to main function arguments.
 
-    if (max - min) >= 10:
-        rmax = np.round(math.ceil(max), -1)
-        rmin = np.round(math.floor(min), -1)
-    elif 1 <= (max - min) < 10:
-        rmax = np.round(math.ceil(max), 0)
-        rmin = np.round(math.floor(min), 0)
-    elif 0.1 <= (max - min) < 1:
-        rmax = np.round(math.ceil(max), 1)
-        rmin = np.round(math.floor(min), 1)
+    Parameters
+    ----------
+    cmap: matplotlib.colormap
+        Colormap to be used with the normalization.
+    vmin: int or float
+        Minimum of the data to be plotted with the colormap.
+    vmax: int or float
+        Maximum of the data to be plotted with the colormap.
+    levels : int or list, optional
+        Number of  levels or list of level boundaries (in data units) to use to divide the colormap.
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
+
+    Returns
+    -------
+    matplotlib.colors.Normalize
+
+    """
+
+    # make vmin and vmax prettier
+    if (vmax - vmin) >= 25:
+        rvmax = np.round(math.ceil(vmax), -1)
+        rvmin = np.round(math.floor(vmin), -1)
+    elif 1 <= (vmax - vmin) < 25:
+        rvmax = np.round(math.ceil(vmax), 0)
+        rvmin = np.round(math.floor(vmin), 0)
+    elif 0.1 <= (vmax - vmin) < 1:
+        rvmax = np.round(math.ceil(vmax), 1)
+        rvmin = np.round(math.floor(vmin), 1)
     else:
-        rmax = np.round(math.ceil(max), 2)
-        rmin = np.round(math.floor(min), 2)
+        rvmax = np.round(math.ceil(vmax), 2)
+        rvmin = np.round(math.floor(vmin), 2)
 
-    return np.linspace(rmin, rmax, num=levels + 1)
+    # center
+    center = None
+    if divergent:
+        if divergent is True:
+            center = 0
+        else:
+            center = divergent
+
+    # build norm with options
+    if levels and center:
+        if levels % 2 == 1:
+            half_levels = int((levels + 1) / 2) + 1
+        else:
+            half_levels = int(levels / 2) + 1
+
+        lin = np.concatenate(
+            (
+                np.linspace(rvmin, center, num=half_levels),
+                np.linspace(center, rvmax, num=half_levels)[1:],
+            )
+        )
+        norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+    elif levels:
+        if isinstance(levels, list):
+            norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
+        else:
+            lin = np.linspace(rvmin, rvmax, num=levels + 1)
+            norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+
+    elif center:
+        norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)
+    else:
+        norm = matplotlib.colors.Normalize(rvmin, rvmax)
+
+    return norm
+
+
+def norm2range(
+    data: np.ndarray, target_range: tuple, data_range: tuple | None = None
+) -> np.ndarray:
+    """
+    Normalize data across a specific range.
+    """
+    if data_range is None:
+        if len(data) > 1:
+            data_range = (min(data), max(data))
+        else:
+            raise ValueError(" if data is not an array, data_range must be specified")
+
+    norm = (data - data_range[0]) / (data_range[1] - data_range[0])
+
+    return target_range[0] + (norm * (target_range[1] - target_range[0]))
+
+
+def size_legend_elements(
+    data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
+) -> list[matplotlib.lines.Line2D]:
+    """
+    Create handles to use in a point-size legend.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Data used to determine the point sizes.
+    sizes : np.ndarray
+        Array of point sizes.
+    max_entries : int
+        Maximum number of entries in the legend.
+    marker: str
+        Marker to use in legend.
+
+
+    Returns
+    -------
+    list of matplotlib.lines.Line2D
+
+    """
+
+    # how many increments of 10 pts**2 are there in the sizes
+    n = int(np.round(max(sizes) - min(sizes), -1) / 10)
+
+    # divide data in those increments
+    lgd_data = np.linspace(min(data), max(data), n)
+
+    # round according to range
+    ratio = abs(max(data) - min(data) / n)
+
+    if ratio >= 1000:
+        rounding = 1000
+    elif 100 <= ratio < 1000:
+        rounding = 100
+    elif 10 <= ratio < 100:
+        rounding = 10
+    elif 5 <= ratio < 10:
+        rounding = 5
+    elif 1 <= ratio < 5:
+        rounding = 1
+    elif 0.1 <= ratio < 1:
+        rounding = 0.1
+    elif 0.01 <= ratio < 0.1:
+        rounding = 0.01
+    else:
+        rounding = 0.001
+
+    lgd_data = np.unique(rounding * np.round(lgd_data / rounding))
+
+    # convert back to sizes
+    lgd_sizes = norm2range(
+        data=lgd_data,
+        data_range=(min(data), max(data)),
+        target_range=(min(sizes), max(sizes)),
+    )
+
+    legend_elements = []
+
+    for s, d in zip(lgd_sizes, lgd_data):
+        if isinstance(d, float) and d.is_integer():
+            label = str(int(d))
+        else:
+            label = str(d)
+
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker=marker,
+                color="k",
+                lw=0,
+                markerfacecolor="w",
+                label=label,
+                markersize=np.sqrt(s),
+            )
+        )
+
+    if len(legend_elements) > max_entries:
+        return [legend_elements[i] for i in np.arange(0, max_entries + 1, 2)]
+    else:
+        return legend_elements
