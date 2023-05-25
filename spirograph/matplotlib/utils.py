@@ -665,7 +665,6 @@ def get_var_group(
 
 def create_cmap(
     var_group: str | None = None,
-    levels: int | None = None,
     divergent: bool | int = False,
     filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
@@ -675,8 +674,6 @@ def create_cmap(
     ----------
     var_group : str, optional
         Variable group from IPCC scheme.
-    levels : int, optional
-        Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
     divergent : bool or int
         Diverging colormap. If False, use sequential colormap.
     filename : str, optional
@@ -687,24 +684,10 @@ def create_cmap(
     matplotlib.colors.Colormap
     """
 
-    # func to get position of sequential cmap in txt file
-    def skip_rows(levels: int) -> int:
-        """Get number of rows to skip depending on levels."""
-        skiprows = 1
-
-        if levels > 5:
-            for i in np.arange(5, levels):
-                skiprows += i + 1
-        return skiprows
-
     reverse = False
 
     if filename:
-        if "disc" in filename:
-            folder = "discrete_colormaps_rgb_0-255"
-        else:
-            folder = "continuous_colormaps_rgb_0-255"
-
+        folder = "continuous_colormaps_rgb_0-255"
         filename = filename.replace(".txt", "")
 
         if filename.endswith("_r"):
@@ -721,48 +704,21 @@ def create_cmap(
             else:
                 filename = var_group + "_seq"
 
-        # continuous or discrete
-        if levels:
-            folder = "discrete_colormaps_rgb_0-255"
-            filename = filename + "_disc"
-        else:
-            folder = "continuous_colormaps_rgb_0-255"
+        folder = "continuous_colormaps_rgb_0-255"
 
     # parent should be 'spirograph/'
     path = Path(__file__).parents[1] / "data/ipcc_colors" / folder / (filename + ".txt")
 
-    if levels:
-        rgb_data = np.loadtxt(path, skiprows=skip_rows(levels), max_rows=levels)
-    else:
-        rgb_data = np.loadtxt(path)
+    rgb_data = np.loadtxt(path)
 
     # convert to 0-1 RGB
     rgb_data = rgb_data / 255
 
-    if levels or "_disc" in filename:
-        N = levels
-    else:
-        N = 256  # default value
-
-    cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=N)
+    cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=256)
     if reverse is True:
         cmap = cmap.reversed()
 
     return cmap
-
-
-def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int) -> list:
-    """Create a list of ticks for the colorbar based on data, to avoid crowded ax."""
-    vmin = plot_obj.colorbar.vmin
-    vmax = plot_obj.colorbar.vmax
-
-    ticks = np.linspace(vmin, vmax, levels + 1)
-
-    # if there are more than 7 levels, return every second label
-    if levels >= 7:
-        ticks = [ticks[i] for i in np.arange(0, len(ticks), 2)]
-
-    return ticks
 
 
 def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
@@ -985,7 +941,8 @@ def custom_cmap_norm(
     vmax: int | float,
     levels: int | list[int | float] | None = None,
     divergent: bool | int | float = False,
-) -> matplotlib.colors.Normalize:
+    linspace_out: bool = False,
+) -> matplotlib.colors.Normalize | np.ndarray:
     """
     Get matplotlib normalization according to main function arguments.
 
@@ -1001,6 +958,8 @@ def custom_cmap_norm(
         Number of  levels or list of level boundaries (in data units) to use to divide the colormap.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
+    linspace_out: bool
+        If True, return array created by np.linspace() instead of normalization instance.
 
     Returns
     -------
@@ -1017,17 +976,17 @@ def custom_cmap_norm(
 
     # make vmin and vmax prettier
     if (vmax - vmin) >= 25:
-        rvmax = np.round(math.ceil(vmax), -1)
-        rvmin = np.round(math.floor(vmin), -1)
+        rvmax = math.ceil(vmax / 10.0) * 10
+        rvmin = math.floor(vmin / 10.0) * 10
     elif 1 <= (vmax - vmin) < 25:
-        rvmax = np.round(math.ceil(vmax), 0)
-        rvmin = np.round(math.floor(vmin), 0)
+        rvmax = math.ceil(vmax / 1) * 1
+        rvmin = math.floor(vmin / 1) * 1
     elif 0.1 <= (vmax - vmin) < 1:
-        rvmax = np.round(math.ceil(vmax), 1)
-        rvmin = np.round(math.floor(vmin), 1)
+        rvmax = math.ceil(vmax / 0.1) * 0.1
+        rvmin = math.floor(vmin / 0.1) * 0.1
     else:
-        rvmax = np.round(math.ceil(vmax), 2)
-        rvmin = np.round(math.floor(vmin), 2)
+        rvmax = math.ceil(vmax / 0.01) * 0.01
+        rvmin = math.floor(vmin / 0.01) * 0.01
 
     # center
     center = None
@@ -1051,12 +1010,19 @@ def custom_cmap_norm(
             )
         )
         norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+
+        if linspace_out:
+            return lin
+
     elif levels:
         if isinstance(levels, list):
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
         else:
             lin = np.linspace(rvmin, rvmax, num=levels + 1)
             norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+
+            if linspace_out:
+                return lin
 
     elif center:
         norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)

@@ -22,7 +22,6 @@ from matplotlib.cm import ScalarMappable
 
 from spirograph.matplotlib.utils import (
     add_cartopy_features,
-    cbar_ticks,
     check_timeindex,
     convert_scen_name,
     create_cmap,
@@ -457,13 +456,6 @@ def gridmap(
     matplotlib.axes.Axes
     """
 
-    # checks
-    if levels:
-        if type(levels) != int or levels < 2 or levels > 21:
-            raise ValueError(
-                'levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.'
-            )
-
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
@@ -527,7 +519,7 @@ def gridmap(
     if isinstance(cmap, str):
         if cmap not in plt.colormaps():
             try:
-                cmap = create_cmap(levels=levels, filename=cmap)
+                cmap = create_cmap(filename=cmap)
             except FileNotFoundError:
                 pass
 
@@ -535,9 +527,29 @@ def gridmap(
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
             get_var_group(path_to_json=cdata, da=plot_data),
+            divergent=divergent,
+        )
+
+    if levels:
+        lin = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
+            levels=levels,
+            divergent=divergent,
+            linspace_out=True,
+        )
+        plot_kw.setdefault("levels", lin)
+
+    elif divergent:
+        norm = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
             levels=levels,
             divergent=divergent,
         )
+        plot_kw.setdefault("norm", norm)
 
     # set defaults
     if divergent is not False:
@@ -552,11 +564,11 @@ def gridmap(
 
     # plot
     if contourf is False:
-        pl = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     else:
         plot_kw.setdefault("levels", levels)
-        pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     # add features
     if features:
@@ -571,10 +583,6 @@ def gridmap(
             plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
         else:
             raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
-
-    # remove some labels to avoid overcrowding, when levels are used with pcolormesh
-    if contourf is False and levels is not None:
-        pl.colorbar.ax.set_yticks(cbar_ticks(pl, levels))
 
     set_plot_attrs(use_attrs, data, ax)
 
