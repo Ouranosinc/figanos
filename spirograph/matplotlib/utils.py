@@ -15,6 +15,7 @@ import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -295,51 +296,21 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
     return sorted_lines
 
 
-def plot_coords(
-    ax: matplotlib.axes.Axes,
-    xr_obj: xr.DataArray | xr.Dataset,
+def loc_mpl(
     loc: str | tuple[float, float] | int,
-    param: str | None = None,
-    backgroundalpha: float = 1,
-) -> matplotlib.axes.Axes:
-    """Place coordinates on bottom right of plot area.
+) -> tuple[tuple[float, float], tuple[float, float], str, str]:
+    """Returns coordinates and alignment associated to loc.
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
-        Matplotlib axes object on which to place the text.
-    xr_obj : xr.DataArray or xr.Dataset
-        The xarray object from which to fetch the text content.
-    param : {"location", "time"}, optional
-        The parameter used.
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    backgroundalpha : float
-        Transparency of the text background. 1 is opaque, 0 is transparent.
 
     Returns
     -------
-    matplotlib.axes.Axes
+    tuple(float, float), str, str
     """
-    text = None
-    if param == "location":
-        if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
-            text = "lat={:.2f}, lon={:.2f}".format(
-                float(xr_obj["lat"]), float(xr_obj["lon"])
-            )
-        else:
-            warnings.warn(
-                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
-            )
-    if param == "time":
-        if "time" in xr_obj.coords:
-            text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
-
-        else:
-            warnings.warn('show_time set to True, but "time" not found in coords')
-
-    # location
     ha = "left"
     va = "bottom"
 
@@ -382,36 +353,160 @@ def plot_coords(
         # transAxes
         if loc == "upper right":
             loc = (0.97, 0.97)
+            box_a = (1, 1)
         elif loc == "upper left":
             loc = (0.03, 0.97)
+            box_a = (0, 1)
         elif loc == "lower left":
             loc = (0.03, 0.03)
+            box_a = (0, 0)
         elif loc == "lower right":
             loc = (0.97, 0.03)
+            box_a = (1, 0)
         elif loc == "right":
             loc = (0.97, 0.5)
+            box_a = (1, 0.5)
         elif loc == "center left":
             loc = (0.03, 0.5)
+            box_a = (0, 0.5)
         elif loc == "center right":
             loc = (0.97, 0.5)
+            box_a = (0.97, 0.5)
         elif loc == "lower center":
             loc = (0.5, 0.03)
+            box_a = (0.5, 0)
         elif loc == "upper center":
             loc = (0.5, 0.97)
+            box_a = (0.5, 1)
         elif loc == "center":
             loc = (0.5, 0.5)
+            box_a = (0.5, 0.5)
 
     elif isinstance(loc, tuple):
+        box_a = []
         for i in loc:
             if i > 1 or i < 0:
                 raise ValueError(
                     "Text location coordinates must be between 0 and 1, inclusively"
                 )
+            elif i > 0.5:
+                box_a.append(1)
+            else:
+                box_a.append(0)
+        box_a = tuple(box_a)
+
+    return loc, box_a, ha, va
+
+
+def plot_coords(
+    ax: matplotlib.axes.Axes,
+    xr_obj: xr.DataArray | xr.Dataset,
+    loc: str | tuple[float, float] | int,
+    param: str | None = None,
+    backgroundalpha: float = 1,
+) -> matplotlib.axes.Axes:
+    """Place coordinates on plot area.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object on which to place the text.
+    xr_obj : xr.DataArray or xr.Dataset
+        The xarray object from which to fetch the text content.
+    param : {"location", "time"}, optional
+        The parameter used.
+    loc : string, int or tuple
+        Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        If a tuple, must be in axes coordinates.
+    backgroundalpha : float
+        Transparency of the text background. 1 is opaque, 0 is transparent.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    text = None
+    if param == "location":
+        if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
+            text = "lat={:.2f}, lon={:.2f}".format(
+                float(xr_obj["lat"]), float(xr_obj["lon"])
+            )
+        else:
+            warnings.warn(
+                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
+            )
+    if param == "time":
+        if "time" in xr_obj.coords:
+            text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
+
+        else:
+            warnings.warn('show_time set to True, but "time" not found in coords')
+
+    loc, box_a, ha, va = loc_mpl(loc)
 
     if text:
-        t = ax.text(loc[0], loc[1], text, transform=ax.transAxes, ha=ha, va=va)
-        t.set_bbox(dict(facecolor="w", alpha=backgroundalpha, edgecolor="w"))
+        t = mpl.offsetbox.TextArea(
+            text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
+        )
 
+        tt = mpl.offsetbox.AnnotationBbox(
+            t,
+            loc,
+            xycoords="axes fraction",
+            box_alignment=box_a,
+            pad=0.05,
+            bboxprops=dict(
+                facecolor="white",
+                alpha=backgroundalpha,
+                edgecolor="w",
+                boxstyle="Square, pad=0.5",
+            ),
+        )
+        ax.add_artist(tt)
+    return ax
+
+
+def plot_logo(
+    ax: matplotlib.axes.Axes,
+    loc: str | tuple[float, float] | int,
+    path_png: str | None = None,
+    offsetim_kw: None | dict = {"alpha": 1, "zoom": 0.5},
+) -> matplotlib.axes.Axes:
+    """Place logo of plot area.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object on which to place the text.
+    loc : string, int or tuple
+        Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        If a tuple, must be in axes coordinates.
+    path_png: str or None
+        Path to picture of logo, must be a png.
+        If none, Ouranos logo is used by default.
+    offsetim_kw: dict
+        Arugments to pass to matplotlib.offsetbox.OffsetImage().
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    if path_png is None:
+        path_png = Path(__file__).parents[1] / "data/ouranos_logo_25.png"
+
+    image = mpl.pyplot.imread(path_png)
+    imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
+    loc, box_a, ha, va = loc_mpl(loc)
+
+    ab = mpl.offsetbox.AnnotationBbox(
+        imagebox,
+        loc,
+        frameon=False,
+        xycoords="axes fraction",
+        box_alignment=box_a,
+        pad=0.05,
+    )
+    ax.add_artist(ab)
     return ax
 
 
