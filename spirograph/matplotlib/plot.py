@@ -701,14 +701,16 @@ def gdfmap(
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
             get_var_group(unique_str=df_col, path_to_json=cdata),
-            levels=levels,
             divergent=divergent,
         )
 
     # create normalization for colormap
+    plot_kw.setdefault("vmin", df[df_col].min())
+    plot_kw.setdefault("vmax", df[df_col].max())
+
     if levels or divergent:
         norm = custom_cmap_norm(
-            cmap, df[df_col].min(), df[df_col].max(), levels=levels, divergent=divergent
+            cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
         )
         plot_kw.setdefault("norm", norm)
 

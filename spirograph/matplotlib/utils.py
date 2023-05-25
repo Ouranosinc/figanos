@@ -666,7 +666,7 @@ def get_var_group(
 def create_cmap(
     var_group: str | None = None,
     levels: int | None = None,
-    divergent: bool = False,
+    divergent: bool | int = False,
     filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable group.
@@ -677,7 +677,7 @@ def create_cmap(
         Variable group from IPCC scheme.
     levels : int, optional
         Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
-    divergent : bool
+    divergent : bool or int
         Diverging colormap. If False, use sequential colormap.
     filename : str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
@@ -1008,6 +1008,13 @@ def custom_cmap_norm(
 
     """
 
+    # get cmap if string
+    if isinstance(cmap, str):
+        if cmap in plt.colormaps():
+            cmap = matplotlib.colormaps[cmap]
+        else:
+            raise ValueError("Colormap not found")
+
     # make vmin and vmax prettier
     if (vmax - vmin) >= 25:
         rvmax = np.round(math.ceil(vmax), -1)
@@ -1031,7 +1038,7 @@ def custom_cmap_norm(
             center = divergent
 
     # build norm with options
-    if levels and center:
+    if levels and center and isinstance(levels, int):
         if levels % 2 == 1:
             half_levels = int((levels + 1) / 2) + 1
         else:
