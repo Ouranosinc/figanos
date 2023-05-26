@@ -1598,8 +1598,6 @@ def taylordiagram(
         plot_kw = {"_no_label": empty_dict(plot_kw)}
     elif not plot_kw:
         plot_kw = {}
-        for key in data.keys():
-            plot_kw[key] = {}
 
     # check type
     for key, v in data.items():
@@ -1617,6 +1615,11 @@ def taylordiagram(
         warnings.warn(
             f"{initial_len - len(data)} points with negative correlations will not be plotted"
         )
+
+    # add missing keys to plot_kw
+    for key in data.keys():
+        if key not in plot_kw:
+            plot_kw[key] = {}
 
     # extract ref to be used in plot
     ref_std = list(data.values())[0].sel(taylor_param="ref_std").values
