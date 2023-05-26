@@ -425,7 +425,7 @@ def gridmap(
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
-        Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
+        Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
@@ -1286,7 +1286,7 @@ def scattermap(
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
-        Levels to use to divide the colormap.
+        Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     cbar_kw : dict, optional
