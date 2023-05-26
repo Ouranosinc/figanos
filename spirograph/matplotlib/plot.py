@@ -1602,9 +1602,11 @@ def taylordiagram(
     # check type
     for key, v in data.items():
         if not isinstance(v, xr.DataArray):
-            raise TypeError("All objects in 'data' must be xarray DataArrays")
+            raise TypeError("All objects in 'data' must be xarray DataArrays.")
         if "taylor_param" not in v.dims:
             raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
+        if key == "reference":
+            raise ValueError("'reference' is not allowed as a key in data.")
 
     # remove negative correlations
     initial_len = len(data)
@@ -1713,7 +1715,14 @@ def taylordiagram(
     ax = floating_ax.get_aux_axes(transform)  # return the axes that can be plotted on
 
     # plot reference
-    ref_pt = ax.scatter(0, ref_std, c="#154504", marker="s", label="reference")
+    if "reference" in plot_kw:
+        ref_kw = plot_kw.pop("reference")
+    else:
+        ref_kw = {}
+    ref_kw = {"color": "#154504", "marker": "s", "label": "reference"} | ref_kw
+
+    ref_pt = ax.scatter(0, ref_std, **ref_kw)
+
     points = [ref_pt]  # set up for later
 
     # rmse contours from reference standard deviation
