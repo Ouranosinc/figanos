@@ -541,7 +541,7 @@ def gridmap(
         )
         plot_kw.setdefault("levels", lin)
 
-    elif divergent:
+    elif divergent and "levels" not in plot_kw:
         norm = custom_cmap_norm(
             cmap,
             np.nanmin(plot_data.values),
