@@ -1608,12 +1608,15 @@ def taylordiagram(
 
     # remove negative correlations
     initial_len = len(data)
+    removed = [
+        key for key, da in data.items() if da.sel(taylor_param="corr").values < 0
+    ]
     data = {
         key: da for key, da in data.items() if da.sel(taylor_param="corr").values >= 0
     }
     if len(data) != initial_len:
         warnings.warn(
-            f"{initial_len - len(data)} points with negative correlations will not be plotted"
+            f"{initial_len - len(data)} points with negative correlations will not be plotted: {', '.join(removed)}"
         )
 
     # add missing keys to plot_kw
