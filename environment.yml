@@ -7,8 +7,8 @@ dependencies:
   - pandas
   - xarray
   - json
+  - geopandas
 # Visualisation
   - cartopy
   - matplotlib
   - seaborn
-  - geopandas
