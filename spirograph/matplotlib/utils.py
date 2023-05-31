@@ -490,7 +490,7 @@ def plot_logo(
     matplotlib.axes.Axes
     """
     if path_png is None:
-        path_png = Path(__file__).parents[1] / "data/ouranos_logo_25.png"
+        path_png = pathlib.Path(__file__).parents[1] / "data/ouranos_logo_25.png"
 
     image = mpl.pyplot.imread(path_png)
     imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
