@@ -26,7 +26,6 @@ from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCur
 
 from spirograph.matplotlib.utils import (
     add_cartopy_features,
-    cbar_ticks,
     check_timeindex,
     convert_scen_name,
     create_cmap,
@@ -430,7 +429,7 @@ def gridmap(
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
-        Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
+        Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
@@ -460,13 +459,6 @@ def gridmap(
     -------
     matplotlib.axes.Axes
     """
-
-    # checks
-    if levels:
-        if type(levels) != int or levels < 2 or levels > 21:
-            raise ValueError(
-                'levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.'
-            )
 
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -531,7 +523,7 @@ def gridmap(
     if isinstance(cmap, str):
         if cmap not in plt.colormaps():
             try:
-                cmap = create_cmap(levels=levels, filename=cmap)
+                cmap = create_cmap(filename=cmap)
             except FileNotFoundError:
                 pass
 
@@ -539,9 +531,29 @@ def gridmap(
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
             get_var_group(path_to_json=cdata, da=plot_data),
+            divergent=divergent,
+        )
+
+    if levels:
+        lin = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
+            levels=levels,
+            divergent=divergent,
+            linspace_out=True,
+        )
+        plot_kw.setdefault("levels", lin)
+
+    elif divergent and "levels" not in plot_kw:
+        norm = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
             levels=levels,
             divergent=divergent,
         )
+        plot_kw.setdefault("norm", norm)
 
     # set defaults
     if divergent is not False:
@@ -556,11 +568,11 @@ def gridmap(
 
     # plot
     if contourf is False:
-        pl = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     else:
         plot_kw.setdefault("levels", levels)
-        pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     # add features
     if features:
@@ -575,10 +587,6 @@ def gridmap(
             plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
         else:
             raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
-
-    # remove some labels to avoid overcrowding, when levels are used with pcolormesh
-    if contourf is False and levels is not None:
-        pl.colorbar.ax.set_yticks(cbar_ticks(pl, levels))
 
     set_plot_attrs(use_attrs, data, ax)
 
@@ -705,14 +713,16 @@ def gdfmap(
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
             get_var_group(unique_str=df_col, path_to_json=cdata),
-            levels=levels,
             divergent=divergent,
         )
 
     # create normalization for colormap
+    plot_kw.setdefault("vmin", df[df_col].min())
+    plot_kw.setdefault("vmax", df[df_col].max())
+
     if levels or divergent:
         norm = custom_cmap_norm(
-            cmap, df[df_col].min(), df[df_col].max(), levels=levels, divergent=divergent
+            cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
         )
         plot_kw.setdefault("norm", norm)
 
@@ -1280,7 +1290,7 @@ def scattermap(
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
-        Levels to use to divide the colormap.
+        Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     cbar_kw : dict, optional
