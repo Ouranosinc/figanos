@@ -13,12 +13,16 @@ import matplotlib.axes
 import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
+import mpl_toolkits.axisartist.grid_finder as gf
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xr
 from cartopy import crs as ccrs
 from matplotlib.cm import ScalarMappable
+from matplotlib.lines import Line2D
+from matplotlib.projections import PolarAxes
+from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCurveLinear
 
 from spirograph.matplotlib.utils import (
     add_cartopy_features,
@@ -204,7 +208,7 @@ def timeseries(
 
     # get data and plot
     for name, arr in data.items():
-        # look for SSP, RCP, CMIP color
+        # look for SSP, RCP, CMIP model color
         cat_colors = (
             Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
         )
@@ -1533,3 +1537,245 @@ def scattermap(
         ax.add_geometries(**geometries_kw)
 
     return ax
+
+
+def taylordiagram(
+    data: xr.DataArray | dict[str, xr.DataArray],
+    plot_kw: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    std_range: tuple = (0, 1.5),
+    contours: int | None = 4,
+    contours_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | None = None,
+    std_label: str | None = None,
+    corr_label: str | None = None,
+):
+    """
+    Build a Taylor diagram. Based on the following code: https://gist.github.com/ycopin/3342888.
+
+    Parameters
+    ----------
+    data : xr.DataArray or dict
+        DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
+        to a point on the diagram. The dictionary keys will become their labels.
+    plot_kw : dict, optional
+        Arguments to pass to the `plot()` function. Changes how the markers look.
+        If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    std_range : tuple
+        Range of the x and y axes, in units of the highest standard deviation in the data.
+    contours : int, optional
+        Number of rsme contours to plot.
+    contours_kw : dict, optional
+        Arguments to pass to `plt.contour()` for the rmse contours.
+    legend_kw : dict, optional
+        Arguments to pass to `plt.legend()`.
+    std_label : str, optional
+        Label for the standard deviation (x and y) axes.
+    corr_label : str, optional
+        Label for the correlation axis.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    plot_kw = empty_dict(plot_kw)
+    fig_kw = empty_dict(fig_kw)
+    contours_kw = empty_dict(contours_kw)
+    legend_kw = empty_dict(legend_kw)
+
+    # convert SSP, RCP, CMIP formats in keys
+    if isinstance(data, dict):
+        data = process_keys(data, convert_scen_name)
+    if isinstance(plot_kw, dict):
+        plot_kw = process_keys(plot_kw, convert_scen_name)
+
+    # if only one data input, insert in dict.
+    if not isinstance(data, dict):
+        data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
+        plot_kw = {"_no_label": empty_dict(plot_kw)}
+    elif not plot_kw:
+        plot_kw = {}
+
+    # check type
+    for key, v in data.items():
+        if not isinstance(v, xr.DataArray):
+            raise TypeError("All objects in 'data' must be xarray DataArrays.")
+        if "taylor_param" not in v.dims:
+            raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
+        if key == "reference":
+            raise ValueError("'reference' is not allowed as a key in data.")
+
+    # remove negative correlations
+    initial_len = len(data)
+    removed = [
+        key for key, da in data.items() if da.sel(taylor_param="corr").values < 0
+    ]
+    data = {
+        key: da for key, da in data.items() if da.sel(taylor_param="corr").values >= 0
+    }
+    if len(data) != initial_len:
+        warnings.warn(
+            f"{initial_len - len(data)} points with negative correlations will not be plotted: {', '.join(removed)}"
+        )
+
+    # add missing keys to plot_kw
+    for key in data.keys():
+        if key not in plot_kw:
+            plot_kw[key] = {}
+
+    # extract ref to be used in plot
+    ref_std = list(data.values())[0].sel(taylor_param="ref_std").values
+    # check if ref is the same in all DataArrays and get the highest std (for ax limits)
+    if len(data) > 1:
+        for key, da in data.items():
+            if da.sel(taylor_param="ref_std").values != ref_std:
+                raise ValueError(
+                    "All reference standard deviation values must be identical"
+                )
+
+    # get highest std for axis limits
+    max_std = [ref_std]
+    for key, da in data.items():
+        max_std.append(
+            float(
+                max(
+                    da.sel(taylor_param="ref_std").values,
+                    da.sel(taylor_param="sim_std").values,
+                )
+            )
+        )
+
+    # make labels
+    if not std_label:
+        try:
+            std_label = "standard deviation" + f" ({list(data.values())[0].units})"
+        except AttributeError:
+            std_label = "Standard deviation"
+
+    if not corr_label:
+        try:
+            if "Pearson" in list(data.values())[0].correlation_type:
+                corr_label = "Pearson correlation"
+            else:
+                corr_label = "Correlation"
+        except AttributeError:
+            corr_label = "Correlation"
+
+    # build diagram
+    transform = PolarAxes.PolarTransform()
+
+    # Setup the axis, here we map angles in degrees to angles in radius
+    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.8, 1])
+    rlocs_deg = rlocs * 90
+    tlocs = rlocs_deg * np.pi / 180  # convert degrees to radians
+    gl1 = gf.FixedLocator(tlocs)  # Positions
+    tf1 = gf.DictFormatter(dict(zip(tlocs, np.flip(rlocs).astype(str))))
+
+    # Standard deviation axis extent
+    radius_min = std_range[0] * max(max_std)
+    radius_max = std_range[1] * max(max_std)
+
+    # Set up the axes range in the parameter "extremes"
+    ghelper = GridHelperCurveLinear(
+        transform,
+        extremes=(0, np.pi / 2, radius_min, radius_max),
+        grid_locator1=gl1,
+        tick_formatter1=tf1,
+    )
+
+    fig = plt.figure(**fig_kw)
+
+    floating_ax = FloatingSubplot(fig, 111, grid_helper=ghelper)
+    fig.add_subplot(floating_ax)
+
+    # Adjust axes
+    floating_ax.axis["top"].set_axis_direction("bottom")  # "Angle axis"
+    floating_ax.axis["top"].toggle(ticklabels=True, label=True)
+    floating_ax.axis["top"].major_ticklabels.set_axis_direction("top")
+    floating_ax.axis["top"].label.set_axis_direction("top")
+    floating_ax.axis["top"].label.set_text(corr_label)
+
+    floating_ax.axis["left"].set_axis_direction("bottom")  # "X axis"
+    floating_ax.axis["left"].label.set_text(std_label)
+
+    floating_ax.axis["right"].set_axis_direction("top")  # "Y axis"
+    floating_ax.axis["right"].toggle(ticklabels=True, label=True)
+    floating_ax.axis["right"].major_ticklabels.set_axis_direction("left")
+    floating_ax.axis["right"].label.set_text(std_label)
+
+    floating_ax.axis["bottom"].set_visible(False)  # Useless
+
+    # Contours along standard deviations
+    floating_ax.grid(visible=True, alpha=0.4)
+    floating_ax.set_title("")
+
+    ax = floating_ax.get_aux_axes(transform)  # return the axes that can be plotted on
+
+    # plot reference
+    if "reference" in plot_kw:
+        ref_kw = plot_kw.pop("reference")
+    else:
+        ref_kw = {}
+    ref_kw = {"color": "#154504", "marker": "s", "label": "reference"} | ref_kw
+
+    ref_pt = ax.scatter(0, ref_std, **ref_kw)
+
+    points = [ref_pt]  # set up for later
+
+    # rmse contours from reference standard deviation
+    if contours:
+        radii, angles = np.meshgrid(
+            np.linspace(radius_min, radius_max), np.linspace(0, np.pi / 2)
+        )
+        # Compute centered RMS difference
+        rms = np.sqrt(ref_std**2 + radii**2 - 2 * ref_std * radii * np.cos(angles))
+
+        contours_kw = {"linestyles": "--", "linewidths": 0.5} | contours_kw
+        ct = ax.contour(angles, radii, rms, levels=contours, **contours_kw)
+
+        ax.clabel(ct, ct.levels, fontsize=8)
+
+        ct_line = Line2D(
+            [0],
+            [0],
+            ls=contours_kw["linestyles"],
+            lw=1,
+            c="k" if "colors" not in contours_kw else contours_kw["colors"],
+            label="rmse",
+        )
+        points.append(ct_line)
+
+    # get color options
+    style_colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
+    if len(data) > len(style_colors):
+        style_colors = style_colors * math.ceil(len(data) / len(style_colors))
+    cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+
+    # plot scatter
+    for (key, da), i in zip(data.items(), range(len(data))):
+        # look for SSP, RCP, CMIP model color
+        if get_scen_color(key, cat_colors):
+            plot_kw[key].setdefault("color", get_scen_color(key, cat_colors))
+        else:
+            plot_kw[key].setdefault("color", style_colors[i])
+
+        # convert corr to polar coordinates
+        plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
+
+        # set defaults
+        plot_kw[key] = {"label": key} | plot_kw[key]
+
+        # plot
+        pt = ax.scatter(
+            plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
+        )
+        points.append(pt)
+
+    # legend
+    legend_kw.setdefault("loc", "upper right")
+    fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
+
+    return floating_ax
