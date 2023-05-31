@@ -10,3 +10,4 @@ dependencies:
   - sphinxcontrib-napoleon
   - ipykernel
   - jupyter_client
+  - xclim

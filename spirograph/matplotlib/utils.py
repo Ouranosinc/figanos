@@ -5,7 +5,6 @@ import math
 import pathlib
 import re
 import warnings
-from pathlib import Path
 from typing import Any, Callable
 
 import cartopy.crs as ccrs
@@ -627,7 +626,12 @@ def create_cmap(
             folder = "continuous_colormaps_rgb_0-255"
 
     # parent should be 'spirograph/'
-    path = Path(__file__).parents[1] / "data/ipcc_colors" / folder / (filename + ".txt")
+    path = (
+        pathlib.Path(__file__).parents[1]
+        / "data/ipcc_colors"
+        / folder
+        / (filename + ".txt")
+    )
 
     if levels:
         rgb_data = np.loadtxt(path, skiprows=skip_rows(levels), max_rows=levels)
@@ -798,7 +802,9 @@ def process_keys(dct: dict[str, Any], func: Callable) -> dict[str, Any]:
 
 def categorical_colors() -> dict[str, str]:
     """Get a list of the categorical colors associated with certain substrings (SSP,RCP,CMIP)."""
-    path = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+    path = (
+        pathlib.Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+    )
     with open(path) as f:
         cat = json.load(f)
 
@@ -807,7 +813,7 @@ def categorical_colors() -> dict[str, str]:
 
 def get_mpl_styles() -> dict[str, str]:
     """Get the available matplotlib styles and their paths, as a dictionary."""
-    folder = Path(__file__).parent / "style/"
+    folder = pathlib.Path(__file__).parent / "style/"
     paths = sorted(folder.glob("*.mplstyle"))
     names = [str(p).split("/")[-1].removesuffix(".mplstyle") for p in paths]
     styles = {name: path for name, path in zip(names, paths)}

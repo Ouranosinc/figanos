@@ -5,3 +5,4 @@ pandoc
 ipython
 ipykernel
 jupyter_client
+xclim
