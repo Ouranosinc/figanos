@@ -9,7 +9,6 @@ from typing import Any, Callable
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature  # noqa
-import geopandas
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
