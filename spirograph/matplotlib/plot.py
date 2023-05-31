@@ -13,16 +13,19 @@ import matplotlib.axes
 import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
+import mpl_toolkits.axisartist.grid_finder as gf
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xr
 from cartopy import crs as ccrs
 from matplotlib.cm import ScalarMappable
+from matplotlib.lines import Line2D
+from matplotlib.projections import PolarAxes
+from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCurveLinear
 
 from spirograph.matplotlib.utils import (
     add_cartopy_features,
-    cbar_ticks,
     check_timeindex,
     convert_scen_name,
     create_cmap,
@@ -35,9 +38,11 @@ from spirograph.matplotlib.utils import (
     get_scen_color,
     get_var_group,
     gpd_to_ccrs,
+    norm2range,
     plot_coords,
     process_keys,
     set_plot_attrs,
+    size_legend_elements,
     sort_lines,
     split_legend,
     wrap_text,
@@ -202,7 +207,7 @@ def timeseries(
 
     # get data and plot
     for name, arr in data.items():
-        # look for SSP, RCP, CMIP color
+        # look for SSP, RCP, CMIP model color
         cat_colors = (
             Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
         )
@@ -378,7 +383,7 @@ def gridmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
+    projection: ccrs.Projection = ccrs.PlateCarree(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
@@ -424,7 +429,7 @@ def gridmap(
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
-        Levels to use to divide the colormap. Acceptable values are from 2 to 21, inclusive.
+        Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
@@ -454,13 +459,6 @@ def gridmap(
     -------
     matplotlib.axes.Axes
     """
-
-    # checks
-    if levels:
-        if type(levels) != int or levels < 2 or levels > 21:
-            raise ValueError(
-                'levels must be int between 2 and 21, inclusively. To pass a list, use plot_kw={"levels":list()}.'
-            )
 
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
@@ -525,7 +523,7 @@ def gridmap(
     if isinstance(cmap, str):
         if cmap not in plt.colormaps():
             try:
-                cmap = create_cmap(levels=levels, filename=cmap)
+                cmap = create_cmap(filename=cmap)
             except FileNotFoundError:
                 pass
 
@@ -533,9 +531,29 @@ def gridmap(
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
             get_var_group(path_to_json=cdata, da=plot_data),
+            divergent=divergent,
+        )
+
+    if levels:
+        lin = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
+            levels=levels,
+            divergent=divergent,
+            linspace_out=True,
+        )
+        plot_kw.setdefault("levels", lin)
+
+    elif divergent and "levels" not in plot_kw:
+        norm = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
             levels=levels,
             divergent=divergent,
         )
+        plot_kw.setdefault("norm", norm)
 
     # set defaults
     if divergent is not False:
@@ -550,11 +568,11 @@ def gridmap(
 
     # plot
     if contourf is False:
-        pl = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     else:
         plot_kw.setdefault("levels", levels)
-        pl = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     # add features
     if features:
@@ -569,10 +587,6 @@ def gridmap(
             plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
         else:
             raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
-
-    # remove some labels to avoid overcrowding, when levels are used with pcolormesh
-    if contourf is False and levels is not None:
-        pl.colorbar.ax.set_yticks(cbar_ticks(pl, levels))
 
     set_plot_attrs(use_attrs, data, ax)
 
@@ -699,14 +713,16 @@ def gdfmap(
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
             get_var_group(unique_str=df_col, path_to_json=cdata),
-            levels=levels,
             divergent=divergent,
         )
 
     # create normalization for colormap
+    plot_kw.setdefault("vmin", df[df_col].min())
+    plot_kw.setdefault("vmax", df[df_col].max())
+
     if levels or divergent:
         norm = custom_cmap_norm(
-            cmap, df[df_col].min(), df[df_col].max(), levels=levels, divergent=divergent
+            cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
         )
         plot_kw.setdefault("norm", norm)
 
@@ -1214,3 +1230,562 @@ def heatmap(
     )
 
     return ax
+
+
+def scattermap(
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    projection: ccrs.Projection = ccrs.PlateCarree(),
+    transform: ccrs.Projection | None = ccrs.PlateCarree(),
+    features: list[str] | dict[str, dict[str, Any]] | None = None,
+    geometries_kw: dict[str, Any] | None = None,
+    sizes: str | bool | None = None,
+    size_range: tuple = (10, 60),
+    cmap: str | matplotlib.colors.Colormap | None = None,
+    levels: int | None = None,
+    divergent: bool | int | float = False,
+    cbar_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | None = None,
+    show_time: bool | str | int | tuple[float, float] = False,
+    frame: bool = False,
+) -> matplotlib.axes.Axes:
+    """Make a scatter plot of georeferenced data on a map.
+
+    Parameters
+    ----------
+    data : dict, DataArray or Dataset
+        Input data do plot. If dictionary, must have only one entry.
+        If a Dataset with multiple variables, the first one will be plotted against the colormap.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict, optional
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
+        Only the keys found in the default dict can be used.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    plot_kw :  dict, optional
+        Arguments to pass to `plt.scatter()`.
+        If 'data' is a dictionary, can be a dictionary with the same key as 'data'.
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    transform : ccrs.Projection, optional
+        Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
+        ccrs.PlateCarree() or ccrs.RotatedPole().
+    features : list or dict, optional
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
+    geometries_kw : dict, optional
+        Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
+    sizes : bool or str, optional
+        Name of the variable to use for determining point size. If True, use the same data as in the colorbar.
+    size_range : tuple
+        Tuple of the minimum and maximum size of the points.
+    cmap : matplotlib.colors.Colormap or str, optional
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    levels : int, optional
+        Number of levels to divide the colormap into.
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
+    cbar_kw : dict, optional
+        Arguments to pass to plt.colorbar().
+    legend_kw : dict, optional
+        Arguments to pass to plt.legend().
+    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show time (as date) at the bottom right of the figure.
+        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
+        of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
+    frame : bool
+        Show or hide frame. Default False.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+    cbar_kw = empty_dict(cbar_kw)
+    legend_kw = empty_dict(legend_kw)
+
+    # set default use_attrs values
+    use_attrs.setdefault("title", "description")
+    use_attrs.setdefault("cbar_label", "long_name")
+    use_attrs.setdefault("cbar_units", "units")
+
+    # extract plot_kw from dict if needed
+    if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
+        plot_kw = plot_kw[list(data.keys())[0]]
+
+    # if data is dict, extract
+    if isinstance(data, dict):
+        if len(data) == 1:
+            data = list(data.values())[0]
+        else:
+            raise ValueError("If `data` is a dict, it must be of length 1.")
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        plot_data = data
+    elif isinstance(data, xr.Dataset):
+        plot_data = data[list(data.keys())[0]]
+    else:
+        raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
+
+    # setup transform
+    if transform is None:
+        if "lat" in data.dims and "lon" in data.dims:
+            transform = ccrs.PlateCarree()
+        elif "rlat" in data.dims and "rlon" in data.dims:
+            if hasattr(data, "rotated_pole"):
+                transform = get_rotpole(data)
+
+    # setup fig, ax
+    if ax is None:
+        fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+
+    # create cbar label
+    if (
+        "cbar_units" in use_attrs
+        and len(get_attributes(use_attrs["cbar_units"], data)) >= 1
+    ):  # avoids '[]' as label
+        cbar_label = (
+            get_attributes(use_attrs["cbar_label"], data)
+            + " ("
+            + get_attributes(use_attrs["cbar_units"], data)
+            + ")"
+        )
+    else:
+        cbar_label = get_attributes(use_attrs["cbar_label"], data)
+
+    # colormap
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=plot_data),
+            divergent=divergent,
+        )
+
+    # nans
+    mask = ~np.isnan(plot_data.values)
+    if np.sum(mask) < len(mask):
+        warnings.warn(
+            f"{len(mask)-np.sum(mask)} nan values were dropped when plotting the color values"
+        )
+
+    # point sizes
+    if sizes:
+        if sizes is True:
+            sdata = plot_data
+
+        elif isinstance(sizes, str):
+            if hasattr(data, "name") and getattr(data, "name") == sizes:
+                sdata = plot_data
+            elif hasattr(data, sizes):
+                sdata = getattr(data, sizes)
+            else:
+                raise ValueError(f"{sizes} not found")
+
+        else:
+            raise TypeError("sizes must be a string or a bool")
+
+        smask = ~np.isnan(sdata.values) & mask
+        if np.sum(smask) < np.sum(mask):
+            warnings.warn(
+                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size"
+            )
+            mask = smask
+
+        pt_sizes = norm2range(
+            data=sdata.values[mask], target_range=size_range, data_range=None
+        )
+        plot_kw.setdefault("s", pt_sizes)
+
+    # norm
+    plot_kw.setdefault("vmin", min(plot_data.values[mask]))
+    plot_kw.setdefault("vmax", max(plot_data.values[mask]))
+
+    norm = custom_cmap_norm(
+        cmap,
+        vmin=plot_kw["vmin"],
+        vmax=plot_kw["vmax"],
+        levels=levels,
+        divergent=divergent,
+    )
+
+    # set defaults and create copy without vmin, vmax (conflicts with norm)
+    plot_kw = {
+        "cmap": cmap,
+        "norm": norm,
+        "transform": transform,
+        "zorder": 8,
+        "marker": "o",
+    } | plot_kw
+
+    plot_kw_pop = plot_kw.copy()
+    for key in ["vmin", "vmax"]:
+        plot_kw_pop.pop(key)
+
+    # plot
+    ax.scatter(
+        x=plot_data.lon.values[mask],
+        y=plot_data.lat.values[mask],
+        c=plot_data.values[mask],
+        **plot_kw_pop,
+    )
+
+    # colorbar
+    cbar_kw.setdefault("label", wrap_text(cbar_label))
+    cb = plt.colorbar(
+        mappable=matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, **cbar_kw
+    )
+
+    # size legend
+    if sizes:
+        legend_elements = size_legend_elements(
+            sdata.values[mask], pt_sizes, max_entries=6, marker=plot_kw["marker"]
+        )
+        # legend spacing
+        if size_range[1] > 200:
+            ls = 0.5 + size_range[1] / 100 * 0.125
+        else:
+            ls = 0.5
+
+        legend_kw = {
+            "loc": "lower left",
+            "facecolor": "w",
+            "framealpha": 1,
+            "edgecolor": "w",
+            "labelspacing": ls,
+        } | legend_kw
+
+        lgd = ax.legend(handles=legend_elements, **legend_kw)
+        lgd.set_zorder(11)
+        if "title" not in legend_kw:
+            if hasattr(sdata, "long_name"):
+                lgd_title = wrap_text(
+                    getattr(sdata, "long_name"), min_line_len=1, max_line_len=15
+                )
+                if hasattr(sdata, "units"):
+                    lgd_title += f" ({getattr(sdata,'units')})"
+            else:
+                lgd_title = sizes
+
+            lgd.set_title(lgd_title)
+
+    if show_time:
+        if show_time is True:
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
+
+    set_plot_attrs(use_attrs, plot_data, ax)
+
+    if frame is False:
+        # cbar
+        cb.outline.set_visible(False)
+        # main ax
+        ax.spines["geo"].set_visible(False)
+
+    # add geometries
+    if geometries_kw:
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
+        else:
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
+
+        ax.add_geometries(**geometries_kw)
+
+    return ax
+
+
+def taylordiagram(
+    data: xr.DataArray | dict[str, xr.DataArray],
+    plot_kw: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    std_range: tuple = (0, 1.5),
+    contours: int | None = 4,
+    contours_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | None = None,
+    std_label: str | None = None,
+    corr_label: str | None = None,
+):
+    """
+    Build a Taylor diagram. Based on the following code: https://gist.github.com/ycopin/3342888.
+
+    Parameters
+    ----------
+    data : xr.DataArray or dict
+        DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
+        to a point on the diagram. The dictionary keys will become their labels.
+    plot_kw : dict, optional
+        Arguments to pass to the `plot()` function. Changes how the markers look.
+        If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    std_range : tuple
+        Range of the x and y axes, in units of the highest standard deviation in the data.
+    contours : int, optional
+        Number of rsme contours to plot.
+    contours_kw : dict, optional
+        Arguments to pass to `plt.contour()` for the rmse contours.
+    legend_kw : dict, optional
+        Arguments to pass to `plt.legend()`.
+    std_label : str, optional
+        Label for the standard deviation (x and y) axes.
+    corr_label : str, optional
+        Label for the correlation axis.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+
+    plot_kw = empty_dict(plot_kw)
+    fig_kw = empty_dict(fig_kw)
+    contours_kw = empty_dict(contours_kw)
+    legend_kw = empty_dict(legend_kw)
+
+    # convert SSP, RCP, CMIP formats in keys
+    if isinstance(data, dict):
+        data = process_keys(data, convert_scen_name)
+    if isinstance(plot_kw, dict):
+        plot_kw = process_keys(plot_kw, convert_scen_name)
+
+    # if only one data input, insert in dict.
+    if not isinstance(data, dict):
+        data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
+        plot_kw = {"_no_label": empty_dict(plot_kw)}
+    elif not plot_kw:
+        plot_kw = {}
+
+    # check type
+    for key, v in data.items():
+        if not isinstance(v, xr.DataArray):
+            raise TypeError("All objects in 'data' must be xarray DataArrays.")
+        if "taylor_param" not in v.dims:
+            raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
+        if key == "reference":
+            raise ValueError("'reference' is not allowed as a key in data.")
+
+    # remove negative correlations
+    initial_len = len(data)
+    removed = [
+        key for key, da in data.items() if da.sel(taylor_param="corr").values < 0
+    ]
+    data = {
+        key: da for key, da in data.items() if da.sel(taylor_param="corr").values >= 0
+    }
+    if len(data) != initial_len:
+        warnings.warn(
+            f"{initial_len - len(data)} points with negative correlations will not be plotted: {', '.join(removed)}"
+        )
+
+    # add missing keys to plot_kw
+    for key in data.keys():
+        if key not in plot_kw:
+            plot_kw[key] = {}
+
+    # extract ref to be used in plot
+    ref_std = list(data.values())[0].sel(taylor_param="ref_std").values
+    # check if ref is the same in all DataArrays and get the highest std (for ax limits)
+    if len(data) > 1:
+        for key, da in data.items():
+            if da.sel(taylor_param="ref_std").values != ref_std:
+                raise ValueError(
+                    "All reference standard deviation values must be identical"
+                )
+
+    # get highest std for axis limits
+    max_std = [ref_std]
+    for key, da in data.items():
+        max_std.append(
+            float(
+                max(
+                    da.sel(taylor_param="ref_std").values,
+                    da.sel(taylor_param="sim_std").values,
+                )
+            )
+        )
+
+    # make labels
+    if not std_label:
+        try:
+            std_label = "standard deviation" + f" ({list(data.values())[0].units})"
+        except AttributeError:
+            std_label = "Standard deviation"
+
+    if not corr_label:
+        try:
+            if "Pearson" in list(data.values())[0].correlation_type:
+                corr_label = "Pearson correlation"
+            else:
+                corr_label = "Correlation"
+        except AttributeError:
+            corr_label = "Correlation"
+
+    # build diagram
+    transform = PolarAxes.PolarTransform()
+
+    # Setup the axis, here we map angles in degrees to angles in radius
+    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.8, 1])
+    rlocs_deg = rlocs * 90
+    tlocs = rlocs_deg * np.pi / 180  # convert degrees to radians
+    gl1 = gf.FixedLocator(tlocs)  # Positions
+    tf1 = gf.DictFormatter(dict(zip(tlocs, np.flip(rlocs).astype(str))))
+
+    # Standard deviation axis extent
+    radius_min = std_range[0] * max(max_std)
+    radius_max = std_range[1] * max(max_std)
+
+    # Set up the axes range in the parameter "extremes"
+    ghelper = GridHelperCurveLinear(
+        transform,
+        extremes=(0, np.pi / 2, radius_min, radius_max),
+        grid_locator1=gl1,
+        tick_formatter1=tf1,
+    )
+
+    fig = plt.figure(**fig_kw)
+
+    floating_ax = FloatingSubplot(fig, 111, grid_helper=ghelper)
+    fig.add_subplot(floating_ax)
+
+    # Adjust axes
+    floating_ax.axis["top"].set_axis_direction("bottom")  # "Angle axis"
+    floating_ax.axis["top"].toggle(ticklabels=True, label=True)
+    floating_ax.axis["top"].major_ticklabels.set_axis_direction("top")
+    floating_ax.axis["top"].label.set_axis_direction("top")
+    floating_ax.axis["top"].label.set_text(corr_label)
+
+    floating_ax.axis["left"].set_axis_direction("bottom")  # "X axis"
+    floating_ax.axis["left"].label.set_text(std_label)
+
+    floating_ax.axis["right"].set_axis_direction("top")  # "Y axis"
+    floating_ax.axis["right"].toggle(ticklabels=True, label=True)
+    floating_ax.axis["right"].major_ticklabels.set_axis_direction("left")
+    floating_ax.axis["right"].label.set_text(std_label)
+
+    floating_ax.axis["bottom"].set_visible(False)  # Useless
+
+    # Contours along standard deviations
+    floating_ax.grid(visible=True, alpha=0.4)
+    floating_ax.set_title("")
+
+    ax = floating_ax.get_aux_axes(transform)  # return the axes that can be plotted on
+
+    # plot reference
+    if "reference" in plot_kw:
+        ref_kw = plot_kw.pop("reference")
+    else:
+        ref_kw = {}
+    ref_kw = {"color": "#154504", "marker": "s", "label": "reference"} | ref_kw
+
+    ref_pt = ax.scatter(0, ref_std, **ref_kw)
+
+    points = [ref_pt]  # set up for later
+
+    # rmse contours from reference standard deviation
+    if contours:
+        radii, angles = np.meshgrid(
+            np.linspace(radius_min, radius_max), np.linspace(0, np.pi / 2)
+        )
+        # Compute centered RMS difference
+        rms = np.sqrt(ref_std**2 + radii**2 - 2 * ref_std * radii * np.cos(angles))
+
+        contours_kw = {"linestyles": "--", "linewidths": 0.5} | contours_kw
+        ct = ax.contour(angles, radii, rms, levels=contours, **contours_kw)
+
+        ax.clabel(ct, ct.levels, fontsize=8)
+
+        ct_line = Line2D(
+            [0],
+            [0],
+            ls=contours_kw["linestyles"],
+            lw=1,
+            c="k" if "colors" not in contours_kw else contours_kw["colors"],
+            label="rmse",
+        )
+        points.append(ct_line)
+
+    # get color options
+    style_colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
+    if len(data) > len(style_colors):
+        style_colors = style_colors * math.ceil(len(data) / len(style_colors))
+    cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+
+    # plot scatter
+    for (key, da), i in zip(data.items(), range(len(data))):
+        # look for SSP, RCP, CMIP model color
+        if get_scen_color(key, cat_colors):
+            plot_kw[key].setdefault("color", get_scen_color(key, cat_colors))
+        else:
+            plot_kw[key].setdefault("color", style_colors[i])
+
+        # convert corr to polar coordinates
+        plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
+
+        # set defaults
+        plot_kw[key] = {"label": key} | plot_kw[key]
+
+        # plot
+        pt = ax.scatter(
+            plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
+        )
+        points.append(pt)
+
+    # legend
+    legend_kw.setdefault("loc", "upper right")
+    fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
+
+    return floating_ax

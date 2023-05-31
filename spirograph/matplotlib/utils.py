@@ -13,9 +13,11 @@ import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+from matplotlib.lines import Line2D
 
 warnings.simplefilter("always", UserWarning)
 
@@ -292,51 +294,21 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
     return sorted_lines
 
 
-def plot_coords(
-    ax: matplotlib.axes.Axes,
-    xr_obj: xr.DataArray | xr.Dataset,
+def loc_mpl(
     loc: str | tuple[float, float] | int,
-    param: str | None = None,
-    backgroundalpha: float = 1,
-) -> matplotlib.axes.Axes:
-    """Place coordinates on bottom right of plot area.
+) -> tuple[tuple[float, float], tuple[float, float], str, str]:
+    """Returns coordinates and alignment associated to loc.
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
-        Matplotlib axes object on which to place the text.
-    xr_obj : xr.DataArray or xr.Dataset
-        The xarray object from which to fetch the text content.
-    param : {"location", "time"}, optional
-        The parameter used.
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    backgroundalpha : float
-        Transparency of the text background. 1 is opaque, 0 is transparent.
 
     Returns
     -------
-    matplotlib.axes.Axes
+    tuple(float, float), str, str
     """
-    text = None
-    if param == "location":
-        if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
-            text = "lat={:.2f}, lon={:.2f}".format(
-                float(xr_obj["lat"]), float(xr_obj["lon"])
-            )
-        else:
-            warnings.warn(
-                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
-            )
-    if param == "time":
-        if "time" in xr_obj.coords:
-            text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
-
-        else:
-            warnings.warn('show_time set to True, but "time" not found in coords')
-
-    # location
     ha = "left"
     va = "bottom"
 
@@ -379,36 +351,160 @@ def plot_coords(
         # transAxes
         if loc == "upper right":
             loc = (0.97, 0.97)
+            box_a = (1, 1)
         elif loc == "upper left":
             loc = (0.03, 0.97)
+            box_a = (0, 1)
         elif loc == "lower left":
             loc = (0.03, 0.03)
+            box_a = (0, 0)
         elif loc == "lower right":
             loc = (0.97, 0.03)
+            box_a = (1, 0)
         elif loc == "right":
             loc = (0.97, 0.5)
+            box_a = (1, 0.5)
         elif loc == "center left":
             loc = (0.03, 0.5)
+            box_a = (0, 0.5)
         elif loc == "center right":
             loc = (0.97, 0.5)
+            box_a = (0.97, 0.5)
         elif loc == "lower center":
             loc = (0.5, 0.03)
+            box_a = (0.5, 0)
         elif loc == "upper center":
             loc = (0.5, 0.97)
+            box_a = (0.5, 1)
         elif loc == "center":
             loc = (0.5, 0.5)
+            box_a = (0.5, 0.5)
 
     elif isinstance(loc, tuple):
+        box_a = []
         for i in loc:
             if i > 1 or i < 0:
                 raise ValueError(
                     "Text location coordinates must be between 0 and 1, inclusively"
                 )
+            elif i > 0.5:
+                box_a.append(1)
+            else:
+                box_a.append(0)
+        box_a = tuple(box_a)
+
+    return loc, box_a, ha, va
+
+
+def plot_coords(
+    ax: matplotlib.axes.Axes,
+    xr_obj: xr.DataArray | xr.Dataset,
+    loc: str | tuple[float, float] | int,
+    param: str | None = None,
+    backgroundalpha: float = 1,
+) -> matplotlib.axes.Axes:
+    """Place coordinates on plot area.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object on which to place the text.
+    xr_obj : xr.DataArray or xr.Dataset
+        The xarray object from which to fetch the text content.
+    param : {"location", "time"}, optional
+        The parameter used.
+    loc : string, int or tuple
+        Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        If a tuple, must be in axes coordinates.
+    backgroundalpha : float
+        Transparency of the text background. 1 is opaque, 0 is transparent.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    text = None
+    if param == "location":
+        if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
+            text = "lat={:.2f}, lon={:.2f}".format(
+                float(xr_obj["lat"]), float(xr_obj["lon"])
+            )
+        else:
+            warnings.warn(
+                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
+            )
+    if param == "time":
+        if "time" in xr_obj.coords:
+            text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
+
+        else:
+            warnings.warn('show_time set to True, but "time" not found in coords')
+
+    loc, box_a, ha, va = loc_mpl(loc)
 
     if text:
-        t = ax.text(loc[0], loc[1], text, transform=ax.transAxes, ha=ha, va=va)
-        t.set_bbox(dict(facecolor="w", alpha=backgroundalpha, edgecolor="w"))
+        t = mpl.offsetbox.TextArea(
+            text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
+        )
 
+        tt = mpl.offsetbox.AnnotationBbox(
+            t,
+            loc,
+            xycoords="axes fraction",
+            box_alignment=box_a,
+            pad=0.05,
+            bboxprops=dict(
+                facecolor="white",
+                alpha=backgroundalpha,
+                edgecolor="w",
+                boxstyle="Square, pad=0.5",
+            ),
+        )
+        ax.add_artist(tt)
+    return ax
+
+
+def plot_logo(
+    ax: matplotlib.axes.Axes,
+    loc: str | tuple[float, float] | int,
+    path_png: str | None = None,
+    offsetim_kw: None | dict = {"alpha": 1, "zoom": 0.5},
+) -> matplotlib.axes.Axes:
+    """Place logo of plot area.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object on which to place the text.
+    loc : string, int or tuple
+        Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        If a tuple, must be in axes coordinates.
+    path_png: str or None
+        Path to picture of logo, must be a png.
+        If none, Ouranos logo is used by default.
+    offsetim_kw: dict
+        Arugments to pass to matplotlib.offsetbox.OffsetImage().
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    if path_png is None:
+        path_png = Path(__file__).parents[1] / "data/ouranos_logo_25.png"
+
+    image = mpl.pyplot.imread(path_png)
+    imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
+    loc, box_a, ha, va = loc_mpl(loc)
+
+    ab = mpl.offsetbox.AnnotationBbox(
+        imagebox,
+        loc,
+        frameon=False,
+        xycoords="axes fraction",
+        box_alignment=box_a,
+        pad=0.05,
+    )
+    ax.add_artist(ab)
     return ax
 
 
@@ -567,8 +663,7 @@ def get_var_group(
 
 def create_cmap(
     var_group: str | None = None,
-    levels: int | None = None,
-    divergent: bool = False,
+    divergent: bool | int = False,
     filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
     """Create colormap according to variable group.
@@ -577,9 +672,7 @@ def create_cmap(
     ----------
     var_group : str, optional
         Variable group from IPCC scheme.
-    levels : int, optional
-        Number of levels for discrete colormaps. Must be between 2 and 21, inclusive. If None, use continuous colormap.
-    divergent : bool
+    divergent : bool or int
         Diverging colormap. If False, use sequential colormap.
     filename : str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
@@ -589,23 +682,15 @@ def create_cmap(
     matplotlib.colors.Colormap
     """
 
-    # func to get position of sequential cmap in txt file
-    def skip_rows(levels: int) -> int:
-        """Get number of rows to skip depending on levels."""
-        skiprows = 1
-
-        if levels > 5:
-            for i in np.arange(5, levels):
-                skiprows += i + 1
-        return skiprows
+    reverse = False
 
     if filename:
-        if "disc" in filename:
-            folder = "discrete_colormaps_rgb_0-255"
-        else:
-            folder = "continuous_colormaps_rgb_0-255"
-
+        folder = "continuous_colormaps_rgb_0-255"
         filename = filename.replace(".txt", "")
+
+        if filename.endswith("_r"):
+            reverse = True
+            filename = filename[:-2]
 
     else:
         # filename
@@ -617,12 +702,7 @@ def create_cmap(
             else:
                 filename = var_group + "_seq"
 
-        # continuous or discrete
-        if levels:
-            folder = "discrete_colormaps_rgb_0-255"
-            filename = filename + "_disc"
-        else:
-            folder = "continuous_colormaps_rgb_0-255"
+        folder = "continuous_colormaps_rgb_0-255"
 
     # parent should be 'spirograph/'
     path = (
@@ -632,36 +712,16 @@ def create_cmap(
         / (filename + ".txt")
     )
 
-    if levels:
-        rgb_data = np.loadtxt(path, skiprows=skip_rows(levels), max_rows=levels)
-    else:
-        rgb_data = np.loadtxt(path)
+    rgb_data = np.loadtxt(path)
 
     # convert to 0-1 RGB
     rgb_data = rgb_data / 255
 
-    if levels or "_disc" in filename:
-        N = levels
-    else:
-        N = 256  # default value
-
-    cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=N)
+    cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=256)
+    if reverse is True:
+        cmap = cmap.reversed()
 
     return cmap
-
-
-def cbar_ticks(plot_obj: matplotlib.axes.Axes, levels: int) -> list:
-    """Create a list of ticks for the colorbar based on data, to avoid crowded ax."""
-    vmin = plot_obj.colorbar.vmin
-    vmax = plot_obj.colorbar.vmax
-
-    ticks = np.linspace(vmin, vmax, levels + 1)
-
-    # if there are more than 7 levels, return every second label
-    if levels >= 7:
-        ticks = [ticks[i] for i in np.arange(0, len(ticks), 2)]
-
-    return ticks
 
 
 def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
@@ -886,7 +946,8 @@ def custom_cmap_norm(
     vmax: int | float,
     levels: int | list[int | float] | None = None,
     divergent: bool | int | float = False,
-) -> matplotlib.colors.Normalize:
+    linspace_out: bool = False,
+) -> matplotlib.colors.Normalize | np.ndarray:
     """
     Get matplotlib normalization according to main function arguments.
 
@@ -902,6 +963,8 @@ def custom_cmap_norm(
         Number of  levels or list of level boundaries (in data units) to use to divide the colormap.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
+    linspace_out: bool
+        If True, return array created by np.linspace() instead of normalization instance.
 
     Returns
     -------
@@ -909,19 +972,26 @@ def custom_cmap_norm(
 
     """
 
+    # get cmap if string
+    if isinstance(cmap, str):
+        if cmap in plt.colormaps():
+            cmap = matplotlib.colormaps[cmap]
+        else:
+            raise ValueError("Colormap not found")
+
     # make vmin and vmax prettier
     if (vmax - vmin) >= 25:
-        rvmax = np.round(math.ceil(vmax), -1)
-        rvmin = np.round(math.floor(vmin), -1)
+        rvmax = math.ceil(vmax / 10.0) * 10
+        rvmin = math.floor(vmin / 10.0) * 10
     elif 1 <= (vmax - vmin) < 25:
-        rvmax = np.round(math.ceil(vmax), 0)
-        rvmin = np.round(math.floor(vmin), 0)
+        rvmax = math.ceil(vmax / 1) * 1
+        rvmin = math.floor(vmin / 1) * 1
     elif 0.1 <= (vmax - vmin) < 1:
-        rvmax = np.round(math.ceil(vmax), 1)
-        rvmin = np.round(math.floor(vmin), 1)
+        rvmax = math.ceil(vmax / 0.1) * 0.1
+        rvmin = math.floor(vmin / 0.1) * 0.1
     else:
-        rvmax = np.round(math.ceil(vmax), 2)
-        rvmin = np.round(math.floor(vmin), 2)
+        rvmax = math.ceil(vmax / 0.01) * 0.01
+        rvmin = math.floor(vmin / 0.01) * 0.01
 
     # center
     center = None
@@ -932,7 +1002,7 @@ def custom_cmap_norm(
             center = divergent
 
     # build norm with options
-    if levels and center:
+    if levels and center and isinstance(levels, int):
         if levels % 2 == 1:
             half_levels = int((levels + 1) / 2) + 1
         else:
@@ -945,6 +1015,10 @@ def custom_cmap_norm(
             )
         )
         norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
+
+        if linspace_out:
+            return lin
+
     elif levels:
         if isinstance(levels, list):
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
@@ -952,9 +1026,115 @@ def custom_cmap_norm(
             lin = np.linspace(rvmin, rvmax, num=levels + 1)
             norm = matplotlib.colors.BoundaryNorm(boundaries=lin, ncolors=cmap.N)
 
+            if linspace_out:
+                return lin
+
     elif center:
         norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)
     else:
         norm = matplotlib.colors.Normalize(rvmin, rvmax)
 
     return norm
+
+
+def norm2range(
+    data: np.ndarray, target_range: tuple, data_range: tuple | None = None
+) -> np.ndarray:
+    """
+    Normalize data across a specific range.
+    """
+    if data_range is None:
+        if len(data) > 1:
+            data_range = (min(data), max(data))
+        else:
+            raise ValueError(" if data is not an array, data_range must be specified")
+
+    norm = (data - data_range[0]) / (data_range[1] - data_range[0])
+
+    return target_range[0] + (norm * (target_range[1] - target_range[0]))
+
+
+def size_legend_elements(
+    data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
+) -> list[matplotlib.lines.Line2D]:
+    """
+    Create handles to use in a point-size legend.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Data used to determine the point sizes.
+    sizes : np.ndarray
+        Array of point sizes.
+    max_entries : int
+        Maximum number of entries in the legend.
+    marker: str
+        Marker to use in legend.
+
+
+    Returns
+    -------
+    list of matplotlib.lines.Line2D
+
+    """
+
+    # how many increments of 10 pts**2 are there in the sizes
+    n = int(np.round(max(sizes) - min(sizes), -1) / 10)
+
+    # divide data in those increments
+    lgd_data = np.linspace(min(data), max(data), n)
+
+    # round according to range
+    ratio = abs(max(data) - min(data) / n)
+
+    if ratio >= 1000:
+        rounding = 1000
+    elif 100 <= ratio < 1000:
+        rounding = 100
+    elif 10 <= ratio < 100:
+        rounding = 10
+    elif 5 <= ratio < 10:
+        rounding = 5
+    elif 1 <= ratio < 5:
+        rounding = 1
+    elif 0.1 <= ratio < 1:
+        rounding = 0.1
+    elif 0.01 <= ratio < 0.1:
+        rounding = 0.01
+    else:
+        rounding = 0.001
+
+    lgd_data = np.unique(rounding * np.round(lgd_data / rounding))
+
+    # convert back to sizes
+    lgd_sizes = norm2range(
+        data=lgd_data,
+        data_range=(min(data), max(data)),
+        target_range=(min(sizes), max(sizes)),
+    )
+
+    legend_elements = []
+
+    for s, d in zip(lgd_sizes, lgd_data):
+        if isinstance(d, float) and d.is_integer():
+            label = str(int(d))
+        else:
+            label = str(d)
+
+        legend_elements.append(
+            Line2D(
+                [0],
+                [0],
+                marker=marker,
+                color="k",
+                lw=0,
+                markerfacecolor="w",
+                label=label,
+                markersize=np.sqrt(s),
+            )
+        )
+
+    if len(legend_elements) > max_entries:
+        return [legend_elements[i] for i in np.arange(0, max_entries + 1, 2)]
+    else:
+        return legend_elements
