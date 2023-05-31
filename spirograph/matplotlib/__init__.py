@@ -8,4 +8,4 @@ from .plot import (
     timeseries,
     violin,
 )
-from .utils import categorical_colors, set_mpl_style
+from .utils import categorical_colors, plot_logo, set_mpl_style
