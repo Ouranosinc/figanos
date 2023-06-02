@@ -646,7 +646,7 @@ def gdfmap(
     plot_kw :  dict, optional
         Arguments to pass to the GeoDataFrame.plot() method.
     projection : ccrs.Projection
-        The projection to use, taken from the cartopy.crs options.
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
     features : list or dict, optional
         Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
@@ -681,22 +681,19 @@ def gdfmap(
         raise ValueError("column 'geometry' not found in GeoDataFrame")
 
     # convert to projection
-    df = gpd_to_ccrs(df=df, proj=projection)
+    if ax is None:
+        df = gpd_to_ccrs(df=df, proj=projection)
+    else:
+        df = gpd_to_ccrs(df=df, proj=ax.projection)
 
     # setup fig, ax
     if ax is None:
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
         ax.set_aspect("equal")  # recommended by geopandas
 
-    # add features and defaults
-    default_features = {
-        "land": {"color": "#f0f0f0"},
-        "rivers": {"edgecolor": "#cfd3d4"},
-        "lakes": {"facecolor": "#cfd3d4"},
-        "coastline": {"edgecolor": "black"},
-    }
-    features = default_features | features
-    add_cartopy_features(ax, features)
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
 
     # colormap
     if isinstance(cmap, str):
