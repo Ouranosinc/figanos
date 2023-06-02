@@ -15,6 +15,8 @@
   "rain": "prec",
   "precip": "prec",
   "precipitation": "prec",
+  "liquidprcptot": "prec",
+  "solidprcptot": "prec",
   "evapotranspiration": "prec",
   "sfcWind": "wind",
   "ua": "wind",
@@ -24,5 +26,7 @@
   "snd": "cryo",
   "prsn": "cryo",
   "siconc": "cryo",
-  "ice": "cryo"
+  "ice": "cryo",
+  "zr": "misc2",
+  "FRZA": "misc2"
 }
