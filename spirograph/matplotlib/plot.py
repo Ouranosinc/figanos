@@ -679,8 +679,9 @@ def gdfmap(
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
         ax.set_aspect("equal")  # recommended by geopandas
 
-    # add features and defaults
-    add_cartopy_features(ax, features)
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
 
     # colormap
     if isinstance(cmap, str):
