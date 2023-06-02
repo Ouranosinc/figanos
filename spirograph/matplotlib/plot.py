@@ -483,13 +483,13 @@ def gridmap(
 
     # select data to plot
     if isinstance(data, xr.DataArray):
-        plot_data = data
+        plot_data = data.squeeze()
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
                 "data is xr.Dataset; only the first variable will be used in plot"
             )
-        plot_data = data[list(data.keys())[0]]
+        plot_data = data[list(data.keys())[0]].squeeze()
     else:
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
@@ -568,11 +568,11 @@ def gridmap(
 
     # plot
     if contourf is False:
-        plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        im=plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     else:
         plot_kw.setdefault("levels", levels)
-        plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        im=plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     # add features
     if features:
@@ -592,7 +592,7 @@ def gridmap(
 
     if frame is False:
         ax.spines["geo"].set_visible(False)
-        ax.collections[-1].colorbar.outline.set_visible(False)
+        im.colorbar.outline.set_visible(False)
 
     # add geometries
     if geometries_kw:
