@@ -697,10 +697,14 @@ def create_cmap(
     else:
         # filename
         if divergent is not False:
+            if var_group == "misc2":
+                var_group='misc'
             filename = var_group + "_div"
         else:
             if var_group == "misc":
                 filename = var_group + "_seq_3"  # Batlow
+            elif var_group == "misc2":
+                filename = "misc_seq_2"  # freezing rain
             else:
                 filename = var_group + "_seq"
 
