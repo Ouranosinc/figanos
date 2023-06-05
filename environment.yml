@@ -1,14 +1,31 @@
 name: spirograph
 channels:
   - conda-forge
+  - default
 dependencies:
-  - python
+  - python >=3.9
   - numpy
   - pandas
+  - cf_xarray>=0.7.6
+  - cftime
+  - dask
   - xarray
-  - json
   - geopandas
+  - zarr
+  - netcdf4
+  - pre_commit
 # Visualisation
   - cartopy
   - matplotlib
   - seaborn
+
+# Docs
+  - pandoc
+  - sphinx
+  - sphinx-autoapi
+  - sphinx-click
+  - sphinx_rtd_theme >=1.0
+  - sphinxcontrib-napoleon
+  - ipykernel
+  - jupyter_client
+  - xclim
