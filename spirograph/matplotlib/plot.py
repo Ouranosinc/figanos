@@ -592,7 +592,8 @@ def gridmap(
 
     if frame is False:
         ax.spines["geo"].set_visible(False)
-        im.colorbar.outline.set_visible(False)
+        if im.colorbar is not None:
+            im.colorbar.outline.set_visible(False)
 
     # add geometries
     if geometries_kw:
