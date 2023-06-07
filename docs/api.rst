@@ -4,6 +4,6 @@ API
 Matplotlib
 ----------
 
-.. automodule:: spirograph.matplotlib.plot
+.. automodule:: figanos.matplotlib.plot
    :members:
    :noindex:

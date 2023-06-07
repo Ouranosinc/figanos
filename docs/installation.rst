@@ -3,18 +3,18 @@ Installation
 ============
 
 
-To install spirograph, run these commands in your terminal:
+To install figanos, run these commands in your terminal:
 
 .. code-block:: console
 
-    $ git clone git@github.com:Ouranosinc/spirograph.git
-    $ cd spirograph
+    $ git clone git@github.com:Ouranosinc/figanos.git
+    $ cd figanos
     $ conda env create -f environment.yml
     $ pip install . # add -e if you want the develop mode
 
 Note:
 When working in a Jupyter Notebook launched from an environment
-that is not spirograph, problems may arise with certain functions,
+that is not figanos, problems may arise with certain functions,
 such as gdfmap(). Installing PyProj to this environment should resolve
 this issue.
 
@@ -22,13 +22,13 @@ this issue.
     Stable release
     --------------
 
-    To install spirograph, run this command in your terminal:
+    To install figanos, run this command in your terminal:
 
     .. code-block:: console
 
-        $ pip install spirograph
+        $ pip install figanos
 
-    This is the preferred method to install spirograph, as it will always install the most recent stable release.
+    This is the preferred method to install figanos, as it will always install the most recent stable release.
 
     If you don't have `pip`_ installed, this `Python installation guide`_ can guide
     you through the process.
@@ -40,19 +40,19 @@ this issue.
     From sources
     ------------
 
-    The sources for spirograph can be downloaded from the `Github repo`_.
+    The sources for figanos can be downloaded from the `Github repo`_.
 
     You can either clone the public repository:
 
     .. code-block:: console
 
-        $ git clone git@github.com:Zeitsperre/spirograph
+        $ git clone git@github.com:Zeitsperre/figanos
 
     Or download the `tarball`_:
 
     .. code-block:: console
 
-        $ curl -OJL https://github.com/Zeitsperre/spirograph/tarball/master
+        $ curl -OJL https://github.com/Zeitsperre/figanos/tarball/master
 
     Once you have a copy of the source, you can install it with:
 
@@ -61,6 +61,6 @@ this issue.
         $ python setup.py install
 
 
-    .. _Github repo: https://github.com/Zeitsperre/spirograph
-    .. _tarball: https://github.com/Zeitsperre/spirograph/tarball/master
+    .. _Github repo: https://github.com/Zeitsperre/figanos
+    .. _tarball: https://github.com/Zeitsperre/figanos/tarball/master
 ..

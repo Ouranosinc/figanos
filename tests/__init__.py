@@ -1,1 +1,1 @@
-"""Unit test package for spirograph."""
+"""Unit test package for figanos."""

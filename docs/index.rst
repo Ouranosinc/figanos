@@ -1,4 +1,4 @@
-Welcome to spirograph's documentation!
+Welcome to figanos's documentation!
 ===========================================================
 
 .. toctree::

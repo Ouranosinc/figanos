@@ -490,7 +490,9 @@ def plot_logo(
     matplotlib.axes.Axes
     """
     if path_png is None:
-        path_png = pathlib.Path(__file__).resolve().parents[1] / "data" / "ouranos_logo_25.png"
+        path_png = (
+            pathlib.Path(__file__).resolve().parents[1] / "data" / "ouranos_logo_25.png"
+        )
 
     image = mpl.pyplot.imread(path_png)
     imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
@@ -613,7 +615,7 @@ def get_var_group(
     da: xr.DataArray | None = None,
     unique_str: str = None,
 ) -> str:
-    """Get IPCC variable group from DataArray or a string using a json file (spirograph/data/ipcc_colors/variable_groups.json).
+    """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
     If da is a Dataset,  look in the DataArray of the first variable."""
 
     # create dict
@@ -696,7 +698,7 @@ def create_cmap(
         # filename
         if divergent is not False:
             if var_group == "misc2":
-                var_group='misc'
+                var_group = "misc"
             filename = var_group + "_div"
         else:
             if var_group == "misc":
@@ -708,7 +710,7 @@ def create_cmap(
 
         folder = "continuous_colormaps_rgb_0-255"
 
-    # parent should be 'spirograph/'
+    # parent should be 'figanos/'
     path = (
         pathlib.Path(__file__).parents[1]
         / "data/ipcc_colors"
@@ -890,7 +892,7 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
     Parameters
     ----------
     args : str
-        Name(s) of spirograph matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
+        Name(s) of figanos matplotlib style ('ouranos', 'paper, 'poster') or path(s) to matplotlib stylesheet(s).
     reset : bool
         If True, reset style to matplotlib default before applying the stylesheets.
 

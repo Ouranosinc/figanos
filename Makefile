@@ -48,9 +48,9 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint/flake8: ## check style with flake8
-	flake8 spirograph tests
+	flake8 figanos tests
 lint/black: ## check style with black
-	black --check spirograph tests
+	black --check figanos tests
 
 lint: lint/flake8 lint/black ## check style
 
@@ -61,14 +61,14 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source spirograph -m pytest
+	coverage run --source figanos -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
 docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/spirograph.rst
+	rm -f docs/figanos.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ spirograph
+	sphinx-apidoc -o docs/ figanos
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html

@@ -24,7 +24,7 @@ from matplotlib.lines import Line2D
 from matplotlib.projections import PolarAxes
 from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCurveLinear
 
-from spirograph.matplotlib.utils import (
+from figanos.matplotlib.utils import (
     add_cartopy_features,
     check_timeindex,
     convert_scen_name,
@@ -568,11 +568,11 @@ def gridmap(
 
     # plot
     if contourf is False:
-        im=plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        im = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     else:
         plot_kw.setdefault("levels", levels)
-        im=plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        im = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
 
     # add features
     if features:

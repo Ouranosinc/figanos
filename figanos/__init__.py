@@ -1,4 +1,4 @@
-"""Top-level package for spirograph."""
+"""Top-level package for figanos."""
 
 __author__ = """Sarah-Claude Bourdeau-Goulet"""
 __email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"
