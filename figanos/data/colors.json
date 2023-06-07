@@ -1,0 +1,81 @@
+{
+  "rcp": {
+    "observation": "black",
+    "rcp26": "#0E1075",
+    "rcp45": "#5889B7",
+    "rcp60": "#DE8028",
+    "rcp85": "#D80100"
+  },
+  "ssp": {
+    "observation": "black",
+    "ssp26": "#052946",
+    "ssp45": "#0ADEE1",
+    "ssp60": "#EFCC00",
+    "ssp85": "#CE153D"
+  },
+  "lines": [
+    "#000000",
+    "#4c72b0",
+    "#dd8452",
+    "#55a868",
+    "#c44e52",
+    "#8172b3",
+    "#937860",
+    "#da8bc3",
+    "#8c8c8c",
+    "#ccb974",
+    "#64b5cd"
+  ],
+  "var_ind": {
+    "default": [
+      "viridis"
+    ],
+    "tas": [
+      "viridis"
+    ],
+    "tasmax": [
+      "plasma"
+    ],
+    "tasmin": [
+      "viridis"
+    ],
+    "pr": [
+      "Blues"
+    ],
+    "sfcWind": [
+      "YlOr"
+    ]
+  },
+  "deltas": {
+    "default": [
+      "RdBu_r",
+      "Blues_r",
+      "Reds"
+    ],
+    "tas": [
+      "RdBu_r",
+      "Blues_r",
+      "Reds"
+    ],
+    "tasmax": [
+      "RdBu_r",
+      "Blues_r",
+      "Reds"
+    ],
+    "tasmin": [
+      "RdBu_r",
+      "Blues_r",
+      "Reds"
+    ],
+    "pr": [
+      "BrWhGr",
+      "Browns_r",
+      "Greens"
+    ],
+    "sfcWind": [
+      "PuYlOr",
+      "YlPu_r",
+      "YlOr"
+    ]
+  }
+}
