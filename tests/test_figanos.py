@@ -1,9 +1,9 @@
-""""Tests for `spirograph` package."""
+""""Tests for `figanos` package."""
 
 import pytest
 from click.testing import CliRunner
 
-import spirograph.cli as cli
+import figanos.cli as cli
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert "spirograph.cli.main" in result.output
+    assert "figanos.cli.main" in result.output
     help_result = runner.invoke(cli.main, ["--help"])
     assert help_result.exit_code == 0
     assert "--help  Show this message and exit." in help_result.output

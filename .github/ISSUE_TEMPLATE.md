@@ -1,4 +1,4 @@
-* spirograph version:
+* figanos version:
 * Python version:
 * Operating System:
 

@@ -58,7 +58,7 @@ setup(
     description="Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
     entry_points={
         "console_scripts": [
-            "spirograph=spirograph.cli:main",
+            "figanos=figanos.cli:main",
         ],
     },
     install_requires=requirements,
@@ -66,9 +66,9 @@ setup(
     long_description=readme + "\n\n" + history,
     long_description_content_type="text/x-rst",
     include_package_data=True,
-    keywords="spirograph",
-    name="spirograph",
-    packages=find_packages(include=["spirograph", "spirograph.*"]),
+    keywords="figanos",
+    name="figanos",
+    packages=find_packages(include=["figanos", "figanos.*"]),
     test_suite="tests",
     tests_require=test_requirements,
     extras_require={
@@ -76,8 +76,8 @@ setup(
         "dev": dev_requirements,
     },
     project_urls={
-        "Source": "https://github.com/Ouranosinc/spirograph",
-        "Issue tracker": "https://github.com/Ouranosinc/spirograph/issues",
+        "Source": "https://github.com/Ouranosinc/figanos",
+        "Issue tracker": "https://github.com/Ouranosinc/figanos/issues",
         "About Ouranos": "https://www.ouranos.ca/en/",
     },
     version="0.1.0",

@@ -1,4 +1,4 @@
-name: spirograph
+name: figanos
 channels:
   - conda-forge
   - default

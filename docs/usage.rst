@@ -2,7 +2,7 @@
 Usage
 =====
 
-To use spirograph in a project::
+To use figanos in a project::
 
-    import spirograph.matplotlib as sp
-    sp.utils.set_mpl_style('ouranos')
+    import figanos.matplotlibas fg
+    fg.utils.set_mpl_style('ouranos')

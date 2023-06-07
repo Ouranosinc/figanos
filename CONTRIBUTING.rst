@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/Ouranosinc/spirograph/issues.
+Report bugs at https://github.com/Ouranosinc/figanos/issues.
 
 If you are reporting a bug, please include:
 
@@ -38,14 +38,14 @@ and "help wanted" is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-spirograph could always use more documentation, whether as part of the
-official spirograph docs, in docstrings, or even on the web in blog posts,
+figanos could always use more documentation, whether as part of the
+official figanos docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/Ouranosinc/spirograph/issues.
+The best way to send feedback is to file an issue at https://github.com/Ouranosinc/figanos/issues.
 
 If you are proposing a feature:
 
@@ -57,17 +57,17 @@ If you are proposing a feature:
 Get Started!
 -------------------------------------------------
 
-Ready to contribute? Here's how to set up `spirograph` for local development for developers outside Ouranos.
+Ready to contribute? Here's how to set up `figanos` for local development for developers outside Ouranos.
 
-1. Fork the `spirograph` repo on GitHub.
+1. Fork the `figanos` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/spirograph.git
+    $ git clone git@github.com:your_name_here/figanos.git
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
 
-    $ mkvirtualenv spirograph
-    $ cd spirograph/
+    $ mkvirtualenv figanos
+    $ cd figanos/
     $ pip install -e .
 
 4. To ensure a consistent style, please install the pre-commit hooks to your repo::
@@ -88,8 +88,8 @@ Ready to contribute? Here's how to set up `spirograph` for local development for
 6. When you're done making changes, check that your changes pass flake8, black, and the
    tests, including testing other Python versions with tox::
 
-    $ flake8 spirograph tests
-    $ black --check spirograph tests
+    $ flake8 figanos tests
+    $ black --check figanos tests
     $ python setup.py test or pytest
     $ tox
 
@@ -120,7 +120,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
 3. The pull request should work for Python 3.7, 3.8, 3.9, and 3.10. Check
-   https://github.com/Ouranosinc/spirograph/pulls
+   https://github.com/Ouranosinc/figanos/pulls
    and make sure that the tests pass for all supported Python versions.
 
 Tips
@@ -128,7 +128,7 @@ Tips
 
 To run a subset of tests::
 
-$ pytest tests.test_spirograph
+$ pytest tests.test_figanos
 
 
 Versioning/Tagging
@@ -164,7 +164,7 @@ From the command line on your Linux distribution, simply run the following from 
     # To upload to PyPI
     $ twine upload dist/*
 
-The new version based off of the version checked out will now be available via `pip` (`$ pip install spirograph`).
+The new version based off of the version checked out will now be available via `pip` (`$ pip install figanos`).
 
 Releasing on conda-forge
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,7 +178,7 @@ In order to prepare an initial release on conda-forge, we *strongly* suggest con
 
 Before updating the main conda-forge recipe, we echo the conda-forge documentation and *strongly* suggest performing the following checks:
  * Ensure that dependencies and dependency versions correspond with those of the tagged version, with open or pinned versions for the `host` requirements.
- * If possible, configure tests within the conda-forge build CI (e.g. `imports: spirograph`, `commands: pytest spirograph`)
+ * If possible, configure tests within the conda-forge build CI (e.g. `imports: figanos`, `commands: pytest figanos`)
 
 Subsequent releases
 ^^^^^^^^^^^^^^^^^^^
@@ -200,15 +200,15 @@ With `docker` installed and running, begin by pulling the image::
 
     $ sudo docker pull quay.io/pypa/manylinux_2_24_x86_64
 
-From the spirograph source folder we can enter into the docker container, providing access to the `spirograph` source files by linking them to the running image::
+From the figanos source folder we can enter into the docker container, providing access to the `figanos` source files by linking them to the running image::
 
-    $ sudo docker run --rm -ti -v $(pwd):/spirograph -w /spirograph quay.io/pypa/manylinux_2_24_x86_64 bash
+    $ sudo docker run --rm -ti -v $(pwd):/figanos -w /figanos quay.io/pypa/manylinux_2_24_x86_64 bash
 
 Finally, to build the wheel, we run it against the provided Python3.7 binary::
 
     $ /opt/python/cp37-cp37m/bin/python setup.py sdist bdist_wheel
 
-This will then place two files in `spirograph/dist/` ("spirograph-1.2.3-py3-none-any.whl" and "spirograph-1.2.3.tar.gz").
+This will then place two files in `figanos/dist/` ("figanos-1.2.3-py3-none-any.whl" and "figanos-1.2.3.tar.gz").
 We can now leave our docker container (`$ exit`) and continue with uploading the files to PyPI::
 
     $ twine upload dist/*
