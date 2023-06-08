@@ -31,11 +31,14 @@ dependencies:
   - wheel
 # Visualisation
   - cartopy
-  - matplotlib-base
-  - seaborn
   - geoviews
   - holoviews
+  - matplotlib-base
+  - seaborn
 # Docs
+  - ipykernel
+  - jupyter_client
+  - nbsphinx
   - notebook
   - pandoc
   - sphinx
@@ -43,5 +46,3 @@ dependencies:
   - sphinx-click
   - sphinx_rtd_theme >=1.0
   - sphinxcontrib-napoleon
-  - ipykernel
-  - jupyter_client

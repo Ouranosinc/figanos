@@ -21,6 +21,9 @@ build:
     pre_build:
       - sphinx-apidoc -o docs/apidoc --module-first figanos
 
+conda:
+  environment: environment.yml
+
 python:
   install:
     - method: pip
