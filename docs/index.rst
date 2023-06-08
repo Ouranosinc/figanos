@@ -3,7 +3,7 @@ Welcome to figanos's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Table of Contents:
 
    readme
    installation
@@ -12,3 +12,14 @@ Welcome to figanos's documentation!
    contributing
    authors
    history
+
+.. toctree::
+   :maxdepth: 2
+
+   notebooks/figanos_docs
+
+.. toctree::
+   :maxdepth: 1
+   :caption: All Modules
+
+   modules
