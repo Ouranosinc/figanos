@@ -11,15 +11,31 @@ dependencies:
   - dask
   - xarray
   - geopandas
+  - h5py
   - zarr
   - netcdf4
-  - pre_commit
+# Development
+  - black
+  - bump2version
+  - coverage
+  - coveralls
+  - flake8
+  - isort
+  - pip
+  - pre-commit
+  - pytest
+  - pytest-cov
+  - tox
+  - twine
+  - wheel
 # Visualisation
   - cartopy
   - matplotlib
   - seaborn
-
+  - geoviews
+  - holoviews
 # Docs
+  - notebook
   - pandoc
   - sphinx
   - sphinx-autoapi
