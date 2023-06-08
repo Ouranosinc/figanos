@@ -22,4 +22,4 @@ Welcome to figanos's documentation!
    :maxdepth: 1
    :caption: All Modules
 
-   modules
+   apidoc/modules
