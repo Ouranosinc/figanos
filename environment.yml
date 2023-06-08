@@ -3,18 +3,19 @@ channels:
   - conda-forge
   - default
 dependencies:
-  - python >=3.9
-  - numpy
-  - pandas
-  - cf_xarray>=0.7.6
-  - cftime
+  - python >=3.9,<3.10
+  - cartopy
   - dask
-  - xarray
   - geopandas
   - h5py
-  - zarr
   - netcdf4
-# Development
+  - numpy
+  - pandas
+  - pyyaml
+  - xarray
+  - xclim >=0.38
+  - zarr
+  # Development
   - black
   - bump2version
   - coverage
@@ -30,11 +31,14 @@ dependencies:
   - wheel
 # Visualisation
   - cartopy
-  - matplotlib
-  - seaborn
   - geoviews
   - holoviews
+  - matplotlib-base
+  - seaborn
 # Docs
+  - ipykernel
+  - jupyter_client
+  - nbsphinx
   - notebook
   - pandoc
   - sphinx
@@ -42,6 +46,3 @@ dependencies:
   - sphinx-click
   - sphinx_rtd_theme >=1.0
   - sphinxcontrib-napoleon
-  - ipykernel
-  - jupyter_client
-  - xclim

@@ -1,8 +1,10 @@
-sphinx
-sphinx-rtd-theme>=1.0
+ipykernel
+ipython
+jupyter_client
 nbsphinx
 pandoc
-ipython
-ipykernel
-jupyter_client
-xclim
+sphinx
+sphinx-autoapi
+sphinx-click
+sphinx_rtd_theme>=1.0
+sphinxcontrib-napoleon
