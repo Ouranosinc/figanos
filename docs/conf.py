@@ -33,7 +33,10 @@ import figanos  # noqa
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'nbsphinx']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.viewcode',
+              'nbsphinx',
+              'sphinx.ext.napoleon']
 
 # To ensure that underlined fields (e.g. `_field`) are shown in the docs.
 autodoc_default_options = {
