@@ -8,15 +8,11 @@ Welcome to figanos's documentation!
    readme
    installation
    usage
+   notebooks/figanos_docs
    api
    contributing
    authors
    history
-
-.. toctree::
-   :maxdepth: 2
-
-   notebooks/figanos_docs
 
 .. toctree::
    :maxdepth: 1

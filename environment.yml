@@ -4,7 +4,6 @@ channels:
   - default
 dependencies:
   - python >=3.9,<3.10
-  - cartopy
   - dask
   - geopandas
   - h5py

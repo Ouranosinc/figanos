@@ -632,8 +632,7 @@ def gdfmap(
     cbar: bool = True,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """
-    Create a map plot from geometries.
+    """Create a map plot from geometries.
 
     Parameters
     ----------
