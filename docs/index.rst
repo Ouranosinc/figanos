@@ -15,7 +15,6 @@ Need help?
    :maxdepth: 2
    :caption: Table of Contents:
 
-   readme
    installation
    usage
    notebooks/figanos_docs
