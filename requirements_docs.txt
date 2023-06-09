@@ -8,3 +8,4 @@ sphinx-autoapi
 sphinx-click
 sphinx_rtd_theme>=1.0
 sphinxcontrib-napoleon
+sphinx_book_theme
