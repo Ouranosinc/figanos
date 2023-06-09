@@ -1250,7 +1250,8 @@ def scattermap(
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Make a scatter plot of georeferenced data on a map.
+    """
+    Make a scatter plot of georeferenced data on a map.
 
     Parameters
     ----------
