@@ -1,4 +1,4 @@
-Welcome to figanos's documentation!
+Welcome to figanos' documentation!
 ===================================
 
 Figanos: Tool to create FIGures in the OurANOS style
