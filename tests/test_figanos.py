@@ -1,4 +1,4 @@
-""""Tests for `figanos` package."""
+"""Tests for `figanos` package."""
 
 import pkgutil
 from pathlib import Path
