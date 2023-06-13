@@ -46,3 +46,5 @@ dependencies:
   - sphinx-click
   - sphinx_rtd_theme >=1.0
   - sphinxcontrib-napoleon
+  - sphinx-codeautolink
+  - sphinx-copybutton

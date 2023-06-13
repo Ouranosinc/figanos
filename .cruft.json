@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/Ouranosinc/cookiecutter-pypackage",
-  "commit": "1229662af01493bc0dfbf415110dfd1f481b2f36",
+  "commit": "8e44c8f85d93b68ac036b79f56c90846da689f46",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -14,7 +14,6 @@
       "version": "0.1.0",
       "use_pytest": "y",
       "use_black": "y",
-      "use_pypi_deployment_with_travis": "n",
       "add_pyup_badge": "n",
       "make_docs": "y",
       "command_line_interface": "Click",

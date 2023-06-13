@@ -1,0 +1,20 @@
+{
+  "title": "figanos",
+  "creators": [
+    {
+      "name": "Bourdeau-Goulet, Sarah-Claude",
+        "affiliation": "Ouranos, Montréal, Québec, Canada"
+    },
+          {
+      "name": "Smith, Trevor James",
+      "affiliation": "Ouranos, Montréal, Québec, Canada",
+      "orcid": "0000-0001-5393-8359"
+    }
+  ],
+  "keywords": [],
+  "license": "Apache-2.0",
+  "language": "eng",
+  "communities": [],
+  "upload_type": "software",
+  "access_right": "open"
+}

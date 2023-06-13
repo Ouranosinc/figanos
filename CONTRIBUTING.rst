@@ -119,9 +119,8 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 3.7, 3.8, 3.9, and 3.10. Check
-   https://github.com/Ouranosinc/figanos/pulls
-   and make sure that the tests pass for all supported Python versions.
+3. The pull request should work for Python 3.8, 3.9, 3.10, and 3.11.
+   Check that the tests pass for all supported Python versions.
 
 Tips
 ----
@@ -152,14 +151,15 @@ The simple approach
 ~~~~~~~~~~~~~~~~~~~
 
 The simplest approach to packaging for general support (pip wheels) requires the following packages installed:
+ * build
  * setuptools
- * wheel
  * twine
+ * wheel
 
 From the command line on your Linux distribution, simply run the following from the clone's main dev branch::
 
     # To build the packages (sources and wheel)
-    $ python setup.py sdist bdist_wheel
+    $ python -m build --sdist --wheel
 
     # To upload to PyPI
     $ twine upload dist/*
@@ -204,9 +204,9 @@ From the figanos source folder we can enter into the docker container, providing
 
     $ sudo docker run --rm -ti -v $(pwd):/figanos -w /figanos quay.io/pypa/manylinux_2_24_x86_64 bash
 
-Finally, to build the wheel, we run it against the provided Python3.7 binary::
+Finally, to build the wheel, we run it against the provided Python3.8 binary::
 
-    $ /opt/python/cp37-cp37m/bin/python setup.py sdist bdist_wheel
+    $ /opt/python/cp38-cp38m/bin/python setup.py sdist bdist_wheel
 
 This will then place two files in `figanos/dist/` ("figanos-1.2.3-py3-none-any.whl" and "figanos-1.2.3.tar.gz").
 We can now leave our docker container (`$ exit`) and continue with uploading the files to PyPI::

@@ -43,17 +43,17 @@ dev_requirements = [
 setup(
     author="Sarah-Claude Bourdeau-Goulet",
     author_email="bourdeau-goulet.sarah-claude@ouranos.ca",
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     description="Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
     entry_points={
