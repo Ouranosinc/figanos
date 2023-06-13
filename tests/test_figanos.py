@@ -1,10 +1,11 @@
 """"Tests for `figanos` package."""
 
+import pkgutil
 from pathlib import Path
 
 import pytest
 
-import figanos
+# import figanos
 
 
 @pytest.fixture
@@ -25,7 +26,9 @@ def test_content(response):
 
 
 def test_imports():
-    metadata = Path(figanos.__file__).resolve().parent.joinpath("__init__.py")
+    figanos = pkgutil.get_loader("figanos").get_filename()
+
+    metadata = Path(figanos).resolve().parent.joinpath("__init__.py")
 
     with open(metadata) as f:
         contents = f.read()
