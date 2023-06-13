@@ -1,9 +1,10 @@
 """"Tests for `figanos` package."""
 
-import pytest
-from click.testing import CliRunner
+from pathlib import Path
 
-import figanos.cli as cli
+import pytest
+
+import figanos
 
 
 @pytest.fixture
@@ -20,3 +21,14 @@ def test_content(response):
     """Sample pytest test function with the pytest fixture as an argument."""
     # from bs4 import BeautifulSoup
     # assert 'GitHub' in BeautifulSoup(response.content).title.string
+    pass
+
+
+def test_imports():
+    metadata = Path(figanos.__file__).resolve().parent.joinpath("__init__.py")
+
+    with open(metadata) as f:
+        contents = f.read()
+        assert '__author__ = """Sarah-Claude Bourdeau-Goulet"""' in contents
+        assert '__email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"' in contents
+        assert '__version__ = "0.1.0"' in contents
