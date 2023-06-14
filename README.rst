@@ -7,8 +7,8 @@ figanos
         :target: https://pypi.python.org/pypi/figanos
         :alt: PyPI
 
-.. image:: https://github.com/Ouranosinc/figanos/workflows/figanos/badge.svg
-        :target: https://github.com/Ouranosinc/figanos
+.. image:: https://github.com/Ouranosinc/figanos/actions/workflows/main.yml/badge.svg
+        :target: https://github.com/Ouranosinc/figanos/actions
         :alt: Build Status
 
 .. image:: https://readthedocs.org/projects/figanos/badge/?version=latest
