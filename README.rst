@@ -1,6 +1,6 @@
-==========
+=======
 figanos
-==========
+=======
 
 
 .. image:: https://img.shields.io/pypi/v/figanos.svg
