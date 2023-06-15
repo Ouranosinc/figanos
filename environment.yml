@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - default
 dependencies:
-  - python >3.10,<=3.11
+  - python >=3.11,<3.12
   - dask
   - geopandas
   - h5py
