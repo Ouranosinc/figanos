@@ -1,16 +1,18 @@
-""""Tests for `figanos` package."""
+"""Tests for `figanos` package."""
+
+import pathlib
+import pkgutil
 
 import pytest
-from click.testing import CliRunner
 
-import figanos.cli as cli
+# import figanos
 
 
 @pytest.fixture
 def response():
     """Sample pytest fixture.
 
-    See more at: http://doc.pytest.org/en/latest/fixture.html
+    See more at: https://doc.pytest.org/en/latest/explanation/fixtures.html
     """
     # import requests
     # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
@@ -20,14 +22,17 @@ def test_content(response):
     """Sample pytest test function with the pytest fixture as an argument."""
     # from bs4 import BeautifulSoup
     # assert 'GitHub' in BeautifulSoup(response.content).title.string
+    pass
 
 
-def test_command_line_interface():
-    """Test the CLI."""
-    runner = CliRunner()
-    result = runner.invoke(cli.main)
-    assert result.exit_code == 0
-    assert "figanos.cli.main" in result.output
-    help_result = runner.invoke(cli.main, ["--help"])
-    assert help_result.exit_code == 0
-    assert "--help  Show this message and exit." in help_result.output
+def test_package_metadata():
+    """Test the package metadata."""
+    project = pkgutil.get_loader("figanos").get_filename()
+
+    metadata = pathlib.Path(project).resolve().parent.joinpath("__init__.py")
+
+    with open(metadata) as f:
+        contents = f.read()
+        assert """Sarah-Claude Bourdeau-Goulet""" in contents
+        assert '__email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"' in contents
+        assert '__version__ = "0.1.0"' in contents

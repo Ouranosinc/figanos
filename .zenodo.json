@@ -1,0 +1,29 @@
+{
+  "title": "figanos",
+  "creators": [
+    {
+      "name": "Bourdeau-Goulet, Sarah-Claude",
+      "affiliation": "Ouranos, Montréal, Québec, Canada"
+    },
+    {
+      "name": "Smith, Trevor James",
+      "affiliation": "Ouranos, Montréal, Québec, Canada",
+      "orcid": "0000-0001-5393-8359"
+    },
+    {
+      "name": "Lavoie, Juliette",
+      "affiliation": "Ouranos, Montréal, Québec, Canada",
+      "orcid": "0000-0002-4708-5182"
+    },
+    {
+      "name": "Beaupré-Laperrière, Alexis ",
+      "affiliation": "Ouranos, Montréal, Québec, Canada"
+    }
+  ],
+  "keywords": [],
+  "license": "Apache-2.0",
+  "language": "eng",
+  "communities": [],
+  "upload_type": "software",
+  "access_right": "open"
+}

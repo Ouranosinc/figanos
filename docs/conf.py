@@ -33,10 +33,19 @@ import figanos  # noqa
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.viewcode',
-              'nbsphinx',
-              'sphinx.ext.napoleon']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.extlinks',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.todo',
+    'nbsphinx',
+    'sphinx_codeautolink',
+    'sphinx_copybutton'
+]
+
+autosectionlabel_prefix_document = True
+autosectionlabel_maxdepth = 2
 
 # To ensure that underlined fields (e.g. `_field`) are shown in the docs.
 autodoc_default_options = {
@@ -44,6 +53,12 @@ autodoc_default_options = {
     "undoc-members": True,
     "private-members": False,
     "special-members": False,
+}
+
+extlinks = {
+    "issue": ("https://github.com/Ouranosinc/figanos/issues/%s", "GH/%s"),
+    "pull": ("https://github.com/Ouranosinc/figanos/pull/%s", "PR/%s"),
+    "user": ("https://github.com/%s", "@%s"),
 }
 
 # Add any paths that contain templates here, relative to this directory.
