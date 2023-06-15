@@ -28,6 +28,7 @@ requirements = [
     "xclim>=0.38",
     "pyyaml",
     "zarr",
+    "seaborn"
 ]
 
 test_requirements = ["pytest>=3"]
