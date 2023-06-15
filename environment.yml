@@ -4,7 +4,6 @@ channels:
   - default
 dependencies:
   - python >=3.9,<3.10
-  - cartopy
   - dask
   - geopandas
   - h5py
@@ -46,3 +45,4 @@ dependencies:
   - sphinx-click
   - sphinx_rtd_theme >=1.0
   - sphinxcontrib-napoleon
+  - sphinx-book-theme

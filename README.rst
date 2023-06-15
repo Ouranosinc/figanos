@@ -14,7 +14,8 @@ figanos
         :alt: Documentation Status
 
 
-Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.
+Figanos: Tool to create FIGures in the OurANOS style
+
 
 Pour nous partager vos codes à ajouter dans figanos, s.v.p créer un issue sur le repo github avec une description de la fonction et
 le code de celle-ci.
@@ -27,7 +28,15 @@ le code de celle-ci.
 Features
 --------
 
-* TODO
+* timeseries(): Creates time series as line plots.
+* gridmap(): Plots gridded georeferenced data on a map.
+* scattermap(): Make a scatter plot of georeferenced data on a map.
+* gdfmap(): Plots geometries (through a GeoDataFrame) on a map.
+* stripes(): Create climate stripe diagrams.
+* violin(): Create seaborn violin plots with extra options.
+* heatmap(): Create seaborn heatmaps with extra options.
+* taylordiagram(): Create Taylor diagram.
+
 
 Credits
 -------

@@ -632,8 +632,7 @@ def gdfmap(
     cbar: bool = True,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """
-    Create a map plot from geometries.
+    """Create a map plot from geometries.
 
     Parameters
     ----------
@@ -1251,7 +1250,8 @@ def scattermap(
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Make a scatter plot of georeferenced data on a map.
+    """
+    Make a scatter plot of georeferenced data on a map.
 
     Parameters
     ----------
