@@ -36,6 +36,7 @@ import figanos  # noqa
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
+    'sphinx.ext.extlinks',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'nbsphinx',
