@@ -54,6 +54,12 @@ autodoc_default_options = {
     "special-members": False,
 }
 
+extlinks = {
+    "issue": ("https://github.com/Sarahclaude/figanos/issues/%s", "GH/%s"),
+    "pull": ("https://github.com/Sarahclaude/figanos/pull/%s", "PR/%s"),
+    "user": ("https://github.com/%s", "@%s"),
+}
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
