@@ -1,7 +1,7 @@
 Welcome to figanos' documentation!
 ===================================
 
-Figanos: Tool to create FIGures in the OurANOS style
+Figanos: Tool to create **fig**\ ures\  in\  the Our\ **anos**\  style.
 
 Need help?
 ==========
