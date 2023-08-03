@@ -2,6 +2,14 @@
 History
 =======
 
+0.3.0 (Unreleased)
+------------------
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+
+New features and enhancements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* New function hatchmap (:pull:`107`).
+
 0.2.0 (2023-06-19)
 ------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
