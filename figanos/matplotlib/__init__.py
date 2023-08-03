@@ -1,6 +1,7 @@
 from .plot import (
     gdfmap,
     gridmap,
+    hatchmap,
     heatmap,
     scattermap,
     stripes,
