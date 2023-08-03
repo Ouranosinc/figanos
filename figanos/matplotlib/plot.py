@@ -1788,3 +1788,238 @@ def taylordiagram(
     fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
 
     return floating_ax
+
+
+def hatchmap(
+    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None = None,
+    projection: ccrs.Projection = ccrs.PlateCarree(),
+    transform: ccrs.Projection | None = None,
+    features: list[str] | dict[str, dict[str, Any]] | None = None,
+    geometries_kw: dict[str, Any] | None = None,
+    levels: int | None = None,
+    legend_kw: dict[str, Any] | None = None,
+    show_time: bool | str | int | tuple[float, float] = False,
+    frame: bool = False,
+) -> matplotlib.axes.Axes:
+    """Create map of hatches from 2D data.
+
+    Parameters
+    ----------
+    data : dict, DataArray or Dataset
+        Input data do plot.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict, optional
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description'}.
+        Only the keys found in the default dict can be used.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    plot_kw:  dict, optional
+        Arguments to pass to 'xarray.plot.contourf()' function.
+        If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.ccrs options. Ignored if ax is not None.
+    transform : ccrs.Projection, optional
+        Transform corresponding to the data coordinate system. If None, an attempt is made to find dimensions matching
+        ccrs.PlateCarree() or ccrs.RotatedPole().
+    features : list or dict, optional
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
+    geometries_kw : dict, optional
+        Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
+    levels : int, optional
+        Number of levels to divide the data into (creates hatching for each level).
+        Accepted only if one data entry, i.e, one value in dictionary or one variable in Dataset or one DataArray.
+    legend_kw : dict, optional
+        Arguments to pass to `ax.legend()`.
+    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show time (as date) at the bottom right of the figure.
+        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
+        of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
+    frame : bool
+        Show or hide frame. Default False.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    # default hatches
+    dfh = [
+        "/",
+        "\\",
+        "|",
+        "-",
+        "+",
+        "x",
+        "o",
+        "O",
+        ".",
+        "*",
+        "//",
+        "\\\\",
+        "||",
+        "--",
+        "++",
+        "xx",
+        "oo",
+        "OO",
+        "..",
+        "**",
+    ]
+
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+    legend_kw = empty_dict(legend_kw)
+
+    dattrs = None
+    plot_data = {}
+    dc = plot_kw.copy()
+    # convert data to dict (if not one)
+    if not isinstance(data, dict):
+        if isinstance(data, xr.DataArray):
+            plot_data = {data.name: data}
+            if list(data.keys())[0] not in plot_kw.keys():
+                plot_kw = {list(plot_data.keys())[0]: dc}
+        elif isinstance(data, xr.Dataset):
+            dattrs = data
+            plot_data = {var: data[var] for var in data.data_vars}
+            for v in plot_data.keys():
+                if v not in plot_kw.keys():
+                    plot_kw[v] = dc
+    else:
+        for k, v in data.items():
+            if k not in plot_kw.keys():
+                plot_kw[k] = dc
+            if isinstance(v, xr.Dataset):
+                dattrs = k
+                plot_data[k] = v[list(v.data_vars)[0]]
+                warnings.warn("Only first variable of Dataset is plotted.")
+            else:
+                plot_data[k] = v
+
+    # setup transform from first data entry
+    trdata = list(plot_data.values())[0]
+    if transform is None:
+        if "lat" in trdata.dims and "lon" in trdata.dims:
+            transform = ccrs.PlateCarree()
+        elif "rlat" in trdata.dims and "rlon" in trdata.dims:
+            if hasattr(list(plot_data.values())[0], "rotated_pole"):
+                transform = get_rotpole(list(plot_data.values())[0])
+
+    # setup fig, ax
+    if ax is None:
+        fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+
+    pat_leg = []
+    n = 0
+    for k, v in plot_data.items():
+        # if levels plot multiple hatching from one data entry
+        if levels and len(plot_data) == 1:
+            # nans
+            mask = ~np.isnan(v.values)
+            if np.sum(mask) < len(mask):
+                warnings.warn(
+                    f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the pattern values"
+                )
+
+            if "hatches" in plot_kw[k].keys() and levels != len(plot_kw[k]["hatches"]):
+                warnings.warn("Hatches number is not equivalent to number of levels")
+                hatches = dfh[0:levels]
+            if "hatches" not in plot_kw[k].keys():
+                hatches = dfh[0:levels]
+
+            plot_kw[k] = {
+                "levels": levels,
+                "hatches": hatches,
+                "colors": "none",
+                "add_colorbar": False,
+            } | plot_kw[k]
+            im = v[mask].plot.contourf(ax=ax, transform=transform, **plot_kw[k])
+            artists, labels = im.legend_elements()
+            ax.legend(artists, labels, **legend_kw)
+
+        elif len(plot_data) > 1 and levels:
+            raise TypeError(
+                "To plot levels only one xr.DataArray or xr.Dataset accepted"
+            )
+        else:
+            # since pattern remove colors and colorbar from plotting (done by gridmap)
+            plot_kw[k] = {"colors": "none", "add_colorbar": False} | plot_kw[k]
+            if "hatches" not in plot_kw[k].keys():
+                plot_kw[k]["hatches"] = dfh[n]
+                n += 1
+            im = v.plot.contourf(ax=ax, transform=transform, **plot_kw[k])
+            pat_leg.append(
+                matplotlib.patches.Patch(
+                    hatch=plot_kw[k]["hatches"], fill=False, label=k
+                )
+            )
+
+    legend_kw = {"loc": "lower right", "handleheight": 2, "handlelength": 4} | legend_kw
+    ax.legend(handles=pat_leg, **legend_kw)
+
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
+
+    if show_time:
+        if show_time is True:
+            plot_coords(ax, v, param="time", loc="lower right", backgroundalpha=1)
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, v, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+
+    if frame is False:
+        ax.spines["geo"].set_visible(False)
+        if im.colorbar is not None:
+            im.colorbar.outline.set_visible(False)
+
+    # add geometries
+    if geometries_kw:
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
+        else:
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
+
+        ax.add_geometries(**geometries_kw)
+
+    if dattrs:
+        use_attrs.setdefault("title", "description")
+        set_plot_attrs(use_attrs, dattrs, ax, wrap_kw={"max_line_len": 60})
+
+    return ax
