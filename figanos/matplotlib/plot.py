@@ -1957,8 +1957,16 @@ def hatchmap(
                 "colors": "none",
                 "add_colorbar": False,
             } | plot_kw[k]
-            im = v[mask].plot.contourf(ax=ax, transform=transform, **plot_kw[k])
-            artists, labels = im.legend_elements()
+
+            if "lat" in v.dims:
+                v.coords["mask"] = (("lat", "lon"), mask)
+            else:
+                v.coords["mask"] = (("rlat", "rlon"), mask)
+
+            im = v.where(mask is not True).plot.contourf(
+                ax=ax, transform=transform, **plot_kw[k]
+            )
+            artists, labels = im.legend_elements(str_format="{:2.1f}".format)
             ax.legend(artists, labels, **legend_kw)
 
         elif len(plot_data) > 1 and levels:
@@ -1978,8 +1986,13 @@ def hatchmap(
                 )
             )
 
-    legend_kw = {"loc": "lower right", "handleheight": 2, "handlelength": 4} | legend_kw
-    ax.legend(handles=pat_leg, **legend_kw)
+    if not isinstance(levels, int):
+        legend_kw = {
+            "loc": "lower right",
+            "handleheight": 2,
+            "handlelength": 4,
+        } | legend_kw
+        ax.legend(handles=pat_leg, **legend_kw)
 
     # add features
     if features:
