@@ -1832,9 +1832,6 @@ def hatchmap(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    levels : int, optional
-        Number of levels to divide the data into (creates hatching for each level).
-        Accepted only if one data entry, i.e, one value in dictionary or one variable in Dataset or one DataArray.
     legend_kw : dict, optional
         Arguments to pass to `ax.legend()`.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
@@ -1937,22 +1934,22 @@ def hatchmap(
     n = 0
     for k, v in plot_data.items():
         # if levels plot multiple hatching from one data entry
-        if levels and len(plot_data) == 1:
+        if "levels" in plot_kw[k] and len(plot_data) == 1:
             # nans
             mask = ~np.isnan(v.values)
             if np.sum(mask) < len(mask):
                 warnings.warn(
                     f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the pattern values"
                 )
-
-            if "hatches" in plot_kw[k].keys() and levels != len(plot_kw[k]["hatches"]):
+            if "hatches" in plot_kw[k] and plot_kw[k]["levels"] != len(
+                plot_kw[k]["hatches"]
+            ):
                 warnings.warn("Hatches number is not equivalent to number of levels")
                 hatches = dfh[0:levels]
-            if "hatches" not in plot_kw[k].keys():
+            if "hatches" not in plot_kw[k]:
                 hatches = dfh[0:levels]
 
             plot_kw[k] = {
-                "levels": levels,
                 "hatches": hatches,
                 "colors": "none",
                 "add_colorbar": False,
@@ -1969,7 +1966,7 @@ def hatchmap(
             artists, labels = im.legend_elements(str_format="{:2.1f}".format)
             ax.legend(artists, labels, **legend_kw)
 
-        elif len(plot_data) > 1 and levels:
+        elif len(plot_data) > 1 and "levels" in plot_kw[k]:
             raise TypeError(
                 "To plot levels only one xr.DataArray or xr.Dataset accepted"
             )
@@ -1986,7 +1983,7 @@ def hatchmap(
                 )
             )
 
-    if not isinstance(levels, int):
+    if pat_leg:
         legend_kw = {
             "loc": "lower right",
             "handleheight": 2,
