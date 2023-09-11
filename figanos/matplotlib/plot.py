@@ -34,6 +34,7 @@ from figanos.matplotlib.utils import (
     fill_between_label,
     get_array_categ,
     get_attributes,
+    get_localized_term,
     get_rotpole,
     get_scen_color,
     get_var_group,
@@ -341,7 +342,7 @@ def timeseries(
         title_loc="left",
         wrap_kw={"min_line_len": 35, "max_line_len": 48},
     )
-    ax.set_xlabel("time")  # check_timeindex() already checks for 'time'
+    ax.set_xlabel(get_localized_term("time"))  # check_timeindex() already checks for 'time'
 
     # other plot elements
     if show_lat_lon:
@@ -1067,11 +1068,11 @@ def stripes(
         cax = ax.inset_axes([0.01, 0.05, 0.35, 0.06])
         cbar_tcks = np.arange(math.floor(data_min), math.ceil(data_max), 2)
         # label
-        label = ""
-        if "long_name" in list(data.values())[0].attrs:
-            label = list(data.values())[0].long_name
-            if "units" in list(data.values())[0].attrs:
-                u = list(data.values())[0].units
+        da = list(data.values())[0]
+        label = get_attributes("long_name", da)
+        if label != "":
+            if "units" in da.attrs:
+                u = da.units
                 label += f" ({u})"
             label = wrap_text(label, max_line_len=40)
 
@@ -1660,18 +1661,18 @@ def taylordiagram(
     # make labels
     if not std_label:
         try:
-            std_label = "standard deviation" + f" ({list(data.values())[0].units})"
+            std_label = get_localized_term("standard deviation") + f" ({list(data.values())[0].units})"
         except AttributeError:
-            std_label = "Standard deviation"
+            std_label = get_localized_term("standard deviation").capitalize()
 
     if not corr_label:
         try:
             if "Pearson" in list(data.values())[0].correlation_type:
-                corr_label = "Pearson correlation"
+                corr_label = get_localized_term("pearson correlation").capitalize()
             else:
-                corr_label = "Correlation"
+                corr_label = get_localized_term("Correlation").capitalize()
         except AttributeError:
-            corr_label = "Correlation"
+            corr_label = get_localized_term("Correlation").capitalize()
 
     # build diagram
     transform = PolarAxes.PolarTransform()
@@ -1728,7 +1729,7 @@ def taylordiagram(
         ref_kw = plot_kw.pop("reference")
     else:
         ref_kw = {}
-    ref_kw = {"color": "#154504", "marker": "s", "label": "reference"} | ref_kw
+    ref_kw = {"color": "#154504", "marker": "s", "label": get_localized_term("reference")} | ref_kw
 
     ref_pt = ax.scatter(0, ref_std, **ref_kw)
 

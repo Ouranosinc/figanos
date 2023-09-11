@@ -4,6 +4,7 @@ channels:
   - default
 dependencies:
   - python >=3.11,<3.12
+  - click
   - dask
   - geopandas
   - h5py
@@ -14,6 +15,13 @@ dependencies:
   - xarray
   - xclim >=0.38
   - zarr
+  # Visualisation
+  - cartopy
+  - geoviews
+  - holoviews
+  - jupyter
+  - matplotlib-base
+  - seaborn
   # Development
   - black
   - bump2version
@@ -28,12 +36,6 @@ dependencies:
   - tox
   - twine
   - wheel
-# Visualisation
-  - cartopy
-  - geoviews
-  - holoviews
-  - matplotlib-base
-  - seaborn
 # Docs
   - ipykernel
   - jupyter_client
