@@ -4,16 +4,23 @@ channels:
   - default
 dependencies:
   - python >=3.11,<3.12
-  - dask
+  # Main
+  - cartopy
+  - matplotlib-base
+  - seaborn
   - geopandas
-  - h5py
-  - netcdf4
   - numpy
   - pandas
-  - pyyaml
   - xarray
+  # To make the package and notebooks usable
   - xclim >=0.38
+  - dask
+  - h5py
+  - netcdf4
+  - pyyaml
   - zarr
+  - geoviews
+  - holoviews
   # Development
   - black
   - bump2version
@@ -28,13 +35,7 @@ dependencies:
   - tox
   - twine
   - wheel
-# Visualisation
-  - cartopy
-  - geoviews
-  - holoviews
-  - matplotlib-base
-  - seaborn
-# Docs
+  # Docs
   - ipykernel
   - jupyter_client
   - nbsphinx
