@@ -342,9 +342,7 @@ def timeseries(
         title_loc="left",
         wrap_kw={"min_line_len": 35, "max_line_len": 48},
     )
-    ax.set_xlabel(
-        get_localized_term("time")
-    )  # check_timeindex() already checks for 'time'
+    ax.set_xlabel(get_localized_term("time"))  # check_timeindex() already checks for 'time'
 
     # other plot elements
     if show_lat_lon:
@@ -1663,10 +1661,7 @@ def taylordiagram(
     # make labels
     if not std_label:
         try:
-            std_label = (
-                get_localized_term("standard deviation")
-                + f" ({list(data.values())[0].units})"
-            )
+            std_label = get_localized_term("standard deviation") + f" ({list(data.values())[0].units})"
         except AttributeError:
             std_label = get_localized_term("standard deviation").capitalize()
 
@@ -1734,11 +1729,7 @@ def taylordiagram(
         ref_kw = plot_kw.pop("reference")
     else:
         ref_kw = {}
-    ref_kw = {
-        "color": "#154504",
-        "marker": "s",
-        "label": get_localized_term("reference"),
-    } | ref_kw
+    ref_kw = {"color": "#154504", "marker": "s", "label": get_localized_term("reference")} | ref_kw
 
     ref_pt = ax.scatter(0, ref_std, **ref_kw)
 

@@ -17,15 +17,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-import yaml
 from matplotlib.lines import Line2D
-
-try:
-    from xclim.core.options import METADATA_LOCALES
-    from xclim.core.options import OPTIONS as XC_OPTIONS
-except ImportError:
-    METADATA_LOCALES = "metadata_locales"
-    XC_OPTIONS = {METADATA_LOCALES: []}
+from xclim.core.options import OPTIONS as XC_OPTIONS, METADATA_LOCALES
+import yaml
 
 
 TERMS: dict = {}
@@ -175,9 +169,7 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
     return cat
 
 
-def get_attributes(
-    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None
-) -> str:
+def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None) -> str:
     """
     Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
     then the first variable (DataArray) of the Dataset, then the Dataset attributes.
