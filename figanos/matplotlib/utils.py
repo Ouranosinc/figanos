@@ -19,8 +19,13 @@ import pandas as pd
 import xarray as xr
 import yaml
 from matplotlib.lines import Line2D
-from xclim.core.options import METADATA_LOCALES
-from xclim.core.options import OPTIONS as XC_OPTIONS
+try:
+    from xclim.core.options import METADATA_LOCALES
+    from xclim.core.options import OPTIONS as XC_OPTIONS
+except ImportError:
+    METADATA_LOCALES = "metadata_locales"
+    XC_OPTIONS = {METADATA_LOCALES: []}
+
 
 TERMS: dict = {}
 """
