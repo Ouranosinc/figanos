@@ -19,6 +19,7 @@ import pandas as pd
 import xarray as xr
 import yaml
 from matplotlib.lines import Line2D
+
 try:
     from xclim.core.options import METADATA_LOCALES
     from xclim.core.options import OPTIONS as XC_OPTIONS
