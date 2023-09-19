@@ -1,3 +1,11 @@
+xclim>=0.38
+dask
+h5py
+netcdf4
+pyyaml
+zarr
+geoviews
+holoviews
 ipykernel
 ipython
 jupyter_client
