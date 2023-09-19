@@ -4,11 +4,15 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`).
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * New function hatchmap (:pull:`107`).
+
+Internal changes
+^^^^^^^^^^^^^^^^
+* Clean up of the dependencies to remove the notebooks deps from the core deps.
 
 0.2.0 (2023-06-19)
 ------------------

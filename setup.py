@@ -9,22 +9,11 @@ with open("README.rst") as readme_file:
 
 requirements = [
     "cartopy",
-    "click>=8.0",
-    "dask",
     "geopandas",
-    "geoviews",
-    "h5py",
-    "holoviews",
-    "jupyter",
     "matplotlib",
-    "netCDF4",
-    "notebook",
     "numpy",
     "pandas",
     "xarray",
-    "xclim>=0.38",
-    "pyyaml",
-    "zarr",
     "seaborn",
 ]
 
