@@ -4,7 +4,7 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`).
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

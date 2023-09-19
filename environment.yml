@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - default
 dependencies:
-  - python
+  - python>=3.8
   # Main
   - cartopy
   - matplotlib-base
