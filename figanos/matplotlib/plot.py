@@ -343,7 +343,7 @@ def timeseries(
         wrap_kw={"min_line_len": 35, "max_line_len": 48},
     )
     ax.set_xlabel(
-        get_localized_term("time")
+        get_localized_term("time").capitalize()
     )  # check_timeindex() already checks for 'time'
 
     # other plot elements
@@ -1675,9 +1675,9 @@ def taylordiagram(
             if "Pearson" in list(data.values())[0].correlation_type:
                 corr_label = get_localized_term("pearson correlation").capitalize()
             else:
-                corr_label = get_localized_term("Correlation").capitalize()
+                corr_label = get_localized_term("correlation").capitalize()
         except AttributeError:
-            corr_label = get_localized_term("Correlation").capitalize()
+            corr_label = get_localized_term("correlation").capitalize()
 
     # build diagram
     transform = PolarAxes.PolarTransform()

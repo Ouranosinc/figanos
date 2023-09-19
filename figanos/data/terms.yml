@@ -7,8 +7,8 @@ time:
 "standard deviation":
   fr: "écart-type"
 "correlation":
-  fr: Corrélation
+  fr: corrélation
 "pearson correlation":
-  fr: Corrélation de Pearson
+  fr: corrélation de Pearson
 "reference":
   fr: référence
