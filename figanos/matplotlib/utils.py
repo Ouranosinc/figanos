@@ -17,9 +17,56 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+import yaml
 from matplotlib.lines import Line2D
+from xclim.core.options import METADATA_LOCALES
+from xclim.core.options import OPTIONS as XC_OPTIONS
 
-warnings.simplefilter("always", UserWarning)
+TERMS: dict = {}
+"""
+A translation directory for special terms to appear on the plots.
+
+Keys are terms to translate and they map to "locale": "translation" dictionaries.
+The "official" figanos terms are based on figanos/data/terms.yml.
+"""
+
+
+# Load terms translations
+with (pathlib.Path(__file__).resolve().parents[1] / "data" / "terms.yml").open() as f:
+    TERMS = yaml.safe_load(f)
+
+
+def get_localized_term(term, locale=None):
+    """Get `term` translated into `locale`.
+
+    Terms are pulled from the :py:data:`TERMS` dictionary.
+
+    Parameters
+    ----------
+    term : str
+      A word or short phrase to translate.
+    locale : str, optional
+      A 2-letter locale name to translate to.
+      Default is None, which will pull the locale
+      from xclim's "metadata_locales" option (taking the first).
+
+    Return
+    ------
+    str : Translated term.
+    """
+    locale = locale or (XC_OPTIONS[METADATA_LOCALES] or ["en"])[0]
+    if locale == "en":
+        return term
+
+    if term not in TERMS:
+        warnings.warn(f"No translation known for term '{term}'.")
+        return term
+
+    if locale not in TERMS[term]:
+        warnings.warn(f"No {locale} translation known for term '{term}'.")
+        return term
+
+    return TERMS[term][locale]
 
 
 def empty_dict(param):
@@ -122,10 +169,14 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
     return cat
 
 
-def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
+def get_attributes(
+    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None
+) -> str:
     """
     Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
     then the first variable (DataArray) of the Dataset, then the Dataset attributes.
+
+    If a locale is activated in xclim's options or a locale is passed, a localized version is given if available.
 
     Parameters
     ----------
@@ -133,27 +184,37 @@ def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
         String corresponding to an attribute name.
     xr_obj : DataArray or Dataset
         The Xarray object containing the attributes.
+    locale : str, optional
+        A 2-letter locale name to translate to.
+        Default is None, which will pull the locale
+        from xclim's "metadata_locales" option (taking the first).
 
     Returns
     -------
     str
         Xarray attribute value as string or empty string if not found
     """
-    if isinstance(xr_obj, xr.DataArray) and string in xr_obj.attrs:
-        return xr_obj.attrs[string]
-
-    elif (
-        isinstance(xr_obj, xr.Dataset)
-        and string in xr_obj[list(xr_obj.data_vars)[0]].attrs
-    ):  # DataArray of first variable
-        return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
-
-    elif isinstance(xr_obj, xr.Dataset) and string in xr_obj.attrs:
-        return xr_obj.attrs[string]
-
+    locale = locale or (XC_OPTIONS[METADATA_LOCALES] or ["en"])[0]
+    if locale != "en":
+        names = [f"{string}_{locale}", string]
     else:
-        warnings.warn(f'Attribute "{string}" not found.')
-        return ""
+        names = [string]
+
+    for name in names:
+        if isinstance(xr_obj, xr.DataArray) and name in xr_obj.attrs:
+            return xr_obj.attrs[name]
+
+        if (
+            isinstance(xr_obj, xr.Dataset)
+            and name in xr_obj[list(xr_obj.data_vars)[0]].attrs
+        ):  # DataArray of first variable
+            return xr_obj[list(xr_obj.data_vars)[0]].attrs[name]
+
+        if isinstance(xr_obj, xr.Dataset) and name in xr_obj.attrs:
+            return xr_obj.attrs[name]
+
+    warnings.warn(f'Attribute "{string}" not found.')
+    return ""
 
 
 def set_plot_attrs(
@@ -599,11 +660,11 @@ def fill_between_label(
     if legend != "full":
         label = None
     elif array_categ[name] in ["ENS_PCT_VAR_DS", "ENS_PCT_DIM_DS", "ENS_PCT_DIM_DA"]:
-        label = "{}th-{}th percentiles".format(
+        label = get_localized_term("{}th-{}th percentiles").format(
             get_suffix(sorted_lines["lower"]), get_suffix(sorted_lines["upper"])
         )
     elif array_categ[name] == "ENS_STATS_VAR_DS":
-        label = "min-max range"
+        label = get_localized_term("min-max range")
     else:
         label = None
 
@@ -713,7 +774,8 @@ def create_cmap(
     # parent should be 'figanos/'
     path = (
         pathlib.Path(__file__).parents[1]
-        / "data/ipcc_colors"
+        / "data"
+        / "ipcc_colors"
         / folder
         / (filename + ".txt")
     )
