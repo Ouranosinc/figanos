@@ -14,6 +14,7 @@ New features and enhancements
 Internal changes
 ^^^^^^^^^^^^^^^^
 * Clean up of the dependencies to remove the notebooks deps from the core deps.
+* `figanos` now uses Trusted Publishing to publish the package on PyPI and TestPyPI. (:pull:`113`).
 
 0.2.0 (2023-06-19)
 ------------------
