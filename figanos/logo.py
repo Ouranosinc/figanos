@@ -24,8 +24,6 @@ class Logos:
 
     Methods
     -------
-    logos()
-        Returns the dictionary containing the logo names and paths.
     set_logo(path: Union[str, Path], name: str = None)
         Sets the path and name to a logo file.
         If no logos are already set, the first one will be set as the default.
