@@ -529,9 +529,9 @@ def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
     path_png: str | None = None,
-    offsetim_kw: None | dict = {"alpha": 1, "zoom": 0.5},
+    **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
-    """Place logo of plot area.
+    r"""Place logo of plot area.
 
     Parameters
     ----------
@@ -543,20 +543,23 @@ def plot_logo(
     path_png: str or None
         Path to picture of logo, must be a png.
         If none, Ouranos logo is used by default.
-    offsetim_kw: dict
-        Arugments to pass to matplotlib.offsetbox.OffsetImage().
+    \*\*offset_image_kwargs
+        Arguments to pass to matplotlib.offsetbox.OffsetImage().
 
     Returns
     -------
     matplotlib.axes.Axes
     """
+    if offset_image_kwargs is None:
+        offset_image_kwargs = {"alpha": 1, "zoom": 0.5}
+
     if path_png is None:
         path_png = (
             pathlib.Path(__file__).resolve().parents[1] / "data" / "ouranos_logo_25.png"
         )
 
     image = mpl.pyplot.imread(path_png)
-    imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
+    imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)
     loc, box_a, ha, va = loc_mpl(loc)
 
     ab = mpl.offsetbox.AnnotationBbox(

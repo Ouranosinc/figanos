@@ -11,6 +11,8 @@ dependencies:
   - geopandas
   - numpy
   - pandas
+  - platformdirs
+  - pyyaml
   - xarray
   # To make the package and notebooks usable
   - xclim >=0.38

@@ -13,8 +13,10 @@ requirements = [
     "matplotlib",
     "numpy",
     "pandas",
-    "xarray",
+    "platformdirs",
+    "pyyaml",
     "seaborn",
+    "xarray",
 ]
 
 test_requirements = ["pytest>=3"]

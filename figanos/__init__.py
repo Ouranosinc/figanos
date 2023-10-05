@@ -5,3 +5,4 @@ __email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"
 __version__ = "0.2.0"
 
 from . import matplotlib
+from .logo import Logos
