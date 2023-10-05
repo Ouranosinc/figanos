@@ -29,13 +29,14 @@ class Logos:
     set_logo(path: Union[str, Path], name: str = None)
         Sets the path and name to a logo file.
         If no logos are already set, the first one will be set as the default.
-
+    install_ouranos_logos(permitted: bool = False)
+        Fetches and installs the Ouranos logos.
     """
 
     config = Path(platformdirs.user_config_dir("figanos", ensure_exists=True)) / "logos"
     catalogue = config / "logo_mapping.yaml"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Constructor for the Logo class."""
         self._setup()
 
@@ -51,7 +52,7 @@ class Logos:
                     warnings.warn(f"Logo file {logo_path} does not exist.")
                 setattr(self, logo_name, logo_path)
 
-    def _setup(self):
+    def _setup(self) -> None:
         if (
             not self.catalogue.exists()
             or yaml.safe_load(self.catalogue.read_text()) is None
@@ -70,7 +71,7 @@ class Logos:
     def __repr__(self):
         return f"{self.logos().items()}"
 
-    def set_logo(self, path: Union[str, Path], name: Optional[str] = None):
+    def set_logo(self, path: Union[str, Path], name: Optional[str] = None) -> None:
         """Copies the logo at a given path to the config folder and maps it to a given name in the logo config."""
         _logo_mapping = yaml.safe_load(self.catalogue.read_text())
 
@@ -93,7 +94,7 @@ class Logos:
         else:
             warnings.warn(f"Logo file {logo_path} does not exist.")
 
-    def install_ouranos_logo(self, *, permitted: bool = False) -> None:
+    def install_ouranos_logos(self, *, permitted: bool = False) -> None:
         """Fetches and installs the Ouranos logo.
 
         The Ouranos logo is reserved for use by employees and project partners of Ouranos.
@@ -108,7 +109,8 @@ class Logos:
                 for colour in ["couleur", "blanc", "noir"]:
                     file = self.config / f"ouranos_logo_{orientation}_{colour}.png"
                     urllib.request.urlretrieve(
-                        f"https://raw.githubusercontent.com/Ouranosinc/.github/main/images/ouranos_logo_{orientation}_{colour}.png",
+                        "https://raw.githubusercontent.com/Ouranosinc/.github/main/images/"
+                        f"ouranos_logo_{orientation}_{colour}.png",
                         file,
                     )
                     self.set_logo(file)
