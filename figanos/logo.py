@@ -1,13 +1,12 @@
 import logging
 import shutil
-import warnings
 import urllib.request
+import warnings
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 
 import platformdirs
 import yaml
-
 
 __all__ = ["Logos"]
 
