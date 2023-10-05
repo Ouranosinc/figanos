@@ -4,12 +4,16 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`).
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`).
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * New function hatchmap (:pull:`107`).
 * Support for translating figures. Activating a locale through xclim's ``metadata_locales`` option will try to use metadata saved by xclim or xscen in this locale and to translate common terms appearing in the figures. Figanos currently ships with french translations of those terms. (:pull:`109`, :issue:`64`).
+
+Bug fixes
+^^^^^^^^^
+* Fixed issue with the `Manifest.in` not bundling a YAML file loaded on import. (:pull:`118`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
