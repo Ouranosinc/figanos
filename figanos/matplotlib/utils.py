@@ -22,6 +22,8 @@ from matplotlib.lines import Line2D
 from xclim.core.options import METADATA_LOCALES
 from xclim.core.options import OPTIONS as XC_OPTIONS
 
+from figanos import Logos
+
 TERMS: dict = {}
 """
 A translation directory for special terms to appear on the plots.
@@ -528,7 +530,7 @@ def plot_coords(
 def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
-    path_png: str | None = None,
+    logo: str | pathlib.Path | dict[str, str | pathlib.Path] | None = None,
     **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
     r"""Place logo of plot area.
@@ -540,9 +542,11 @@ def plot_logo(
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    path_png: str or None
-        Path to picture of logo, must be a png.
-        If none, Ouranos logo is used by default.
+    logo : str, Path, dict, optional
+        A str or Path to picture of logo, or a name of an already-installed logo.
+        If dict, the logo will be installed and accessible using 'name' provided. must be of format {'name': 'path'}.
+        If none, the logo set as 'default' will be used.
+        Logos must be in 'png' format.
     \*\*offset_image_kwargs
         Arguments to pass to matplotlib.offsetbox.OffsetImage().
 
@@ -553,10 +557,17 @@ def plot_logo(
     if offset_image_kwargs is None:
         offset_image_kwargs = {"alpha": 1, "zoom": 0.5}
 
-    if path_png is None:
-        path_png = (
-            pathlib.Path(__file__).resolve().parents[1] / "data" / "ouranos_logo_25.png"
-        )
+    logos = Logos()
+    if logo:
+        if isinstance(logo, dict):
+            if len(logo) != 1:
+                raise ValueError("Logo dict must have only one entry")
+            name = list(logo.keys())[0]
+            path_png = list(logo.values())[0]
+            logos.set_logo(path_png, name)
+        path_png = logos[logo]
+    else:
+        path_png = logos.default
 
     image = mpl.pyplot.imread(path_png)
     imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)

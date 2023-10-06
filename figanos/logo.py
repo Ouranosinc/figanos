@@ -57,6 +57,7 @@ class Logos:
                 if not Path(logo_path).exists():
                     warnings.warn(f"Logo file {logo_path} does not exist.")
                 setattr(self, logo_name, logo_path)
+        self.default = self._logos.get("default")
 
     def _setup(self) -> None:
         if (
