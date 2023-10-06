@@ -51,6 +51,21 @@ repos:
     hooks:
       - id: blackdoc
         additional_dependencies: [ 'black==23.9.1' ]
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.6.1
+    hooks:
+      - id: nbstripout
+        files: '.ipynb'
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: [ '--config=setup.cfg' ]
+  - repo: https://github.com/keewis/blackdoc
+    rev: v0.3.8
+    hooks:
+      - id: blackdoc
+        additional_dependencies: [ 'black==23.9.1' ]
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.32.0
     hooks:
