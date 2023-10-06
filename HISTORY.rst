@@ -16,7 +16,7 @@ Internal changes
 ^^^^^^^^^^^^^^^^
 * Clean up of the dependencies to remove the notebooks deps from the core deps.
 * `figanos` now uses Trusted Publishing to publish the package on PyPI and TestPyPI. (:pull:`113`).
-* The official Ouranos logos have been removed from the repository. They can now installed if required via the ``figanos.Logos.install_ouranos_logos`` class method. (:pull:`119`).
+* The official Ouranos logos have been removed from the repository. They can now installed if required via the ``figanos.Logos.install_ouranos_logos`` class method. (:issue:`115`, :pull:`119`).
 
 0.2.0 (2023-06-19)
 ------------------
