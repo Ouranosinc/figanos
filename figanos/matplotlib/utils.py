@@ -22,7 +22,7 @@ from matplotlib.lines import Line2D
 from xclim.core.options import METADATA_LOCALES
 from xclim.core.options import OPTIONS as XC_OPTIONS
 
-from figanos import Logos
+from .._logo import Logos
 
 TERMS: dict = {}
 """
@@ -530,7 +530,7 @@ def plot_coords(
 def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
-    logo: str | pathlib.Path | dict[str, str | pathlib.Path] | None = None,
+    logo: str | pathlib.Path | None = None,
     **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
     r"""Place logo of plot area.
@@ -543,8 +543,8 @@ def plot_logo(
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
     logo : str, Path, dict, optional
-        A str or Path to picture of logo, or a name of an already-installed logo.
-        If dict, the logo will be installed and accessible using 'name' provided. must be of format {'name': 'path'}.
+        A name (str) or Path to picture of logo, or a name of an already-installed logo.
+        If a Path is provided, the logo will be installed and accessible via the 'Path().name' of file.
         If none, the logo set as 'default' will be used.
         Logos must be in 'png' format.
     \*\*offset_image_kwargs
@@ -555,19 +555,19 @@ def plot_logo(
     matplotlib.axes.Axes
     """
     if offset_image_kwargs is None:
-        offset_image_kwargs = {"alpha": 1, "zoom": 0.5}
+        offset_image_kwargs = {"alpha": 0.8, "zoom": 0.25}
 
     logos = Logos()
     if logo:
-        if isinstance(logo, dict):
-            if len(logo) != 1:
-                raise ValueError("Logo dict must have only one entry")
-            name = list(logo.keys())[0]
-            path_png = list(logo.values())[0]
-            logos.set_logo(path_png, name)
+        if isinstance(logo, pathlib.Path):
+            path_png = logo
         path_png = logos[logo]
     else:
         path_png = logos.default
+    if path_png is None:
+        raise ValueError(
+            "No logo found. Please install one with the figanos.Logos().install_logo() method."
+        )
 
     image = mpl.pyplot.imread(path_png)
     imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)
