@@ -10,9 +10,15 @@ import yaml
 
 __all__ = ["Logos"]
 
+LOGO_CONFIG_FILE = "logo_mapping.yaml"
+OURANOS_LOGO_URL_TEMPLATE = (
+    "https://raw.githubusercontent.com/Ouranosinc/.github/main/images/"
+    "ouranos_logo_{orientation}_{colour}.png"
+)
+
 
 class Logos:
-    """Class for the logo of the application.
+    """Class for managing logos to be used in graphics.
 
     Attributes
     ----------
@@ -30,20 +36,23 @@ class Logos:
         Fetches and installs the Ouranos logos.
     """
 
-    config = Path(platformdirs.user_config_dir("figanos", ensure_exists=True)) / "logos"
-    catalogue = config / "logo_mapping.yaml"
-
     def __init__(self) -> None:
         """Constructor for the Logo class."""
+        self.config = (
+            Path(platformdirs.user_config_dir("figanos", ensure_exists=True)) / "logos"
+        )
+        self.catalogue = self.config / LOGO_CONFIG_FILE
+        self._logos = {}
         self._setup()
 
-        self._logos = yaml.safe_load(self.catalogue.read_text())
-        if not self._logos.get("logos"):
+        _logos = yaml.safe_load(self.catalogue.read_text())
+        if not _logos.get("logos"):
             warnings.warn(
                 "No entries found in the logo configuration file. "
                 "Consider setting some logos with the figanos.Logo().set_logo() method."
             )
         else:
+            self._logos = _logos["logos"]
             for logo_name, logo_path in self._logos["logos"].items():
                 if not Path(logo_path).exists():
                     warnings.warn(f"Logo file {logo_path} does not exist.")
@@ -63,10 +72,19 @@ class Logos:
                 yaml.dump(dict(logos={}), f)
 
     def __str__(self):
-        return f"{frozenset(self.logos().keys())}"
+        return f"{self.__getitem__('default')}"
 
     def __repr__(self):
-        return f"{self.logos().items()}"
+        return f"{self._logos.items()}"
+
+    def __getitem__(self, name: str) -> Optional[str]:
+        """Retrieve a logo path by its name."""
+        return self._logos.get(name)
+
+    def reload_config(self) -> None:
+        """Reload the configuration from the YAML file."""
+        _logo_mapping = yaml.safe_load(self.catalogue.read_text())
+        self._logos = _logo_mapping.get("logos", {})
 
     def set_logo(self, path: Union[str, Path], name: Optional[str] = None) -> None:
         """Copies the logo at a given path to the config folder and maps it to a given name in the logo config."""
@@ -77,6 +95,7 @@ class Logos:
             if name is None:
                 name = logo_path.stem
             install_logo_path = self.config / logo_path.name
+
             if not install_logo_path.exists():
                 shutil.copy(logo_path, install_logo_path)
 
@@ -87,6 +106,7 @@ class Logos:
             logging.info("Setting %s logo to %s", name, install_logo_path)
             _logo_mapping["logos"][name] = str(install_logo_path)
             self.catalogue.write_text(yaml.dump(_logo_mapping))
+            self.reload_config()
 
         else:
             warnings.warn(f"Logo file {logo_path} does not exist.")
@@ -105,21 +125,23 @@ class Logos:
             for orientation in ["horizontal", "vertical"]:
                 for colour in ["couleur", "blanc", "noir"]:
                     file = self.config / f"ouranos_logo_{orientation}_{colour}.png"
-                    urllib.request.urlretrieve(
-                        "https://raw.githubusercontent.com/Ouranosinc/.github/main/images/"
-                        f"ouranos_logo_{orientation}_{colour}.png",
-                        file,
+                    logo_url = OURANOS_LOGO_URL_TEMPLATE.format(
+                        orientation=orientation, colour=colour
                     )
-                    self.set_logo(file)
-            _logo_mapping = yaml.safe_load(self.catalogue.read_text())
+                    try:
+                        urllib.request.urlretrieve(logo_url, file)
+                        self.set_logo(file)
+                    except Exception as e:
+                        logging.error(f"Error downloading or setting Ouranos logo: {e}")
 
+            _logo_mapping = yaml.safe_load(self.catalogue.read_text())
             if not _logo_mapping["logos"].get("default"):
                 logging.info("Setting default logo ouranos_logo_horizontal_couleur.png")
                 _logo_mapping["logos"]["default"] = str(
                     self.config / "ouranos_logo_horizontal_couleur.png"
                 )
                 self.catalogue.write_text(yaml.dump(_logo_mapping))
-
+            self.reload_config()
         else:
             warnings.warn(
                 "You have not indicated that you have permission to use the Ouranos logo. "
