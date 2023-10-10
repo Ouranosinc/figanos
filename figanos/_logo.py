@@ -25,18 +25,20 @@ class Logos:
         The path to the folder where the logo configuration file is stored.
     catalogue : Path
         The path to the logo configuration file.
+    default : str
+        The path to the default logo.
 
     Methods
     -------
+    installed()
+        Retrieves a list of installed logos.
+    install_ouranos_logos(\*, permitted: bool = False)
+        Fetches and installs the Ouranos logos.
     set_logo(path: Union[str, Path], name: str = None)
         Sets the path and name to a logo file.
         If no logos are already set, the first one will be set as the default.
     reload_config()
         Reloads the logo configuration from the YAML file.
-    installed()
-        Retrieves a list of installed logos.
-    install_ouranos_logos(\*, permitted: bool = False)
-        Fetches and installs the Ouranos logos.
     """
 
     default = None
@@ -51,13 +53,9 @@ class Logos:
         self._setup()
         self.reload_config()
 
-        for logo_name, logo_path in self._logos.items():
-            if not Path(logo_path).exists():
-                warnings.warn(f"Logo file {logo_path} does not exist.")
-            setattr(self, logo_name, logo_path)
-
         if not self._logos.get("default"):
-            logging.info("Setting default logo to %s", _figanos_logo)
+            warnings.warn(f"Setting default logo to {_figanos_logo}")
+            self.set_logo(_figanos_logo)
             self.set_logo(_figanos_logo, name="default")
 
     def _setup(self) -> None:
@@ -86,6 +84,10 @@ class Logos:
     def reload_config(self) -> None:
         """Reload the configuration from the YAML file."""
         self._logos = yaml.safe_load(self.catalogue.read_text())["logos"]
+        for logo_name, logo_path in self._logos.items():
+            if not Path(logo_path).exists():
+                warnings.warn(f"Logo file {logo_name} not found at {logo_path}.")
+            setattr(self, logo_name, logo_path)
 
     def installed(self) -> list:
         """Retrieve a list of installed logos."""
@@ -109,8 +111,10 @@ class Logos:
             self.catalogue.write_text(yaml.dump(dict(logos=_logo_mapping)))
             self.reload_config()
 
-        else:
-            warnings.warn(f"Logo file {logo_path} does not exist.")
+        elif not logo_path.exists():
+            warnings.warn(f"Logo file {logo_path} not found. Not setting logo.")
+        elif not logo_path.is_file():
+            warnings.warn(f"Logo path {logo_path} is a folder. Not setting logo.")
 
     def install_ouranos_logos(self, *, permitted: bool = False) -> None:
         """Fetches and installs the Ouranos logo.
@@ -129,9 +133,10 @@ class Logos:
                     logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
                     try:
                         urllib.request.urlretrieve(logo_url, self.config / file)
-                        self.set_logo(file)
+                        self.set_logo(self.config / file)
                     except Exception as e:
                         logging.error(f"Error downloading or setting Ouranos logo: {e}")
+            print(f"Ouranos logos installed at {self.config}.")
         else:
             warnings.warn(
                 "You have not indicated that you have permission to use the Ouranos logo. "
