@@ -136,7 +136,7 @@ class Logos:
                         self.set_logo(self.config / file)
                     except Exception as e:
                         logging.error(f"Error downloading or setting Ouranos logo: {e}")
-            print(f"Ouranos logos installed at {self.config}.")
+            print(f"Ouranos logos installed at: {self.config}.")
         else:
             warnings.warn(
                 "You have not indicated that you have permission to use the Ouranos logo. "

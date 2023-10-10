@@ -16,7 +16,7 @@ The style can be applied to any matplotlib figures, even if they are not created
 
 Logo Management
 ~~~~~~~~~~~~~~~
-Figanos stores logos for convenience so that they can be called by name when creating figures. On installation, the `default` logo will be set to the `figanos_logo.png` file.
+Figanos stores logos for convenience so that they can be called by name when creating figures. On installation, the `default` logo will be set to the `figanos_logo.png` file. Files are saved in the user's home configuration folder (`XDG_CONFIG_HOME` on Linux), in the `figanos/logos` folder.
 
 For users who are permitted to use the Ouranos logos, they can be installed with the following command. You only need to run this once when setting up a new environment with figanos.
 
