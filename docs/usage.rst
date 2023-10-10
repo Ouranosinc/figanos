@@ -32,7 +32,7 @@ The logos are stored in the user's home configuration directory in the ``figanos
 
 On installation, the `default` logo will be set to the `figanos_logo.png` file. To set it to a different logo, simply call the `set_logo()` method with the path to the desired logo with the name set as `default`.
 
-For users who are permitted to use the Ouranos logos, the logos can be installed with the following command:
+For users who are permitted to use the Ouranos logos, the logos can be installed with the following command. You only need to do this once when setting up a new environment with figanos.
 
 .. code-block:: python
 

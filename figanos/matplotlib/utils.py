@@ -545,7 +545,7 @@ def plot_logo(
     logo : str, Path, dict, optional
         A name (str) or Path to picture of logo, or a name of an already-installed logo.
         If a Path is provided, the logo will be installed and accessible via the 'Path().name' of file.
-        If none, the logo set as 'default' will be used.
+        The default logo is the Figanos logo. To install the Ouranos (or another) logo consult the Usage page.
         Logos must be in 'png' format.
     \*\*offset_image_kwargs
         Arguments to pass to matplotlib.offsetbox.OffsetImage().
