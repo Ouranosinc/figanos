@@ -50,7 +50,6 @@ class Logos:
         )
         self.catalogue = self.config / LOGO_CONFIG_FILE
         self._logos = {}
-        self._setup()
         self.reload_config()
 
         if not self._logos.get("default"):
@@ -83,6 +82,7 @@ class Logos:
 
     def reload_config(self) -> None:
         """Reload the configuration from the YAML file."""
+        self._setup()
         self._logos = yaml.safe_load(self.catalogue.read_text())["logos"]
         for logo_name, logo_path in self._logos.items():
             if not Path(logo_path).exists():
@@ -136,6 +136,14 @@ class Logos:
                         self.set_logo(self.config / file)
                     except Exception as e:
                         logging.error(f"Error downloading or setting Ouranos logo: {e}")
+
+            if Path(self.default).stem == "figanos_logo":
+                _default_ouranos_logo = (
+                    self.config / "ouranos_logo_vertical_couleur.png"
+                )
+                warnings.warn(f"Setting default logo to {_default_ouranos_logo}.")
+                self.set_logo(_default_ouranos_logo, name="default")
+            self.reload_config()
             print(f"Ouranos logos installed at: {self.config}.")
         else:
             warnings.warn(
