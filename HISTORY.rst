@@ -4,19 +4,20 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`).
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`).
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * New function hatchmap (:pull:`107`).
 * Support for translating figures. Activating a locale through xclim's ``metadata_locales`` option will try to use metadata saved by `xclim` or xscen in this locale and to translate common terms appearing in the figures. Figanos currently ships with French translations of those terms. (:pull:`109`, :issue:`64`).
 * New ``figanos.Logos`` class added to manage and install logos stored in user's Home configuration directory. The ``figanos.utils.plot_logo`` function call signature has changed to support the new system. (:issue:`115`, :pull:`119`).
+* Logo sizing and placement now depends on `scikit-image` for resizing, and uses `width` and `height` instead of `zoom`. (:issue:`123`, :pull:`119`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
 * Clean up of the dependencies to remove the notebooks deps from the core deps.
 * `figanos` now uses Trusted Publishing to publish the package on PyPI and TestPyPI. (:pull:`113`).
-* The official Ouranos logos have been removed from the repository. They can now installed if required via the ``figanos.Logos.install_ouranos_logos`` class method. (:issue:`115`, :pull:`119`).
+* The official Ouranos logos have been removed from the repository. They can now be installed if required via the ``figanos.Logos.install_ouranos_logos`` class method. (:issue:`115`, :pull:`119`).
 
 0.2.0 (2023-06-19)
 ------------------
