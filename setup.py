@@ -16,7 +16,7 @@ requirements = [
     "platformdirs",
     "pyyaml",
     "seaborn",
-    "xarray",
+    "scikit-image" "xarray",
 ]
 
 test_requirements = ["pytest>=3"]
