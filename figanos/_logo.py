@@ -70,15 +70,15 @@ class Logos:
             with open(self.catalogue, "w") as f:
                 yaml.dump(dict(logos={}), f)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.__getitem__('default')}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self._logos.items()}"
 
     def __getitem__(self, name: str) -> Optional[str]:
         """Retrieve a logo path by its name."""
-        return self._logos.get(name, None)
+        return self._logos[name]
 
     def reload_config(self) -> None:
         """Reload the configuration from the YAML file."""
@@ -93,7 +93,9 @@ class Logos:
         """Retrieve a list of installed logos."""
         return list(self._logos.keys())
 
-    def set_logo(self, path: Union[str, Path], name: Optional[str] = None) -> None:
+    def set_logo(
+        self, path: Union[str, Path], name: Optional[str] = None
+    ) -> Optional[str]:
         """Copies the logo at a given path to the config folder and maps it to a given name in the logo config."""
         _logo_mapping = yaml.safe_load(self.catalogue.read_text())["logos"]
 
@@ -110,6 +112,7 @@ class Logos:
             _logo_mapping[name] = str(install_logo_path)
             self.catalogue.write_text(yaml.dump(dict(logos=_logo_mapping)))
             self.reload_config()
+            return self._logos[name]
 
         elif not logo_path.exists():
             warnings.warn(f"Logo file {logo_path} not found. Not setting logo.")

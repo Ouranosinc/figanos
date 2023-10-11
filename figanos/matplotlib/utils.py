@@ -598,11 +598,11 @@ def plot_logo(
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    logo : str, Path, dict, optional
-        A name (str) or Path to picture of logo, or a name of an already-installed logo.
-        If a Path is provided, the logo will be installed and accessible via the 'Path().name' of file.
+    logo : str, Path, optional
+        A name (str) or Path to a logo file, or a name of an already-installed logo.
+        If an existing is not found, the logo will be installed and accessible via the filename.
         The default logo is the Figanos logo. To install the Ouranos (or another) logo consult the Usage page.
-        Logos must be in 'png' format.
+        The logo must be in 'png' format.
     height : float, optional
         The desired height of the image. If None, the original height is used.
     width : float, optional
@@ -621,9 +621,10 @@ def plot_logo(
 
     logos = Logos()
     if logo:
-        if isinstance(logo, pathlib.Path):
-            path_png = logo
-        path_png = logos[logo]
+        try:
+            path_png = logos[logo]
+        except KeyError:
+            path_png = logos.set_logo(logo)
     else:
         path_png = logos.default
 
@@ -645,7 +646,7 @@ def plot_logo(
         frameon=False,
         xycoords="axes fraction",
         box_alignment=box_a,
-        # pad=0.05,
+        pad=0.05,
     )
     ax.add_artist(ab)
     return ax
