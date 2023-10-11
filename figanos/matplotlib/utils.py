@@ -19,6 +19,9 @@ import pandas as pd
 import xarray as xr
 import yaml
 from matplotlib.lines import Line2D
+
+# from scipy.ndimage import zoom
+from skimage.transform import rescale, resize
 from xclim.core.options import METADATA_LOCALES
 from xclim.core.options import OPTIONS as XC_OPTIONS
 
@@ -439,7 +442,7 @@ def loc_mpl(
         elif loc == "upper center":
             loc = (0.5, 0.97)
             box_a = (0.5, 1)
-        elif loc == "center":
+        else:
             loc = (0.5, 0.5)
             box_a = (0.5, 0.5)
 
@@ -455,6 +458,11 @@ def loc_mpl(
             else:
                 box_a.append(0)
         box_a = tuple(box_a)
+    else:
+        raise ValueError(
+            "loc must be a string, int or tuple. "
+            "See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html"
+        )
 
     return loc, box_a, ha, va
 
@@ -527,10 +535,58 @@ def plot_coords(
     return ax
 
 
+def scale_image(
+    im: np.ndarray,
+    height: float | None,
+    width: float | None,
+    keep_ratio: bool = True,
+) -> np.ndarray:
+    """Scale an image to a specified height and width.
+
+    Parameters
+    ----------
+    im : np.ndarray
+        The image to be scaled.
+    height : float, optional
+        The desired height of the image. If None, the original height is used.
+    width : float, optional
+        The desired width of the image. If None, the original width is used.
+    keep_ratio : bool
+        If True, the aspect ratio of the original image is maintained. Default is True.
+
+    Returns
+    -------
+    np.ndarray
+        The scaled image.
+    """
+    original_height, original_width = im.shape[:2]
+
+    if height is None and width is None:
+        return im
+
+    if not keep_ratio:
+        height = original_height or height
+        width = original_width or width
+    else:
+        if width is not None:
+            if height is not None:
+                warnings.warn("Both height and width provided, using height.")
+            # Only width is provided, derive zoom factor for height based on aspect ratio
+            height = (width / original_width) * original_height
+        elif height is not None:
+            # Only height is provided, derive zoom factor for width based on aspect ratio
+            width = (height / original_height) * original_width
+
+    return resize(im, (height, width, im.shape[2]), anti_aliasing=True)
+
+
 def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
     logo: str | pathlib.Path | None = None,
+    height: float | None = None,
+    width: float | None = None,
+    keep_ratio: bool = True,
     **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
     r"""Place logo of plot area.
@@ -547,6 +603,12 @@ def plot_logo(
         If a Path is provided, the logo will be installed and accessible via the 'Path().name' of file.
         The default logo is the Figanos logo. To install the Ouranos (or another) logo consult the Usage page.
         Logos must be in 'png' format.
+    height : float, optional
+        The desired height of the image. If None, the original height is used.
+    width : float, optional
+        The desired width of the image. If None, the original width is used.
+    keep_ratio : bool, optional
+        If True, the aspect ratio of the original image is maintained. Default is True.
     \*\*offset_image_kwargs
         Arguments to pass to matplotlib.offsetbox.OffsetImage().
 
@@ -555,7 +617,7 @@ def plot_logo(
     matplotlib.axes.Axes
     """
     if offset_image_kwargs is None:
-        offset_image_kwargs = {"alpha": 0.8, "zoom": 0.25}
+        offset_image_kwargs = {}
 
     logos = Logos()
     if logo:
@@ -564,22 +626,26 @@ def plot_logo(
         path_png = logos[logo]
     else:
         path_png = logos.default
+
     if path_png is None:
         raise ValueError(
-            "No logo found. Please install one with the figanos.Logos().install_logo() method."
+            "No logo found. Please install one with the figanos.Logos().set_logo() method."
         )
 
     image = mpl.pyplot.imread(path_png)
-    imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)
     loc, box_a, ha, va = loc_mpl(loc)
 
+    scaled_image = scale_image(image, height, width, keep_ratio)
+    imagebox = mpl.offsetbox.OffsetImage(scaled_image, **offset_image_kwargs)
+
+    loc, box_a, ha, va = loc_mpl(loc)
     ab = mpl.offsetbox.AnnotationBbox(
         imagebox,
         loc,
         frameon=False,
         xycoords="axes fraction",
         box_alignment=box_a,
-        pad=0.05,
+        # pad=0.05,
     )
     ax.add_artist(ab)
     return ax
