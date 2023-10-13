@@ -5,8 +5,10 @@ import math
 import pathlib
 import re
 import warnings
+from tempfile import NamedTemporaryFile
 from typing import Any, Callable
 
+import cairosvg
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature  # noqa
 import geopandas as gpd
@@ -19,9 +21,7 @@ import pandas as pd
 import xarray as xr
 import yaml
 from matplotlib.lines import Line2D
-
-# from scipy.ndimage import zoom
-from skimage.transform import rescale, resize
+from skimage.transform import resize
 from xclim.core.options import METADATA_LOCALES
 from xclim.core.options import OPTIONS as XC_OPTIONS
 
@@ -535,8 +535,23 @@ def plot_coords(
     return ax
 
 
-def scale_image(
-    im: np.ndarray,
+def find_logo(logo: str | pathlib.Path) -> str:
+    """Read a logo file."""
+    logos = Logos()
+    if logo:
+        logo_path = logos[logo]
+    else:
+        logo_path = logos.default
+
+    if logo_path is None:
+        raise ValueError(
+            "No logo found. Please install one with the figanos.Logos().set_logo() method."
+        )
+    return logo_path
+
+
+def load_image(
+    im: str | pathlib.Path,
     height: float | None,
     width: float | None,
     keep_ratio: bool = True,
@@ -545,8 +560,8 @@ def scale_image(
 
     Parameters
     ----------
-    im : np.ndarray
-        The image to be scaled.
+    im : str or Path
+        The image to be scaled. PNG and SVG formats are supported.
     height : float, optional
         The desired height of the image. If None, the original height is used.
     width : float, optional
@@ -559,25 +574,47 @@ def scale_image(
     np.ndarray
         The scaled image.
     """
-    original_height, original_width = im.shape[:2]
+    if pathlib.Path(im).suffix == ".png":
+        im = mpl.pyplot.imread(im)
+        original_height, original_width = im.shape[:2]
 
-    if height is None and width is None:
-        return im
+        if height is None and width is None:
+            return im
 
-    if not keep_ratio:
-        height = original_height or height
-        width = original_width or width
-    else:
-        if width is not None:
+        warnings.warn(
+            "The scikit-image library is used to resize PNG images. This may affect logo image quality."
+        )
+        if not keep_ratio:
+            height = original_height or height
+            width = original_width or width
+        else:
+            if width is not None:
+                if height is not None:
+                    warnings.warn("Both height and width provided, using height.")
+                # Only width is provided, derive zoom factor for height based on aspect ratio
+                height = (width / original_width) * original_height
+            elif height is not None:
+                # Only height is provided, derive zoom factor for width based on aspect ratio
+                width = (height / original_height) * original_width
+
+        return resize(im, (height, width, im.shape[2]), anti_aliasing=True)
+
+    elif pathlib.Path(im).suffix == ".svg":
+        cairo_kwargs = dict(url=im)
+        if not keep_ratio:
+            if height is not None and width is not None:
+                cairo_kwargs.update(output_height=height, output_width=width)
+        elif width is not None:
             if height is not None:
                 warnings.warn("Both height and width provided, using height.")
-            # Only width is provided, derive zoom factor for height based on aspect ratio
-            height = (width / original_width) * original_height
+            cairo_kwargs.update(output_width=width)
         elif height is not None:
-            # Only height is provided, derive zoom factor for width based on aspect ratio
-            width = (height / original_height) * original_width
+            cairo_kwargs.update(output_height=height)
 
-    return resize(im, (height, width, im.shape[2]), anti_aliasing=True)
+        with NamedTemporaryFile(suffix=".png") as png_file:
+            cairo_kwargs.update(write_to=png_file.name)
+            cairosvg.svg2png(**cairo_kwargs)
+            return mpl.pyplot.imread(png_file.name)
 
 
 def plot_logo(
@@ -619,25 +656,9 @@ def plot_logo(
     if offset_image_kwargs is None:
         offset_image_kwargs = {}
 
-    logos = Logos()
-    if logo:
-        try:
-            path_png = logos[logo]
-        except KeyError:
-            path_png = logos.set_logo(logo)
-    else:
-        path_png = logos.default
-
-    if path_png is None:
-        raise ValueError(
-            "No logo found. Please install one with the figanos.Logos().set_logo() method."
-        )
-
-    image = mpl.pyplot.imread(path_png)
-    loc, box_a, ha, va = loc_mpl(loc)
-
-    scaled_image = scale_image(image, height, width, keep_ratio)
-    imagebox = mpl.offsetbox.OffsetImage(scaled_image, **offset_image_kwargs)
+    logo_path = find_logo(logo)
+    image = load_image(logo_path, height, width, keep_ratio)
+    imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)
 
     loc, box_a, ha, va = loc_mpl(loc)
     ab = mpl.offsetbox.AnnotationBbox(

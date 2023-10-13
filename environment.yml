@@ -6,6 +6,7 @@ dependencies:
   - python>=3.8
   # Main
   - cartopy
+  - cairosvg
   - matplotlib-base
   - seaborn
   - geopandas
@@ -15,8 +16,8 @@ dependencies:
   - pyyaml
   - scikit-image
   - xarray
-  # To make the package and notebooks usable
   - xclim >=0.38
+  # To make the package and notebooks usable
   - dask
   - h5py
   - netcdf4
