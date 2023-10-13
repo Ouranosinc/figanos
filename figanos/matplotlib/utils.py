@@ -620,7 +620,7 @@ def load_image(
 def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
-    logo: str | pathlib.Path | None = None,
+    logo: str | pathlib.Path | Logos | None = None,
     height: float | None = None,
     width: float | None = None,
     keep_ratio: bool = True,
@@ -635,7 +635,7 @@ def plot_logo(
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    logo : str, Path, optional
+    logo : str, Path, figanos.Logos, optional
         A name (str) or Path to a logo file, or a name of an already-installed logo.
         If an existing is not found, the logo will be installed and accessible via the filename.
         The default logo is the Figanos logo. To install the Ouranos (or another) logo consult the Usage page.
@@ -656,7 +656,11 @@ def plot_logo(
     if offset_image_kwargs is None:
         offset_image_kwargs = {}
 
-    logo_path = find_logo(logo)
+    if isinstance(logo, Logos):
+        logo_path = logo.default
+    else:
+        logo_path = find_logo(logo)
+
     image = load_image(logo_path, height, width, keep_ratio)
     imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)
 
