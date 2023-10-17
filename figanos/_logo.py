@@ -179,20 +179,25 @@ class Logos:
         if permitted:
             for orientation in ["horizontal", "vertical"]:
                 for colour in ["couleur", "blanc", "noir"]:
-                    file = f"ouranos_logo_{orientation}_{colour}.png"
-                    if not (self.config / file).exists():
-                        logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
-                        try:
-                            urllib.request.urlretrieve(logo_url, self.config / file)
-                            self.set_logo(self.config / file)
-                        except Exception as e:
-                            logging.error(
-                                f"Error downloading or setting Ouranos logo: {e}"
-                            )
+                    for suffix in ["png", "svg"]:
+                        if suffix == "svg" and not (
+                            orientation == "horizontal" and colour == "couleur"
+                        ):
+                            continue
+                        file = f"ouranos_logo_{orientation}_{colour}.{suffix}"
+                        if not (self.config / file).exists():
+                            logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
+                            try:
+                                urllib.request.urlretrieve(logo_url, self.config / file)
+                                self.set_logo(self.config / file)
+                            except Exception as e:
+                                logging.error(
+                                    f"Error downloading or setting Ouranos logo: {e}"
+                                )
 
             if Path(self.default).stem == "figanos_logo":
                 _default_ouranos_logo = (
-                    self.config / "ouranos_logo_vertical_couleur.png"
+                    self.config / "ouranos_logo_horizontal_couleur.svg"
                 )
                 warnings.warn(f"Setting default logo to {_default_ouranos_logo}.")
                 self.set_logo(_default_ouranos_logo, name="default")

@@ -12,6 +12,7 @@ New features and enhancements
 * Support for translating figures. Activating a locale through xclim's ``metadata_locales`` option will try to use metadata saved by `xclim` or xscen in this locale and to translate common terms appearing in the figures. Figanos currently ships with French translations of those terms. (:pull:`109`, :issue:`64`).
 * New ``figanos.Logos`` class added to manage and install logos stored in user's Home configuration directory. The ``figanos.utils.plot_logo`` function call signature has changed to support the new system. (:issue:`115`, :pull:`119`).
 * Logo sizing and placement now depends on `scikit-image` for resizing, and uses `width` and `height` instead of `zoom`. (:issue:`123`, :pull:`119`).
+* Logo plotting now supports both PNG and SVG file types (via `cairosvg`). (:pull:`119`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
