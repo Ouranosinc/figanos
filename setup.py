@@ -9,15 +9,18 @@ with open("README.rst") as readme_file:
 
 requirements = [
     "cartopy",
+    "cairosvg",
     "geopandas",
     "matplotlib",
     "numpy",
     "pandas",
-    "xarray",
+    "platformdirs",
+    "pyyaml",
     "seaborn",
+    "scikit-image",
+    "xarray",
+    "xclim",
 ]
-
-test_requirements = ["pytest>=3"]
 
 docs_requirements = [
     dependency for dependency in open("requirements_docs.txt").readlines()
@@ -43,11 +46,6 @@ setup(
         "Programming Language :: Python :: 3.11",
     ],
     description="Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
-    entry_points={
-        "console_scripts": [
-            "figanos=figanos.cli:main",
-        ],
-    },
     install_requires=requirements,
     license="Apache Software License 2.0",
     long_description=readme,
@@ -57,7 +55,6 @@ setup(
     name="figanos",
     packages=find_packages(include=["figanos", "figanos.*"]),
     test_suite="tests",
-    tests_require=test_requirements,
     extras_require={
         "docs": docs_requirements,
         "dev": dev_requirements,
