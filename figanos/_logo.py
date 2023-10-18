@@ -55,7 +55,7 @@ class Logos:
     """
 
     def __init__(self) -> None:
-        """Constructor for the Logo class."""
+        """Initialize the Logo class instance."""
         self._config = None
         self._catalogue = None
         self._default = None
@@ -69,6 +69,7 @@ class Logos:
 
     @property
     def config(self) -> Path:
+        """The path to the logo configuration folder."""
         if self._config is None:
             self._config = (
                 Path(platformdirs.user_config_dir("figanos", ensure_exists=True))
@@ -78,6 +79,7 @@ class Logos:
 
     @property
     def catalogue(self) -> Path:
+        """The path to the logo configuration file."""
         if self._catalogue is None:
             self._catalogue = self.config / LOGO_CONFIG_FILE
         return self._catalogue
@@ -106,9 +108,11 @@ class Logos:
                 yaml.dump(dict(logos={}), f)
 
     def __str__(self) -> str:
+        """Return the default logo filepath."""
         return f"{self._default}"
 
     def __repr__(self) -> str:
+        """Return the default logo filepath."""
         return f"{self._default}"
 
     def __getitem__(self, args) -> Optional[str]:
@@ -140,7 +144,7 @@ class Logos:
     def set_logo(
         self, path: Union[str, Path], name: Optional[str] = None
     ) -> Optional[str]:
-        """Copies the logo at a given path to the config folder and maps it to a given name in the logo config."""
+        """Copy an image at a given path to the config folder and map it to a given name in the catalogue."""
         _logo_mapping = yaml.safe_load(self.catalogue.read_text())["logos"]
 
         logo_path = Path(path)
@@ -167,7 +171,7 @@ class Logos:
             warnings.warn(f"Logo path `{logo_path}` is a folder. Not setting logo.")
 
     def install_ouranos_logos(self, *, permitted: bool = False) -> None:
-        """Fetches and installs the Ouranos logo.
+        """Fetch and install the Ouranos logo.
 
         The Ouranos logo is reserved for use by employees and project partners of Ouranos.
 

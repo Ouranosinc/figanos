@@ -1,3 +1,4 @@
+"""Utility functions for figanos figure-creation."""
 from __future__ import annotations
 
 import json
@@ -84,17 +85,16 @@ def empty_dict(param):
 def check_timeindex(
     xr_objs: xr.DataArray | xr.Dataset | dict[str, Any]
 ) -> xr.DataArray | xr.Dataset | dict[str, Any]:
-    """Check if the time index of Xarray objects in a dict is CFtime
-    and convert to pd.DatetimeIndex if True.
+    """Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
 
     Parameters
     ----------
-    xr_dict : dict
+    xr_objs : xr.DataArray or xr.Dataset or dict
         Dictionary containing Xarray DataArrays or Datasets.
 
     Returns
     -------
-    dict
+    xr.DataArray or xr.Dataset or dict
         Dictionary of xarray objects with a pandas DatetimeIndex
     """
     if isinstance(xr_objs, dict):
@@ -123,12 +123,12 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
     """Get an array category, which determines how to plot the array.
 
     Parameters
-    __________
+    ----------
     array : Dataset or DataArray
         The array being categorized.
 
     Returns
-    _________
+    -------
     str
         ENS_PCT_VAR_DS: ensemble percentiles stored as variables
         ENS_PCT_DIM_DA: ensemble percentiles stored as dimension coordinates, DataArray
@@ -177,10 +177,9 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
 def get_attributes(
     string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None
 ) -> str:
-    """
-    Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
-    then the first variable (DataArray) of the Dataset, then the Dataset attributes.
+    """Fetch attributes or dims corresponding to keys from Xarray objects.
 
+    Searches DataArray attributes first, then the first variable (DataArray) of the Dataset, then Dataset attributes.
     If a locale is activated in xclim's options or a locale is passed, a localized version is given if available.
 
     Parameters
@@ -229,9 +228,9 @@ def set_plot_attrs(
     title_loc: str = "center",
     wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """
-    Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
-    to check for and get the string.
+    """Set plot elements according to Dataset or DataArray attributes.
+
+    Uses get_attributes() to check for and get the string.
 
     Parameters
     ----------
@@ -363,11 +362,11 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 def loc_mpl(
     loc: str | tuple[float, float] | int,
 ) -> tuple[tuple[float, float], tuple[float, float], str, str]:
-    """Returns coordinates and alignment associated to loc.
+    """Find coordinates and alignment associated to loc string.
 
     Parameters
     ----------
-    loc : string, int or tuple
+    loc : string, int, or tuple[float, float]
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
 
@@ -783,8 +782,9 @@ def get_var_group(
     unique_str: str = None,
 ) -> str:
     """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
-    If da is a Dataset,  look in the DataArray of the first variable."""
 
+    If `da` is a Dataset, look in the DataArray of the first variable.
+    """
     # create dict
     with open(path_to_json) as f:
         var_dict = json.load(f)
@@ -850,7 +850,6 @@ def create_cmap(
     -------
     matplotlib.colors.Colormap
     """
-
     reverse = False
 
     if filename:
@@ -977,7 +976,7 @@ def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
         Projection to use, taken from the cartopy.crs options.
 
     Returns
-    --------
+    -------
     gpd.GeoDataFrame
         GeoDataFrame adjusted to given projection
     """
@@ -987,7 +986,6 @@ def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
 
 def convert_scen_name(name: str) -> str:
     """Convert strings containing SSP, RCP or CMIP to their proper format."""
-
     matches = re.findall(r"(?:SSP|RCP|CMIP)[0-9]{1,3}", name, flags=re.I)
     if matches:
         for s in matches:
@@ -1082,14 +1080,12 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
 def add_cartopy_features(
     ax: matplotlib.axes.Axes, features: list[str] | dict[str, dict[str, Any]]
 ) -> matplotlib.axes.Axes:
-    """
-    Add cartopy features to matplotlib axes.
+    """Add cartopy features to matplotlib axes.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
         The axes on which to add the features.
-
     features : list or dict
         List of features, or nested dictionary of format {'feature': {'kwarg':'value'}}
 
@@ -1098,7 +1094,6 @@ def add_cartopy_features(
     matplotlib.axes.Axes
         The axis with added features.
     """
-
     if isinstance(features, list):
         features = {f: {} for f in features}
 
@@ -1122,8 +1117,7 @@ def custom_cmap_norm(
     divergent: bool | int | float = False,
     linspace_out: bool = False,
 ) -> matplotlib.colors.Normalize | np.ndarray:
-    """
-    Get matplotlib normalization according to main function arguments.
+    """Get matplotlib normalization according to main function arguments.
 
     Parameters
     ----------
@@ -1143,9 +1137,7 @@ def custom_cmap_norm(
     Returns
     -------
     matplotlib.colors.Normalize
-
     """
-
     # get cmap if string
     if isinstance(cmap, str):
         if cmap in plt.colormaps():
@@ -1214,9 +1206,7 @@ def custom_cmap_norm(
 def norm2range(
     data: np.ndarray, target_range: tuple, data_range: tuple | None = None
 ) -> np.ndarray:
-    """
-    Normalize data across a specific range.
-    """
+    """Normalize data across a specific range."""
     if data_range is None:
         if len(data) > 1:
             data_range = (min(data), max(data))
@@ -1231,8 +1221,7 @@ def norm2range(
 def size_legend_elements(
     data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
 ) -> list[matplotlib.lines.Line2D]:
-    """
-    Create handles to use in a point-size legend.
+    """Create handles to use in a point-size legend.
 
     Parameters
     ----------
@@ -1245,13 +1234,10 @@ def size_legend_elements(
     marker: str
         Marker to use in legend.
 
-
     Returns
     -------
     list of matplotlib.lines.Line2D
-
     """
-
     # how many increments of 10 pts**2 are there in the sizes
     n = int(np.round(max(sizes) - min(sizes), -1) / 10)
 

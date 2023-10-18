@@ -1,3 +1,5 @@
+"""Figanos plotting module."""
+
 from .plot import (
     gdfmap,
     gridmap,

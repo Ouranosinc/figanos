@@ -23,6 +23,11 @@ Internal changes
 * Clean up of the dependencies to remove the notebooks deps from the core deps.
 * `figanos` now uses Trusted Publishing to publish the package on PyPI and TestPyPI. (:pull:`113`).
 * The official Ouranos logos have been removed from the repository. They can now be installed if required via the ``figanos.Logos.install_ouranos_logos`` class method. (:issue:`115`, :pull:`119`).
+* Documentation adjustments. (:pull:`121`):
+    * Added a few `pre-commit` hooks for cleaning up notebooks and ensuring that docstrings are properly formatted.
+    * Cleaned up the docstrings of a few functions, added some module-level strings, minor typo fixes.
+    * Set `nbsphinx` in the documentation to always run (with th exception of one complex cell).
+    * The `environment.yml` Python version is set to 3.11 to reduce the dependency solver complexity.
 
 0.2.0 (2023-06-19)
 ------------------
