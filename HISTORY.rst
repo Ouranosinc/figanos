@@ -4,7 +4,7 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`).
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`) .
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -13,6 +13,7 @@ New features and enhancements
 * New ``figanos.Logos`` class added to manage and install logos stored in user's Home configuration directory. The ``figanos.utils.plot_logo`` function call signature has changed to support the new system. (:issue:`115`, :pull:`119`).
 * Logo sizing and placement now depends on `scikit-image` for resizing, and uses `width` and `height` instead of `zoom`. (:issue:`123`, :pull:`119`).
 * Logo plotting now supports both PNG and SVG file types (via `cairosvg`). (:pull:`119`).
+* Use small geojson in the notebook. (:pull:`124`).
 
 Bug fixes
 ^^^^^^^^^
