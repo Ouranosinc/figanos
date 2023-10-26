@@ -14,6 +14,7 @@ New features and enhancements
 * Logo sizing and placement now depends on `scikit-image` for resizing, and uses `width` and `height` instead of `zoom`. (:issue:`123`, :pull:`119`).
 * Logo plotting now supports both PNG and SVG file types (via `cairosvg`). (:pull:`119`).
 * Use small geojson in the notebook. (:pull:`124`).
+* Add the Colours of Figanos page (:issue:`126`, :pull:`127`).
 
 Bug fixes
 ^^^^^^^^^
