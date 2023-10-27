@@ -150,7 +150,7 @@ class Logos:
         logo_path = Path(path)
         if logo_path.exists() and logo_path.is_file():
             if name is None:
-                name = logo_path.stem
+                name = logo_path.stem.replace("-", "_")
             install_logo_path = self.config / logo_path.name
 
             if not install_logo_path.exists():
@@ -183,25 +183,20 @@ class Logos:
         if permitted:
             for orientation in ["horizontal", "vertical"]:
                 for colour in ["couleur", "blanc", "noir"]:
-                    for suffix in ["png", "svg"]:
-                        if suffix == "svg" and not (
-                            orientation == "horizontal" and colour == "couleur"
-                        ):
-                            continue
-                        file = f"ouranos_logo_{orientation}_{colour}.{suffix}"
-                        if not (self.config / file).exists():
-                            logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
-                            try:
-                                urllib.request.urlretrieve(logo_url, self.config / file)
-                                self.set_logo(self.config / file)
-                            except Exception as e:
-                                logging.error(
-                                    f"Error downloading or setting Ouranos logo: {e}"
-                                )
+                    file = f"logo-ouranos-{orientation}-{colour}.svg"
+                    if not (self.config / file).exists():
+                        logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
+                        try:
+                            urllib.request.urlretrieve(logo_url, self.config / file)
+                            self.set_logo(self.config / file)
+                        except Exception as e:
+                            logging.error(
+                                f"Error downloading or setting Ouranos logo: {e}"
+                            )
 
             if Path(self.default).stem == "figanos_logo":
                 _default_ouranos_logo = (
-                    self.config / "ouranos_logo_horizontal_couleur.svg"
+                    self.config / "logo-ouranos-horizontal-couleur.svg"
                 )
                 warnings.warn(f"Setting default logo to {_default_ouranos_logo}.")
                 self.set_logo(_default_ouranos_logo, name="default")
