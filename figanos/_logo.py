@@ -150,7 +150,7 @@ class Logos:
         logo_path = Path(path)
         if logo_path.exists() and logo_path.is_file():
             if name is None:
-                name = logo_path.stem
+                name = logo_path.stem.replace("-", "_")
             install_logo_path = self.config / logo_path.name
 
             if not install_logo_path.exists():
