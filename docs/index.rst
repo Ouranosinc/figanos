@@ -17,6 +17,7 @@ Need help?
    installation
    usage
    notebooks/figanos_docs
+   notebooks/figanos_colours
    api
    contributing
    authors
