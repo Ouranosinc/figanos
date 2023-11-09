@@ -721,7 +721,7 @@ def gdfmap(
     plot_kw.setdefault("vmin", df[df_col].min())
     plot_kw.setdefault("vmax", df[df_col].max())
 
-    if levels or divergent:
+    if (levels is not None) or (divergent is not False):
         norm = custom_cmap_norm(
             cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
         )
