@@ -4,11 +4,15 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Gabriel Rondeau-Genesse (:user:`RondeauG`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * New function hatchmap (:pull:`107`).
+
+Bug fixes
+^^^^^^^^^
+* Fixed an issue with the `divergent` argument getting ignored (:pull:`132`).
 
 0.2.0 (2023-06-19)
 ------------------

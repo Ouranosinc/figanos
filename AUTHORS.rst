@@ -13,3 +13,8 @@ Co-Developers
 * Trevor James Smith <smith.trevorj@ouranos.ca> `@Zeitsperre <https://github.com/Zeitsperre>`_
 * Alexis Beaupré-Laperrière <Beaupre-Laperriere.Alexis@ouranos.ca> `@Beauprel <https://github.com/Beauprel>`_
 * Juliette Lavoie <lavoie.juliette@ouranos.ca> `@juliettelavoie <https://github.com/juliettelavoie>`_
+
+Contributors
+------------
+
+* Gabriel Rondeau-Genesse <rondeau-genesse.gabriel@ouranos.ca> `@RondeauG <https://github.com/RondeauG>`_
