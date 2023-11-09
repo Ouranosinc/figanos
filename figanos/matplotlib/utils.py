@@ -1,3 +1,4 @@
+"""Utility functions for figanos figure-creation."""
 from __future__ import annotations
 
 import json
@@ -5,8 +6,10 @@ import math
 import pathlib
 import re
 import warnings
+from tempfile import NamedTemporaryFile
 from typing import Any, Callable
 
+import cairosvg
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature  # noqa
 import geopandas as gpd
@@ -17,9 +20,59 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+import yaml
 from matplotlib.lines import Line2D
+from skimage.transform import resize
+from xclim.core.options import METADATA_LOCALES
+from xclim.core.options import OPTIONS as XC_OPTIONS
 
-warnings.simplefilter("always", UserWarning)
+from .._logo import Logos
+
+TERMS: dict = {}
+"""
+A translation directory for special terms to appear on the plots.
+
+Keys are terms to translate and they map to "locale": "translation" dictionaries.
+The "official" figanos terms are based on figanos/data/terms.yml.
+"""
+
+
+# Load terms translations
+with (pathlib.Path(__file__).resolve().parents[1] / "data" / "terms.yml").open() as f:
+    TERMS = yaml.safe_load(f)
+
+
+def get_localized_term(term, locale=None):
+    """Get `term` translated into `locale`.
+
+    Terms are pulled from the :py:data:`TERMS` dictionary.
+
+    Parameters
+    ----------
+    term : str
+      A word or short phrase to translate.
+    locale : str, optional
+      A 2-letter locale name to translate to.
+      Default is None, which will pull the locale
+      from xclim's "metadata_locales" option (taking the first).
+
+    Return
+    ------
+    str : Translated term.
+    """
+    locale = locale or (XC_OPTIONS[METADATA_LOCALES] or ["en"])[0]
+    if locale == "en":
+        return term
+
+    if term not in TERMS:
+        warnings.warn(f"No translation known for term '{term}'.")
+        return term
+
+    if locale not in TERMS[term]:
+        warnings.warn(f"No {locale} translation known for term '{term}'.")
+        return term
+
+    return TERMS[term][locale]
 
 
 def empty_dict(param):
@@ -32,17 +85,16 @@ def empty_dict(param):
 def check_timeindex(
     xr_objs: xr.DataArray | xr.Dataset | dict[str, Any]
 ) -> xr.DataArray | xr.Dataset | dict[str, Any]:
-    """Check if the time index of Xarray objects in a dict is CFtime
-    and convert to pd.DatetimeIndex if True.
+    """Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
 
     Parameters
     ----------
-    xr_dict : dict
+    xr_objs : xr.DataArray or xr.Dataset or dict
         Dictionary containing Xarray DataArrays or Datasets.
 
     Returns
     -------
-    dict
+    xr.DataArray or xr.Dataset or dict
         Dictionary of xarray objects with a pandas DatetimeIndex
     """
     if isinstance(xr_objs, dict):
@@ -71,12 +123,12 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
     """Get an array category, which determines how to plot the array.
 
     Parameters
-    __________
+    ----------
     array : Dataset or DataArray
         The array being categorized.
 
     Returns
-    _________
+    -------
     str
         ENS_PCT_VAR_DS: ensemble percentiles stored as variables
         ENS_PCT_DIM_DA: ensemble percentiles stored as dimension coordinates, DataArray
@@ -122,10 +174,13 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
     return cat
 
 
-def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
-    """
-    Fetch attributes or dims corresponding to keys from Xarray objects. Look in DataArray attributes first,
-    then the first variable (DataArray) of the Dataset, then the Dataset attributes.
+def get_attributes(
+    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None
+) -> str:
+    """Fetch attributes or dims corresponding to keys from Xarray objects.
+
+    Searches DataArray attributes first, then the first variable (DataArray) of the Dataset, then Dataset attributes.
+    If a locale is activated in xclim's options or a locale is passed, a localized version is given if available.
 
     Parameters
     ----------
@@ -133,27 +188,37 @@ def get_attributes(string: str, xr_obj: xr.DataArray | xr.Dataset) -> str:
         String corresponding to an attribute name.
     xr_obj : DataArray or Dataset
         The Xarray object containing the attributes.
+    locale : str, optional
+        A 2-letter locale name to translate to.
+        Default is None, which will pull the locale
+        from xclim's "metadata_locales" option (taking the first).
 
     Returns
     -------
     str
         Xarray attribute value as string or empty string if not found
     """
-    if isinstance(xr_obj, xr.DataArray) and string in xr_obj.attrs:
-        return xr_obj.attrs[string]
-
-    elif (
-        isinstance(xr_obj, xr.Dataset)
-        and string in xr_obj[list(xr_obj.data_vars)[0]].attrs
-    ):  # DataArray of first variable
-        return xr_obj[list(xr_obj.data_vars)[0]].attrs[string]
-
-    elif isinstance(xr_obj, xr.Dataset) and string in xr_obj.attrs:
-        return xr_obj.attrs[string]
-
+    locale = locale or (XC_OPTIONS[METADATA_LOCALES] or ["en"])[0]
+    if locale != "en":
+        names = [f"{string}_{locale}", string]
     else:
-        warnings.warn(f'Attribute "{string}" not found.')
-        return ""
+        names = [string]
+
+    for name in names:
+        if isinstance(xr_obj, xr.DataArray) and name in xr_obj.attrs:
+            return xr_obj.attrs[name]
+
+        if (
+            isinstance(xr_obj, xr.Dataset)
+            and name in xr_obj[list(xr_obj.data_vars)[0]].attrs
+        ):  # DataArray of first variable
+            return xr_obj[list(xr_obj.data_vars)[0]].attrs[name]
+
+        if isinstance(xr_obj, xr.Dataset) and name in xr_obj.attrs:
+            return xr_obj.attrs[name]
+
+    warnings.warn(f'Attribute "{string}" not found.')
+    return ""
 
 
 def set_plot_attrs(
@@ -163,9 +228,9 @@ def set_plot_attrs(
     title_loc: str = "center",
     wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """
-    Set plot elements according to Dataset or DataArray attributes.  Uses get_attributes()
-    to check for and get the string.
+    """Set plot elements according to Dataset or DataArray attributes.
+
+    Uses get_attributes() to check for and get the string.
 
     Parameters
     ----------
@@ -297,11 +362,11 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 def loc_mpl(
     loc: str | tuple[float, float] | int,
 ) -> tuple[tuple[float, float], tuple[float, float], str, str]:
-    """Returns coordinates and alignment associated to loc.
+    """Find coordinates and alignment associated to loc string.
 
     Parameters
     ----------
-    loc : string, int or tuple
+    loc : string, int, or tuple[float, float]
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
 
@@ -376,7 +441,7 @@ def loc_mpl(
         elif loc == "upper center":
             loc = (0.5, 0.97)
             box_a = (0.5, 1)
-        elif loc == "center":
+        else:
             loc = (0.5, 0.5)
             box_a = (0.5, 0.5)
 
@@ -392,6 +457,11 @@ def loc_mpl(
             else:
                 box_a.append(0)
         box_a = tuple(box_a)
+    else:
+        raise ValueError(
+            "loc must be a string, int or tuple. "
+            "See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html"
+        )
 
     return loc, box_a, ha, va
 
@@ -464,13 +534,98 @@ def plot_coords(
     return ax
 
 
+def find_logo(logo: str | pathlib.Path) -> str:
+    """Read a logo file."""
+    logos = Logos()
+    if logo:
+        logo_path = logos[logo]
+    else:
+        logo_path = logos.default
+
+    if logo_path is None:
+        raise ValueError(
+            "No logo found. Please install one with the figanos.Logos().set_logo() method."
+        )
+    return logo_path
+
+
+def load_image(
+    im: str | pathlib.Path,
+    height: float | None,
+    width: float | None,
+    keep_ratio: bool = True,
+) -> np.ndarray:
+    """Scale an image to a specified height and width.
+
+    Parameters
+    ----------
+    im : str or Path
+        The image to be scaled. PNG and SVG formats are supported.
+    height : float, optional
+        The desired height of the image. If None, the original height is used.
+    width : float, optional
+        The desired width of the image. If None, the original width is used.
+    keep_ratio : bool
+        If True, the aspect ratio of the original image is maintained. Default is True.
+
+    Returns
+    -------
+    np.ndarray
+        The scaled image.
+    """
+    if pathlib.Path(im).suffix == ".png":
+        im = mpl.pyplot.imread(im)
+        original_height, original_width = im.shape[:2]
+
+        if height is None and width is None:
+            return im
+
+        warnings.warn(
+            "The scikit-image library is used to resize PNG images. This may affect logo image quality."
+        )
+        if not keep_ratio:
+            height = original_height or height
+            width = original_width or width
+        else:
+            if width is not None:
+                if height is not None:
+                    warnings.warn("Both height and width provided, using height.")
+                # Only width is provided, derive zoom factor for height based on aspect ratio
+                height = (width / original_width) * original_height
+            elif height is not None:
+                # Only height is provided, derive zoom factor for width based on aspect ratio
+                width = (height / original_height) * original_width
+
+        return resize(im, (height, width, im.shape[2]), anti_aliasing=True)
+
+    elif pathlib.Path(im).suffix == ".svg":
+        cairo_kwargs = dict(url=im)
+        if not keep_ratio:
+            if height is not None and width is not None:
+                cairo_kwargs.update(output_height=height, output_width=width)
+        elif width is not None:
+            if height is not None:
+                warnings.warn("Both height and width provided, using height.")
+            cairo_kwargs.update(output_width=width)
+        elif height is not None:
+            cairo_kwargs.update(output_height=height)
+
+        with NamedTemporaryFile(suffix=".png") as png_file:
+            cairo_kwargs.update(write_to=png_file.name)
+            cairosvg.svg2png(**cairo_kwargs)
+            return mpl.pyplot.imread(png_file.name)
+
+
 def plot_logo(
     ax: matplotlib.axes.Axes,
     loc: str | tuple[float, float] | int,
-    path_png: str | None = None,
-    offsetim_kw: None | dict = {"alpha": 1, "zoom": 0.5},
+    logo: str | pathlib.Path | Logos | None = None,
+    height: float | None = None,
+    width: float | None = None,
+    keep_ratio: bool = True,
+    **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
-    """Place logo of plot area.
+    r"""Place logo of plot area.
 
     Parameters
     ----------
@@ -479,25 +634,36 @@ def plot_logo(
     loc : string, int or tuple
         Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
         If a tuple, must be in axes coordinates.
-    path_png: str or None
-        Path to picture of logo, must be a png.
-        If none, Ouranos logo is used by default.
-    offsetim_kw: dict
-        Arugments to pass to matplotlib.offsetbox.OffsetImage().
+    logo : str, Path, figanos.Logos, optional
+        A name (str) or Path to a logo file, or a name of an already-installed logo.
+        If an existing is not found, the logo will be installed and accessible via the filename.
+        The default logo is the Figanos logo. To install the Ouranos (or another) logo consult the Usage page.
+        The logo must be in 'png' format.
+    height : float, optional
+        The desired height of the image. If None, the original height is used.
+    width : float, optional
+        The desired width of the image. If None, the original width is used.
+    keep_ratio : bool, optional
+        If True, the aspect ratio of the original image is maintained. Default is True.
+    \*\*offset_image_kwargs
+        Arguments to pass to matplotlib.offsetbox.OffsetImage().
 
     Returns
     -------
     matplotlib.axes.Axes
     """
-    if path_png is None:
-        path_png = (
-            pathlib.Path(__file__).resolve().parents[1] / "data" / "ouranos_logo_25.png"
-        )
+    if offset_image_kwargs is None:
+        offset_image_kwargs = {}
 
-    image = mpl.pyplot.imread(path_png)
-    imagebox = mpl.offsetbox.OffsetImage(image, **offsetim_kw)
+    if isinstance(logo, Logos):
+        logo_path = logo.default
+    else:
+        logo_path = find_logo(logo)
+
+    image = load_image(logo_path, height, width, keep_ratio)
+    imagebox = mpl.offsetbox.OffsetImage(image, **offset_image_kwargs)
+
     loc, box_a, ha, va = loc_mpl(loc)
-
     ab = mpl.offsetbox.AnnotationBbox(
         imagebox,
         loc,
@@ -599,11 +765,11 @@ def fill_between_label(
     if legend != "full":
         label = None
     elif array_categ[name] in ["ENS_PCT_VAR_DS", "ENS_PCT_DIM_DS", "ENS_PCT_DIM_DA"]:
-        label = "{}th-{}th percentiles".format(
+        label = get_localized_term("{}th-{}th percentiles").format(
             get_suffix(sorted_lines["lower"]), get_suffix(sorted_lines["upper"])
         )
     elif array_categ[name] == "ENS_STATS_VAR_DS":
-        label = "min-max range"
+        label = get_localized_term("min-max range")
     else:
         label = None
 
@@ -616,8 +782,9 @@ def get_var_group(
     unique_str: str = None,
 ) -> str:
     """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
-    If da is a Dataset,  look in the DataArray of the first variable."""
 
+    If `da` is a Dataset, look in the DataArray of the first variable.
+    """
     # create dict
     with open(path_to_json) as f:
         var_dict = json.load(f)
@@ -683,7 +850,6 @@ def create_cmap(
     -------
     matplotlib.colors.Colormap
     """
-
     reverse = False
 
     if filename:
@@ -713,7 +879,8 @@ def create_cmap(
     # parent should be 'figanos/'
     path = (
         pathlib.Path(__file__).parents[1]
-        / "data/ipcc_colors"
+        / "data"
+        / "ipcc_colors"
         / folder
         / (filename + ".txt")
     )
@@ -809,7 +976,7 @@ def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
         Projection to use, taken from the cartopy.crs options.
 
     Returns
-    --------
+    -------
     gpd.GeoDataFrame
         GeoDataFrame adjusted to given projection
     """
@@ -819,7 +986,6 @@ def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
 
 def convert_scen_name(name: str) -> str:
     """Convert strings containing SSP, RCP or CMIP to their proper format."""
-
     matches = re.findall(r"(?:SSP|RCP|CMIP)[0-9]{1,3}", name, flags=re.I)
     if matches:
         for s in matches:
@@ -914,14 +1080,12 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
 def add_cartopy_features(
     ax: matplotlib.axes.Axes, features: list[str] | dict[str, dict[str, Any]]
 ) -> matplotlib.axes.Axes:
-    """
-    Add cartopy features to matplotlib axes.
+    """Add cartopy features to matplotlib axes.
 
     Parameters
     ----------
     ax : matplotlib.axes.Axes
         The axes on which to add the features.
-
     features : list or dict
         List of features, or nested dictionary of format {'feature': {'kwarg':'value'}}
 
@@ -930,7 +1094,6 @@ def add_cartopy_features(
     matplotlib.axes.Axes
         The axis with added features.
     """
-
     if isinstance(features, list):
         features = {f: {} for f in features}
 
@@ -954,8 +1117,7 @@ def custom_cmap_norm(
     divergent: bool | int | float = False,
     linspace_out: bool = False,
 ) -> matplotlib.colors.Normalize | np.ndarray:
-    """
-    Get matplotlib normalization according to main function arguments.
+    """Get matplotlib normalization according to main function arguments.
 
     Parameters
     ----------
@@ -975,9 +1137,7 @@ def custom_cmap_norm(
     Returns
     -------
     matplotlib.colors.Normalize
-
     """
-
     # get cmap if string
     if isinstance(cmap, str):
         if cmap in plt.colormaps():
@@ -1046,9 +1206,7 @@ def custom_cmap_norm(
 def norm2range(
     data: np.ndarray, target_range: tuple, data_range: tuple | None = None
 ) -> np.ndarray:
-    """
-    Normalize data across a specific range.
-    """
+    """Normalize data across a specific range."""
     if data_range is None:
         if len(data) > 1:
             data_range = (min(data), max(data))
@@ -1063,8 +1221,7 @@ def norm2range(
 def size_legend_elements(
     data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
 ) -> list[matplotlib.lines.Line2D]:
-    """
-    Create handles to use in a point-size legend.
+    """Create handles to use in a point-size legend.
 
     Parameters
     ----------
@@ -1077,13 +1234,10 @@ def size_legend_elements(
     marker: str
         Marker to use in legend.
 
-
     Returns
     -------
     list of matplotlib.lines.Line2D
-
     """
-
     # how many increments of 10 pts**2 are there in the sizes
     n = int(np.round(max(sizes) - min(sizes), -1) / 10)
 

@@ -3,17 +3,28 @@ channels:
   - conda-forge
   - default
 dependencies:
-  - python >=3.11,<3.12
-  - dask
+  - python>=3.11,<3.12
+  # Main
+  - cartopy
+  - cairosvg
+  - matplotlib-base
+  - seaborn
   - geopandas
-  - h5py
-  - netcdf4
   - numpy
   - pandas
+  - platformdirs
   - pyyaml
+  - scikit-image
   - xarray
   - xclim >=0.38
+  # To make the package and notebooks usable
+  - dask
+  - h5py
+  - netcdf4
+  - pyyaml
   - zarr
+  - geoviews
+  - holoviews
   # Development
   - black
   - bump2version
@@ -28,13 +39,7 @@ dependencies:
   - tox
   - twine
   - wheel
-# Visualisation
-  - cartopy
-  - geoviews
-  - holoviews
-  - matplotlib-base
-  - seaborn
-# Docs
+  # Docs
   - ipykernel
   - jupyter_client
   - nbsphinx

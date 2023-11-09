@@ -1,3 +1,4 @@
+# noqa: D100
 from __future__ import annotations
 
 import math
@@ -34,6 +35,7 @@ from figanos.matplotlib.utils import (
     fill_between_label,
     get_array_categ,
     get_attributes,
+    get_localized_term,
     get_rotpole,
     get_scen_color,
     get_var_group,
@@ -341,7 +343,9 @@ def timeseries(
         title_loc="left",
         wrap_kw={"min_line_len": 35, "max_line_len": 48},
     )
-    ax.set_xlabel("time")  # check_timeindex() already checks for 'time'
+    ax.set_xlabel(
+        get_localized_term("time").capitalize()
+    )  # check_timeindex() already checks for 'time'
 
     # other plot elements
     if show_lat_lon:
@@ -459,7 +463,6 @@ def gridmap(
     -------
     matplotlib.axes.Axes
     """
-
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
@@ -777,7 +780,6 @@ def violin(
     -------
     matplotlib.axes.Axes
     """
-
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
@@ -886,8 +888,7 @@ def stripes(
     cbar: bool = True,
     cbar_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """
-    Create stripes plot with or without multiple scenarios.
+    """Create stripes plot with or without multiple scenarios.
 
     Parameters
     ----------
@@ -899,12 +900,12 @@ def stripes(
         Arguments to pass to `plt.subplots()`. Only works if `ax` is not provided.
     divide : int, optional
         Year at which the plot is divided into scenarios. If not provided, the horizontal separators
-        will extent over the full time axis.
+        will extend over the full time axis.
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
-        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
-        or its 'history' attribute and use corresponding diverging colormap, aligned with the IPCC visual style guide 2022
-        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+        If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding diverging colormap, aligned with the IPCC Visual Style
+        Guide 2022 (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     cmap_center : int or float
         Center of the colormap in data coordinates. Default is 0.
     cbar : bool
@@ -916,7 +917,6 @@ def stripes(
     -------
     matplotlib.axes.Axes
     """
-
     # create empty dicts if None
     fig_kw = empty_dict(fig_kw)
     cbar_kw = empty_dict(cbar_kw)
@@ -1067,11 +1067,11 @@ def stripes(
         cax = ax.inset_axes([0.01, 0.05, 0.35, 0.06])
         cbar_tcks = np.arange(math.floor(data_min), math.ceil(data_max), 2)
         # label
-        label = ""
-        if "long_name" in list(data.values())[0].attrs:
-            label = list(data.values())[0].long_name
-            if "units" in list(data.values())[0].attrs:
-                u = list(data.values())[0].units
+        da = list(data.values())[0]
+        label = get_attributes("long_name", da)
+        if label != "":
+            if "units" in da.attrs:
+                u = da.units
                 label += f" ({u})"
             label = wrap_text(label, max_line_len=40)
 
@@ -1119,8 +1119,8 @@ def heatmap(
         If true, the 2D data will be transposed, so that the original x-axis becomes the y-axis and vice versa.
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
-        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
-        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC Visual Style Guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
@@ -1129,7 +1129,6 @@ def heatmap(
     -------
     matplotlib.axes.Axes
     """
-
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
@@ -1250,8 +1249,7 @@ def scattermap(
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """
-    Make a scatter plot of georeferenced data on a map.
+    """Make a scatter plot of georeferenced data on a map.
 
     Parameters
     ----------
@@ -1285,8 +1283,8 @@ def scattermap(
         Tuple of the minimum and maximum size of the points.
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
-        If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
-        or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
+        If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC Visual Style Guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
         Number of levels to divide the colormap into.
@@ -1323,7 +1321,6 @@ def scattermap(
     -------
     matplotlib.axes.Axes
     """
-
     # create empty dicts if None
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
@@ -1559,8 +1556,9 @@ def taylordiagram(
     std_label: str | None = None,
     corr_label: str | None = None,
 ):
-    """
-    Build a Taylor diagram. Based on the following code: https://gist.github.com/ycopin/3342888.
+    """Build a Taylor diagram.
+
+    Based on the following code: https://gist.github.com/ycopin/3342888.
 
     Parameters
     ----------
@@ -1589,7 +1587,6 @@ def taylordiagram(
     -------
     matplotlib.axes.Axes
     """
-
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
     contours_kw = empty_dict(contours_kw)
@@ -1660,18 +1657,21 @@ def taylordiagram(
     # make labels
     if not std_label:
         try:
-            std_label = "standard deviation" + f" ({list(data.values())[0].units})"
+            std_label = (
+                get_localized_term("standard deviation")
+                + f" ({list(data.values())[0].units})"
+            )
         except AttributeError:
-            std_label = "Standard deviation"
+            std_label = get_localized_term("standard deviation").capitalize()
 
     if not corr_label:
         try:
             if "Pearson" in list(data.values())[0].correlation_type:
-                corr_label = "Pearson correlation"
+                corr_label = get_localized_term("pearson correlation").capitalize()
             else:
-                corr_label = "Correlation"
+                corr_label = get_localized_term("correlation").capitalize()
         except AttributeError:
-            corr_label = "Correlation"
+            corr_label = get_localized_term("correlation").capitalize()
 
     # build diagram
     transform = PolarAxes.PolarTransform()
@@ -1728,7 +1728,11 @@ def taylordiagram(
         ref_kw = plot_kw.pop("reference")
     else:
         ref_kw = {}
-    ref_kw = {"color": "#154504", "marker": "s", "label": "reference"} | ref_kw
+    ref_kw = {
+        "color": "#154504",
+        "marker": "s",
+        "label": get_localized_term("reference"),
+    } | ref_kw
 
     ref_pt = ax.scatter(0, ref_std, **ref_kw)
 
