@@ -1169,7 +1169,7 @@ def custom_cmap_norm(
 
     # build norm with options
     if center is not None and isinstance(levels, int):
-        if center < rvmin or center > rvmax:
+        if center <= rvmin or center >= rvmax:
             raise ValueError("vmin, center and vmax must be in ascending order.")
         if levels % 2 == 1:
             half_levels = int((levels + 1) / 2) + 1
