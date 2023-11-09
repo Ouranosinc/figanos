@@ -1161,7 +1161,7 @@ def custom_cmap_norm(
 
     # center
     center = None
-    if divergent is not None:
+    if divergent is not False:
         if divergent is True:
             center = 0
         elif isinstance(divergent, (int, float)):
