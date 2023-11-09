@@ -1001,14 +1001,14 @@ def custom_cmap_norm(
 
     # center
     center = None
-    if divergent:
+    if divergent is not None:
         if divergent is True:
             center = 0
         else:
             center = divergent
 
     # build norm with options
-    if levels and center and isinstance(levels, int):
+    if center is not None and isinstance(levels, int):
         if levels % 2 == 1:
             half_levels = int((levels + 1) / 2) + 1
         else:
@@ -1025,7 +1025,7 @@ def custom_cmap_norm(
         if linspace_out:
             return lin
 
-    elif levels:
+    elif levels is not None:
         if isinstance(levels, list):
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
         else:
@@ -1035,7 +1035,7 @@ def custom_cmap_norm(
             if linspace_out:
                 return lin
 
-    elif center:
+    elif center is not None:
         norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)
     else:
         norm = matplotlib.colors.Normalize(rvmin, rvmax)
