@@ -1188,11 +1188,11 @@ def custom_cmap_norm(
             return lin
 
     elif levels is not None:
-        if center is not None:
-            warnings.warn(
-                "Divergent argument ignored when levels is a list. Use levels as a number instead."
-            )
         if isinstance(levels, list):
+            if center is not None:
+                warnings.warn(
+                    "Divergent argument ignored when levels is a list. Use levels as a number instead."
+                )
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
         else:
             lin = np.linspace(rvmin, rvmax, num=levels + 1)
