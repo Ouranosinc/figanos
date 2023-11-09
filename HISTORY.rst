@@ -4,7 +4,7 @@ History
 
 0.3.0 (Unreleased)
 ------------------
-Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`) .
+Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,6 +30,10 @@ Internal changes
     * Cleaned up the docstrings of a few functions, added some module-level strings, minor typo fixes.
     * Set `nbsphinx` in the documentation to always run (with th exception of one complex cell).
     * The `environment.yml` Python version is set to 3.11 to reduce the dependency solver complexity.
+
+Bug fixes
+^^^^^^^^^
+* Fixed an issue with the `divergent` argument getting ignored (:pull:`132`).
 
 0.2.0 (2023-06-19)
 ------------------

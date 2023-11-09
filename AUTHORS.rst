@@ -14,3 +14,8 @@ Co-Developers
 * Alexis Beaupré-Laperrière <Beaupre-Laperriere.Alexis@ouranos.ca> `@Beauprel <https://github.com/Beauprel>`_
 * Juliette Lavoie <lavoie.juliette@ouranos.ca> `@juliettelavoie <https://github.com/juliettelavoie>`_
 * Pascal Bourgault <bourgault.pascal@ouranos.ca> `@aulemahal <https://github.com/aulemahal>`_
+
+Contributors
+------------
+
+* Gabriel Rondeau-Genesse <rondeau-genesse.gabriel@ouranos.ca> `@RondeauG <https://github.com/RondeauG>`_
