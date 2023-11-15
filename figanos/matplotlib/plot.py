@@ -2037,3 +2037,114 @@ def hatchmap(
         set_plot_attrs(use_attrs, dattrs, ax, wrap_kw={"max_line_len": 60})
 
     return ax
+
+def _add_lead_time_coord(da, ref):
+    """Add a lead time coordinate to the data. Modifies da in-place."""
+    lead_time = da.time.dt.year - int(ref)
+    da["Lead time"] = lead_time
+    da["Lead time"].attrs["units"] = f"years from {ref}"
+    return lead_time
+
+def partition(
+    variance: xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    start_year: str | None=None,
+    show_num: bool =True,
+    fill_kw: dict[str, Any] | None = None,
+    line_kw: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | None = None,
+)-> matplotlib.axes.Axes:
+    """
+    Figure of the partition of total uncertainty by components.
+    See Hawkins and Sutton (2009) and Lafferty and Sriver (2023) for example.
+
+    Parameters
+    ----------
+    variance: xr.DataArray
+      Variance over time of the different components of uncertainty.
+      Output of a `xclim.ensembles._partitioning` function.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot
+    start_year: str
+      If None, the x-axis will be the time in year.
+      If str, the x-axis will show the number of year since start_year.
+    show_num: bool
+        If True, show the number of components in parenthesis in the legend.
+        `variance` should have a coordinate `num`.
+    fill_kw: dict
+        Keyword arguments passed to `ax.fill_between`.
+        It is possible to pass a dictionary of keywords for each component (uncertainty coordinates).
+    line_kw: dict
+        Keyword arguments passed to `ax.plot` for the lines in between the components.
+        The default is {color="k", lw=2}.
+    fig_kw: dict
+        Keyword arguments passed to `plt.subplots`.
+    legend_kw: dict
+        Keyword arguments passed to `ax.legend`.
+
+    Returns
+    -------
+    mpl.axes.Axes
+    """
+    fill_kw = empty_dict(fill_kw)
+    line_kw = empty_dict(line_kw)
+    fig_kw = empty_dict(fig_kw)
+    legend_kw = empty_dict(legend_kw)
+    # TODO: add support for dataset incase it is written to disk first
+
+    if ax is None:
+        fig, ax = plt.subplots(**fig_kw)
+
+    # Compute fraction
+    #TODO: shoud be done elsewhere
+    #da = variance / variance.sel(uncertainty="total") * 100
+    da= variance
+
+    # Select data from reference year onward
+    if start_year:
+        da = da.sel(time=slice(start_year, None))
+
+        # Lead time coordinate
+        time = _add_lead_time_coord(da, start_year)
+        ax.set_xlabel(f"Lead time [years from {start_year}]")
+    else:
+        time = da.time.dt.year
+
+    # prepare fill kwargs, if no keys are in uncertainty, create dict with uncertainty as keys.
+    if any(da.uncertainty.values not in fill_kw.keys()): #TODO: test this
+        fkw={k: fill_kw for k in da.uncertainty.values}
+    else:
+        fkw=fill_kw
+
+
+    # Draw areas
+    past_y = 0
+    black_lines = []
+    for u in da.uncertainty.values:
+        if u not in ['total', "variability"]:
+            present_y = past_y + da.sel(uncertainty=u)
+            label=f"{u} ({variance.sel(uncertainty=u).num.values})" if show_num else u
+            ax.fill_between(time, past_y, present_y, label= label, **fkw[u])
+            black_lines.append(present_y)
+            past_y = present_y
+    ax.fill_between(time, past_y, 100, label=f"variability")
+
+    # Draw black lines
+    line_kw.setdefault("color", "k")
+    line_kw.setdefault("lw", 2)
+    ax.plot(time, np.array(black_lines).T, **line_kw)
+
+    #TODO: think if this need to be accesible
+    ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(20))
+    ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=5))
+
+    ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10))
+    ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=2))
+
+    ax.set_ylabel("Fraction of total variance [%]") #TODO: take it from attrs
+
+    ax.set_ylim(0, 100)
+    ax.legend(**legend_kw)
+
+    return ax
