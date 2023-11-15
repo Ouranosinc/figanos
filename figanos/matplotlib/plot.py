@@ -2057,8 +2057,8 @@ def partition(
     fig_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """
-    Figure of the partition of total uncertainty by components.
+    """Figure of the partition of total uncertainty by components.
+
     See Hawkins and Sutton (2009) and Lafferty and Sriver (2023) for example.
 
     Parameters
@@ -2129,7 +2129,7 @@ def partition(
             ax.fill_between(time, past_y, present_y, label=label, **fkw[u])
             black_lines.append(present_y)
             past_y = present_y
-    ax.fill_between(time, past_y, 100, label=f"variability")
+    ax.fill_between(time, past_y, 100, label="variability")
 
     # Draw black lines
     line_kw.setdefault("color", "k")
