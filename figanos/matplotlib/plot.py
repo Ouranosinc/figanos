@@ -2038,6 +2038,7 @@ def hatchmap(
 
     return ax
 
+
 def _add_lead_time_coord(da, ref):
     """Add a lead time coordinate to the data. Modifies da in-place."""
     lead_time = da.time.dt.year - int(ref)
@@ -2045,16 +2046,17 @@ def _add_lead_time_coord(da, ref):
     da["Lead time"].attrs["units"] = f"years from {ref}"
     return lead_time
 
+
 def partition(
     variance: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes | None = None,
-    start_year: str | None=None,
-    show_num: bool =True,
+    start_year: str | None = None,
+    show_num: bool = True,
     fill_kw: dict[str, Any] | None = None,
     line_kw: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
-)-> matplotlib.axes.Axes:
+) -> matplotlib.axes.Axes:
     """
     Figure of the partition of total uncertainty by components.
     See Hawkins and Sutton (2009) and Lafferty and Sriver (2023) for example.
@@ -2097,9 +2099,9 @@ def partition(
         fig, ax = plt.subplots(**fig_kw)
 
     # Compute fraction
-    #TODO: shoud be done elsewhere
-    #da = variance / variance.sel(uncertainty="total") * 100
-    da= variance
+    # TODO: shoud be done elsewhere
+    # da = variance / variance.sel(uncertainty="total") * 100
+    da = variance
 
     # Select data from reference year onward
     if start_year:
@@ -2112,20 +2114,19 @@ def partition(
         time = da.time.dt.year
 
     # prepare fill kwargs, if no keys are in uncertainty, create dict with uncertainty as keys.
-    if any(da.uncertainty.values not in fill_kw.keys()): #TODO: test this
-        fkw={k: fill_kw for k in da.uncertainty.values}
+    if any(da.uncertainty.values not in fill_kw.keys()):  # TODO: test this
+        fkw = {k: fill_kw for k in da.uncertainty.values}
     else:
-        fkw=fill_kw
-
+        fkw = fill_kw
 
     # Draw areas
     past_y = 0
     black_lines = []
     for u in da.uncertainty.values:
-        if u not in ['total', "variability"]:
+        if u not in ["total", "variability"]:
             present_y = past_y + da.sel(uncertainty=u)
-            label=f"{u} ({variance.sel(uncertainty=u).num.values})" if show_num else u
-            ax.fill_between(time, past_y, present_y, label= label, **fkw[u])
+            label = f"{u} ({variance.sel(uncertainty=u).num.values})" if show_num else u
+            ax.fill_between(time, past_y, present_y, label=label, **fkw[u])
             black_lines.append(present_y)
             past_y = present_y
     ax.fill_between(time, past_y, 100, label=f"variability")
@@ -2135,14 +2136,14 @@ def partition(
     line_kw.setdefault("lw", 2)
     ax.plot(time, np.array(black_lines).T, **line_kw)
 
-    #TODO: think if this need to be accesible
+    # TODO: think if this need to be accesible
     ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=5))
 
     ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10))
     ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=2))
 
-    ax.set_ylabel("Fraction of total variance [%]") #TODO: take it from attrs
+    ax.set_ylabel("Fraction of total variance [%]")  # TODO: take it from attrs
 
     ax.set_ylim(0, 100)
     ax.legend(**legend_kw)
