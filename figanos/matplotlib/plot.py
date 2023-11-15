@@ -2099,9 +2099,9 @@ def partition(
         fig, ax = plt.subplots(**fig_kw)
 
     # Compute fraction
-    # TODO: shoud be done elsewhere
-    # da = variance / variance.sel(uncertainty="total") * 100
-    da = variance
+    # TODO: should be done elsewhere
+    da = variance / variance.sel(uncertainty="total") * 100
+    # da = variance
 
     # Select data from reference year onward
     if start_year:
@@ -2113,11 +2113,8 @@ def partition(
     else:
         time = da.time.dt.year
 
-    # prepare fill kwargs, if no keys are in uncertainty, create dict with uncertainty as keys.
-    if any(da.uncertainty.values not in fill_kw.keys()):  # TODO: test this
-        fkw = {k: fill_kw for k in da.uncertainty.values}
-    else:
-        fkw = fill_kw
+    # fill_kw that are direct (not with uncertainty as key)
+    fk_direct = {k: v for k, v in fill_kw.items() if (k not in da.uncertainty.values)}
 
     # Draw areas
     past_y = 0
@@ -2126,17 +2123,21 @@ def partition(
         if u not in ["total", "variability"]:
             present_y = past_y + da.sel(uncertainty=u)
             label = f"{u} ({variance.sel(uncertainty=u).num.values})" if show_num else u
-            ax.fill_between(time, past_y, present_y, label=label, **fkw[u])
+            ax.fill_between(
+                time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
+            )
             black_lines.append(present_y)
             past_y = present_y
-    ax.fill_between(time, past_y, 100, label="variability")
+    ax.fill_between(
+        time, past_y, 100, label="variability", **fill_kw.get("variability", fk_direct)
+    )
 
     # Draw black lines
     line_kw.setdefault("color", "k")
     line_kw.setdefault("lw", 2)
     ax.plot(time, np.array(black_lines).T, **line_kw)
 
-    # TODO: think if this need to be accesible
+    # TODO: think if this need to be accessible
     ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=5))
 
