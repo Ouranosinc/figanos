@@ -53,15 +53,18 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint/flake8: ## check style with flake8
-	flake8 figanos tests
+	ruff figanos tests
+	flake8 --config=setup.cfg figanos tests
 
 lint/black: ## check style with black
 	black --check figanos tests
+	blackdoc --check figanos docs
+	isort --check figanos tests
 
 lint: lint/flake8 lint/black ## check style
 
 test: ## run tests quickly with the default Python
-	pytest
+	python -m pytest
 
 test-all: ## run tests on every Python version with tox
 	tox
@@ -87,13 +90,15 @@ endif
 servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
-release: dist ## package and upload a release
-	twine upload dist/*
-
 dist: clean ## builds source and wheel package
-	python -m build --sdist
-	python -m build --wheel
+	python -m flit build
 	ls -l dist
 
+release: dist ## package and upload a release
+	python -m flit publish dist/*
+
 install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+	python -m flit install .
+
+dev: clean ## install the package to the active Python's site-packages
+	python -m flit install --symlink .

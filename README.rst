@@ -2,7 +2,6 @@
 figanos
 =======
 
-
 .. image:: https://img.shields.io/pypi/v/figanos.svg
         :target: https://pypi.python.org/pypi/figanos
         :alt: PyPI
@@ -21,10 +20,7 @@ figanos
 
 Figanos: Tool to create FIGures in the OurANOS style
 
-
-Pour nous partager vos codes à ajouter dans figanos, s.v.p créer un issue sur le repo github avec une description de la fonction et
-le code de celle-ci.
-
+Pour nous partager vos codes à ajouter dans figanos, s.v.p créer un issue sur le repo github avec une description de la fonction et le code de celle-ci.
 
 * Free software: Apache Software License 2.0
 * Documentation: https://figanos.readthedocs.io.
