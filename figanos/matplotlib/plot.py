@@ -2048,7 +2048,7 @@ def _add_lead_time_coord(da, ref):
 
 
 def partition(
-    variance: xr.DataArray | xr.Dataset,
+    data: xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes | None = None,
     start_year: str | None = None,
     show_num: bool = True,
@@ -2063,7 +2063,7 @@ def partition(
 
     Parameters
     ----------
-    variance: xr.DataArray
+    data: xr.DataArray or xr.Dataset
       Variance over time of the different components of uncertainty.
       Output of a `xclim.ensembles._partitioning` function.
     ax : matplotlib axis, optional
@@ -2093,14 +2093,25 @@ def partition(
     line_kw = empty_dict(line_kw)
     fig_kw = empty_dict(fig_kw)
     legend_kw = empty_dict(legend_kw)
-    # TODO: add support for dataset incase it is written to disk first
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        data = data.squeeze()
+    elif isinstance(data, xr.Dataset):  # in case, it was save to disk before plotting.
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
+            )
+        data = data[list(data.keys())[0]].squeeze()
+    else:
+        raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
     if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
     # Compute fraction
     # TODO: should be done elsewhere
-    da = variance / variance.sel(uncertainty="total") * 100
+    da = data / data.sel(uncertainty="total") * 100
     # da = variance
 
     # Select data from reference year onward
@@ -2122,7 +2133,7 @@ def partition(
     for u in da.uncertainty.values:
         if u not in ["total", "variability"]:
             present_y = past_y + da.sel(uncertainty=u)
-            label = f"{u} ({variance.sel(uncertainty=u).num.values})" if show_num else u
+            label = f"{u} ({data.sel(uncertainty=u).num.values})" if show_num else u
             ax.fill_between(
                 time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
             )
@@ -2137,7 +2148,7 @@ def partition(
     line_kw.setdefault("lw", 2)
     ax.plot(time, np.array(black_lines).T, **line_kw)
 
-    # TODO: think if this need to be accessible
+    # TODO: think if this needs to be accessible
     ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=5))
 
