@@ -27,6 +27,7 @@ from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCur
 
 from figanos.matplotlib.utils import (
     add_cartopy_features,
+    add_features_map,
     check_timeindex,
     convert_scen_name,
     create_cmap,
@@ -40,6 +41,7 @@ from figanos.matplotlib.utils import (
     get_scen_color,
     get_var_group,
     gpd_to_ccrs,
+    masknan_sizes_key,
     norm2range,
     plot_coords,
     process_keys,
@@ -469,9 +471,9 @@ def gridmap(
     plot_kw = empty_dict(plot_kw)
 
     # set default use_attrs values
-    use_attrs.setdefault("title", "description")
-    use_attrs.setdefault("cbar_label", "long_name")
-    use_attrs.setdefault("cbar_units", "units")
+    use_attrs = {"cbar_label": "long_name", "cbar_units": "units"} | use_attrs
+    if "row" not in plot_kw and "col" not in plot_kw:
+        use_attrs.setdefault("title", "description")
 
     # extract plot_kw from dict if needed
     if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
@@ -505,10 +507,14 @@ def gridmap(
                 transform = get_rotpole(data)
 
     # setup fig, ax
-    if ax is None:
+    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
 
-    # create cbar label
+        # create cbar label
     if (
         "cbar_units" in use_attrs
         and len(get_attributes(use_attrs["cbar_units"], data)) >= 1
@@ -570,55 +576,48 @@ def gridmap(
         plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
 
     # plot
+    plotting = {"transform": transform, "cmap": cmap, **plot_kw}
+    if ax:
+        plotting.setdefault("ax", ax)
     if contourf is False:
-        im = plot_data.plot.pcolormesh(ax=ax, transform=transform, cmap=cmap, **plot_kw)
-
+        im = plot_data.plot.pcolormesh(**plotting)
     else:
-        plot_kw.setdefault("levels", levels)
-        im = plot_data.plot.contourf(ax=ax, transform=transform, cmap=cmap, **plot_kw)
+        plotting.setdefault("levels", levels)
+        im = plot_data.plot.contourf(**plotting)
 
-    # add features
-    if features:
-        add_cartopy_features(ax, features)
-
-    if show_time:
-        if show_time is True:
-            plot_coords(
-                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
-            )
-        elif isinstance(show_time, (str, tuple, int)):
-            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
-        else:
-            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
-
-    set_plot_attrs(use_attrs, data, ax)
-
-    if frame is False:
-        ax.spines["geo"].set_visible(False)
-        if im.colorbar is not None:
+    if ax:
+        ax = add_features_map(
+            data,
+            ax,
+            use_attrs,
+            projection,
+            features,
+            geometries_kw,
+            show_time,
+            frame,
+            plot_data,
+        )
+        if (frame is False) and (im.colorbar is not None):
             im.colorbar.outline.set_visible(False)
-
-    # add geometries
-    if geometries_kw:
-        if "geoms" not in geometries_kw.keys():
-            warnings.warn(
-                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+        return ax
+    else:
+        for ax in im.axes.flat:
+            ax = add_features_map(
+                data,
+                ax,
+                use_attrs,
+                projection,
+                features,
+                geometries_kw,
+                show_time,
+                frame,
+                plot_data,
             )
-        if "crs" in geometries_kw.keys():
-            geometries_kw["geoms"] = gpd_to_ccrs(
-                geometries_kw["geoms"], geometries_kw["crs"]
-            )
-        else:
-            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
-        geometries_kw = {
-            "crs": projection,
-            "facecolor": "none",
-            "edgecolor": "black",
-        } | geometries_kw
-
-        ax.add_geometries(**geometries_kw)
-
-    return ax
+            if (frame is False) and (im.colorbar is not None):
+                im.cbar.outline.set_visible(False)
+        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
+        im.set_titles(template="{value}")
+        return im
 
 
 def gdfmap(
@@ -1329,9 +1328,15 @@ def scattermap(
     legend_kw = empty_dict(legend_kw)
 
     # set default use_attrs values
-    use_attrs.setdefault("title", "description")
-    use_attrs.setdefault("cbar_label", "long_name")
-    use_attrs.setdefault("cbar_units", "units")
+    use_attrs = {"cbar_label": "long_name", "cbar_units": "units"} | use_attrs
+    if "row" not in plot_kw and "col" not in plot_kw:
+        use_attrs.setdefault("title", "description")
+
+    # figanos does not use xr.plot.scatter default markersize
+    if "markersize" in plot_kw.keys():
+        if not sizes:
+            sizes = plot_kw["markersize"]
+        plot_kw.pop("markersize")
 
     # extract plot_kw from dict if needed
     if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
@@ -1343,6 +1348,9 @@ def scattermap(
             data = list(data.values())[0]
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
+
+    if sizes and isinstance(data, xr.Dataset):
+        data = masknan_sizes_key(data, sizes)
 
     # select data to plot
     if isinstance(data, xr.DataArray):
@@ -1361,8 +1369,12 @@ def scattermap(
                 transform = get_rotpole(data)
 
     # setup fig, ax
-    if ax is None:
+    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
 
     # create cbar label
     if (
@@ -1377,6 +1389,10 @@ def scattermap(
         )
     else:
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
+
+    if "add_colorbar" not in plot_kw or plot_kw["add_colorbar"] is not False:
+        plot_kw.setdefault("cbar_kwargs", {})
+        plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
 
     # colormap
     if isinstance(cmap, str):
@@ -1393,18 +1409,10 @@ def scattermap(
             divergent=divergent,
         )
 
-    # nans
-    mask = ~np.isnan(plot_data.values)
-    if np.sum(mask) < len(mask):
-        warnings.warn(
-            f"{len(mask)-np.sum(mask)} nan values were dropped when plotting the color values"
-        )
-
     # point sizes
     if sizes:
         if sizes is True:
             sdata = plot_data
-
         elif isinstance(sizes, str):
             if hasattr(data, "name") and getattr(data, "name") == sizes:
                 sdata = plot_data
@@ -1412,25 +1420,21 @@ def scattermap(
                 sdata = getattr(data, sizes)
             else:
                 raise ValueError(f"{sizes} not found")
-
         else:
             raise TypeError("sizes must be a string or a bool")
 
-        smask = ~np.isnan(sdata.values) & mask
-        if np.sum(smask) < np.sum(mask):
-            warnings.warn(
-                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size"
-            )
-            mask = smask
-
         pt_sizes = norm2range(
-            data=sdata.values[mask], target_range=size_range, data_range=None
+            data=np.resize(sdata.values, (sdata.values.size, 1)),
+            target_range=size_range,
+            data_range=None,
         )
-        plot_kw.setdefault("s", pt_sizes)
+
+        if ax:
+            plot_kw.setdefault("s", pt_sizes)
 
     # norm
-    plot_kw.setdefault("vmin", min(plot_data.values[mask]))
-    plot_kw.setdefault("vmax", max(plot_data.values[mask]))
+    plot_kw.setdefault("vmin", np.nanmin(plot_data.values))
+    plot_kw.setdefault("vmax", np.nanmax(plot_data.values))
 
     norm = custom_cmap_norm(
         cmap,
@@ -1447,30 +1451,68 @@ def scattermap(
         "transform": transform,
         "zorder": 8,
         "marker": "o",
+        "edgecolor": "none",
     } | plot_kw
 
     plot_kw_pop = plot_kw.copy()
     for key in ["vmin", "vmax"]:
         plot_kw_pop.pop(key)
-
     # plot
-    ax.scatter(
-        x=plot_data.lon.values[mask],
-        y=plot_data.lat.values[mask],
-        c=plot_data.values[mask],
-        **plot_kw_pop,
-    )
+    plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
+    if ax:
+        plot_kw_pop.setdefault("ax", ax)
+    im = data.plot.scatter(**plot_kw_pop)
 
-    # colorbar
-    cbar_kw.setdefault("label", wrap_text(cbar_label))
-    cb = plt.colorbar(
-        mappable=matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, **cbar_kw
-    )
+    # add features
+    if ax:
+        ax = add_features_map(
+            data,
+            ax,
+            use_attrs,
+            projection,
+            features,
+            geometries_kw,
+            show_time,
+            frame,
+            plot_data,
+        )
+        if (frame is False) and (im.colorbar is not None):
+            im.colorbar.outline.set_visible(False)
+
+    else:
+        if sizes:
+            pt_sizes2 = np.resize(pt_sizes, sdata.shape)
+            n = 0
+        for fax in im.axes.flat:
+            fax = add_features_map(
+                data,
+                fax,
+                use_attrs,
+                projection,
+                features,
+                geometries_kw,
+                show_time,
+                frame,
+                plot_data,
+            )
+
+            # correct markersize for facetgrid
+            scat = fax.collections[0]
+            scat.set_sizes(pt_sizes2[n])
+            n += 1
+
+            if (frame is False) and (im.cbar is not None):
+                im.cbar.outline.set_visible(False)
+        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
+        im.set_titles(template="{value}")
 
     # size legend
     if sizes:
         legend_elements = size_legend_elements(
-            sdata.values[mask], pt_sizes, max_entries=6, marker=plot_kw["marker"]
+            np.resize(sdata.values, (sdata.values.size, 1)),
+            pt_sizes,
+            max_entries=6,
+            marker=plot_kw["marker"],
         )
         # legend spacing
         if size_range[1] > 200:
@@ -1484,65 +1526,31 @@ def scattermap(
             "framealpha": 1,
             "edgecolor": "w",
             "labelspacing": ls,
+            "handles": legend_elements,
         } | legend_kw
 
-        lgd = ax.legend(handles=legend_elements, **legend_kw)
-        lgd.set_zorder(11)
         if "title" not in legend_kw:
             if hasattr(sdata, "long_name"):
                 lgd_title = wrap_text(
                     getattr(sdata, "long_name"), min_line_len=1, max_line_len=15
                 )
                 if hasattr(sdata, "units"):
-                    lgd_title += f" ({getattr(sdata,'units')})"
+                    lgd_title += f" ({getattr(sdata, 'units')})"
             else:
                 lgd_title = sizes
+            legend_kw.setdefault("title", lgd_title)
 
-            lgd.set_title(lgd_title)
-
-    if show_time:
-        if show_time is True:
-            plot_coords(
-                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
-            )
-        elif isinstance(show_time, (str, tuple, int)):
-            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        if ax:
+            lgd = ax.legend(**legend_kw)
         else:
-            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+            legend_kw.setdefault("bbox_to_anchor", (1.05, 1))
+            lgd = plt.legend(**legend_kw)
+        lgd.set_zorder(11)
 
-    # add features
-    if features:
-        add_cartopy_features(ax, features)
-
-    set_plot_attrs(use_attrs, plot_data, ax)
-
-    if frame is False:
-        # cbar
-        cb.outline.set_visible(False)
-        # main ax
-        ax.spines["geo"].set_visible(False)
-
-    # add geometries
-    if geometries_kw:
-        if "geoms" not in geometries_kw.keys():
-            warnings.warn(
-                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
-            )
-        if "crs" in geometries_kw.keys():
-            geometries_kw["geoms"] = gpd_to_ccrs(
-                geometries_kw["geoms"], geometries_kw["crs"]
-            )
-        else:
-            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
-        geometries_kw = {
-            "crs": projection,
-            "facecolor": "none",
-            "edgecolor": "black",
-        } | geometries_kw
-
-        ax.add_geometries(**geometries_kw)
-
-    return ax
+    if ax:
+        return ax
+    else:
+        return im
 
 
 def taylordiagram(
@@ -1898,6 +1906,7 @@ def hatchmap(
     dattrs = None
     plot_data = {}
     dc = plot_kw.copy()
+
     # convert data to dict (if not one)
     if not isinstance(data, dict):
         if isinstance(data, xr.DataArray):
@@ -1931,8 +1940,12 @@ def hatchmap(
                 transform = get_rotpole(list(plot_data.values())[0])
 
     # setup fig, ax
-    if ax is None:
+    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    else:
+        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
 
     pat_leg = []
     n = 0

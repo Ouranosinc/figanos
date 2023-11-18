@@ -1209,7 +1209,7 @@ def norm2range(
     """Normalize data across a specific range."""
     if data_range is None:
         if len(data) > 1:
-            data_range = (min(data), max(data))
+            data_range = (np.nanmin(data), np.nanmax(data))
         else:
             raise ValueError(" if data is not an array, data_range must be specified")
 
@@ -1298,3 +1298,136 @@ def size_legend_elements(
         return [legend_elements[i] for i in np.arange(0, max_entries + 1, 2)]
     else:
         return legend_elements
+
+
+def add_features_map(
+    data,
+    ax,
+    use_attrs,
+    projection,
+    features,
+    geometries_kw,
+    show_time,
+    frame,
+    plot_data,
+) -> matplotlib.axes.Axes:
+    """Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
+
+    Parameters
+    ----------
+    data : dict, DataArray or Dataset
+        Input data do plot. If dictionary, must have only one entry.
+    ax : matplotlib axis
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
+        Only the keys found in the default dict can be used.
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    features : list or dict
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
+    geometries_kw : dict
+        Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
+    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+        If True, show time (as date) at the bottom right of the figure.
+        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
+        of the text. If a string or an int, the same values as those of the 'loc' parameter
+        of matplotlib's legends are accepted.
+
+        ==================   =============
+        Location String      Location Code
+        ==================   =============
+        'upper right'        1
+        'upper left'         2
+        'lower left'         3
+        'lower right'        4
+        'right'              5
+        'center left'        6
+        'center right'       7
+        'lower center'       8
+        'upper center'       9
+        'center'             10
+        ==================   =============
+    frame : bool
+        Show or hide frame. Default False.
+    plot_data: xr.DataArray
+        xr.DataArray used for plotting. Used to get the time coordinate.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
+
+    if show_time:
+        if show_time is True:
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+        else:
+            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+
+    set_plot_attrs(use_attrs, data, ax)
+
+    if frame is False:
+        ax.spines["geo"].set_visible(False)
+
+    # add geometries
+    if geometries_kw:
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
+        else:
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
+
+        ax.add_geometries(**geometries_kw)
+    return ax
+
+
+def masknan_sizes_key(data, sizes) -> xr.Dataset:
+    """Mask  the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
+
+    Parameters
+    ----------
+    data: xr.Dataset
+        xr.Dataset used to plot
+    sizes: str
+        Variable used to plot markersize
+
+    Returns
+    -------
+    xr.Dataset
+    """
+    # find variable name
+    kl = list(data.keys())
+    kl.remove(sizes)
+    key = kl[0]
+
+    # Create a mask for missing 'sizes' data
+    size_mask = np.isnan(data[sizes])
+
+    # Set 'key' values to NaN where 'sizes' is missing
+    data[key] = data[key].where(~size_mask)
+
+    # Create a mask for missing 'key' data
+    key_mask = np.isnan(data[key])
+
+    # Set 'sizes' values to NaN where 'key' is missing
+    data[sizes] = data[sizes].where(~key_mask)
+    return data
