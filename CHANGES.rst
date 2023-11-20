@@ -15,6 +15,7 @@ New features and enhancements
 * Logo plotting now supports both PNG and SVG file types (via `cairosvg`). (:pull:`119`).
 * Use small geojson in the notebook. (:pull:`124`).
 * Add the Colours of Figanos page (:issue:`126`, :pull:`127`).
+* Figanos now adheres to PEPs 517/518/621 using the `flit` backend for building and packaging. (:pull:`135`).
 
 Bug fixes
 ^^^^^^^^^
@@ -30,10 +31,20 @@ Internal changes
     * Cleaned up the docstrings of a few functions, added some module-level strings, minor typo fixes.
     * Set `nbsphinx` in the documentation to always run (with th exception of one complex cell).
     * The `environment.yml` Python version is set to 3.11 to reduce the dependency solver complexity.
+* The `cookiecutter` template has been updated to the latest commit via `cruft`. (:pull:`138`):
+    * `Manifest.in`, `requirements_dev.txt`, `requirements_docs.txt` and `setup.py` have been removed.
+    * `pyproject.toml` has been added, with most package configurations migrated into it.
+    * `HISTORY.rst` has been renamed to `CHANGES.rst`.
+    * `actions-version-updater.yml` has been added to automate the versioning of the package.
+    * `bump-version.yml` has been added to automate patch versioning of the package.
+    * `pre-commit` hooks have been updated to the latest versions; `check-toml` and `toml-sort` have been added to cleanup the `pyproject.toml` file.
+    * `ruff` has been added to the linting tools to replace most `flake8` and `pydocstyle` verifications.
+    *  GitHub workflows now run proper pytest suites for `conda`-based testing.
 
 Bug fixes
 ^^^^^^^^^
 * Fixed an issue with the `divergent` argument getting ignored (:pull:`132`).
+* Some small documentation fixes for working uniquely in a `conda` environment. (:pull:`138`).
 
 0.2.0 (2023-06-19)
 ------------------
