@@ -66,11 +66,6 @@ repos:
       - id: nbstripout
         files: '.ipynb'
         args: [ '--extra-keys=metadata.kernelspec' ]
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        args: [ '--config=setup.cfg' ]
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.32.0
     hooks:
