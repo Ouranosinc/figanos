@@ -5,9 +5,15 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "figanos"
 authors = [
-  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"}
+  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"},
+  {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
+  {name = "Alexis Beaupré-Laperrière", email = "Beaupre-Laperriere.Alexis@ouranos.ca"}
 ]
-maintainers = []
+maintainers = [
+  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"},
+  {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
+  {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
+]
 readme = {file = "README.rst", content-type = "text/x-rst"}
 requires-python = ">=3.8.0"
 keywords = ["figanos"]
@@ -39,7 +45,7 @@ dependencies = [
   "seaborn",
   "scikit-image",
   "xarray",
-  "xclim"
+  "xclim>=0.38"
 ]
 
 [project.optional-dependencies]
@@ -56,18 +62,16 @@ dev = [
   "coveralls>=3.3.1",
   "pytest>=7.3.1",
   "pytest-cov>=4.0.0",
-  "black>=23.10.1",
+  "black>=23.11.0",
   "blackdoc>=0.3.9",
   "isort>=5.12.0",
   "pre-commit>=3.3.2"
 ]
 docs = [
   # Documentation and examples
-  "xclim>=0.38",
   "dask",
   "h5py",
   "netcdf4",
-  "pyyaml",
   "zarr",
   "geoviews",
   "holoviews",
@@ -79,8 +83,8 @@ docs = [
   "sphinx-click",
   "sphinx-codeautolink",
   "sphinx-copybutton",
-  "sphinx",
-  "sphinx_book_theme",
+  "sphinx>=6.2.0",
+  "sphinx-book-theme>=1.0",
   "sphinxcontrib-napoleon"
 ]
 
@@ -88,11 +92,11 @@ docs = [
 figanos = "figanos.cli:cli"
 
 [project.urls]
-# "Homepage" = "https://figanos.readthedocs.io/"
-# "Changelog" = "https://figanos.readthedocs.io/en/stable/history.html"
-# "About Ouranos" = "https://www.ouranos.ca/en/"
-"Source" = "https://github.com/Sarahclaude/figanos"
-"Issue tracker" = "https://github.com/Sarahclaude/figanos/issues"
+"Homepage" = "https://figanos.readthedocs.io/"
+"Changelog" = "https://figanos.readthedocs.io/en/stable/changes.html"
+"Issue tracker" = "https://github.com/Ouranosinc/figanos/issues"
+"Source" = "https://github.com/Ouranosinc/figanos"
+"About Ouranos" = "https://www.ouranos.ca/en/"
 
 [tool]
 

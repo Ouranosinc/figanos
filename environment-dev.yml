@@ -45,9 +45,9 @@ dependencies:
   - nbsphinx
   - notebook
   - pandoc
-  - sphinx
+  - sphinx >=6.2.0
   - sphinx-autoapi
-  - sphinx-book-theme
+  - sphinx-book-theme >=1.0.0
   - sphinx-click
   - sphinx-codeautolink
   - sphinx-copybutton
