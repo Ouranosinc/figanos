@@ -79,7 +79,6 @@ docs = [
   "ipython",
   "jupyter_client",
   "nbsphinx",
-  "pandoc",
   "sphinx-click",
   "sphinx-codeautolink",
   "sphinx-copybutton",
