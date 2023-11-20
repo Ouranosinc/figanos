@@ -597,7 +597,11 @@ def gridmap(
             frame,
             plot_data,
         )
-        if (frame is False) and (im.colorbar is not None):
+        # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
+        if (frame is False) and (
+            (getattr(im, "colorbar", None) is not None)
+            or (getattr(im, "cbar", None) is not None)
+        ):
             im.colorbar.outline.set_visible(False)
         return ax
     else:
@@ -613,7 +617,11 @@ def gridmap(
                 frame,
                 plot_data,
             )
-            if (frame is False) and (im.colorbar is not None):
+            # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
+            if (frame is False) and (
+                (getattr(im, "colorbar", None) is not None)
+                or (getattr(im, "cbar", None) is not None)
+            ):
                 im.cbar.outline.set_visible(False)
         im.fig.suptitle(get_attributes("long_name", data), y=1.05)
         im.set_titles(template="{value}")
