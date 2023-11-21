@@ -44,13 +44,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - tox-env: "py38-coveralls"
+          - tox-env: "py38"
             python-version: "3.8"
-          - tox-env: "py39-coveralls"
+          - tox-env: "py39"
             python-version: "3.9"
-          - tox-env: "py310-coveralls"
+          - tox-env: "py310"
             python-version: "3.10"
-          - tox-env: "py311-coveralls"
+          - tox-env: "py311"
             python-version: "3.11"
     steps:
       - uses: actions/checkout@v4
@@ -76,9 +76,6 @@ jobs:
     name: Test with Python${{ matrix.python-version }} (Anaconda)
     needs: lint
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11"]
     defaults:
       run:
         shell: bash -l {0}
@@ -91,7 +88,7 @@ jobs:
           environment-file: environment-dev.yml
           create-args: >-
             mamba
-            python=${{ matrix.python-version }}
+            python=3.11
       - name: Conda and Mamba versions
         run: |
           mamba --version
@@ -111,7 +108,7 @@ jobs:
           python -m coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: run-Python${{ matrix.python-version }}-conda
+          COVERALLS_FLAG_NAME: run-py311-conda
           COVERALLS_PARALLEL: true
           COVERALLS_SERVICE_NAME: github
 
