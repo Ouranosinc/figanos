@@ -580,7 +580,15 @@ def gridmap(
     if ax:
         plotting.setdefault("ax", ax)
     else:
-        plotting = fig_kw | plotting
+        cfig_kw = fig_kw.copy()
+        if "figsize" in fig_kw:
+            plotting.setdefault("figsize", fig_kw["figsize"])
+            cfig_kw.pop("figsize")
+        if cfig_kw:
+            warnings.warn(
+                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+            )
+
     if contourf is False:
         im = plot_data.plot.pcolormesh(**plotting)
     else:
