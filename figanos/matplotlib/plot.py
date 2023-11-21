@@ -579,6 +579,8 @@ def gridmap(
     plotting = {"transform": transform, "cmap": cmap, **plot_kw}
     if ax:
         plotting.setdefault("ax", ax)
+    else:
+        plotting = fig_kw | plotting
     if contourf is False:
         im = plot_data.plot.pcolormesh(**plotting)
     else:
