@@ -44,13 +44,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - tox-env: "py38"
+          - tox-env: "py38-coveralls"
             python-version: "3.8"
-          - tox-env: "py39"
+          - tox-env: "py39-coveralls"
             python-version: "3.9"
-          - tox-env: "py310"
+          - tox-env: "py310-coveralls"
             python-version: "3.10"
-          - tox-env: "py311"
+          - tox-env: "py311-coveralls"
             python-version: "3.11"
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +105,7 @@ jobs:
           python -m pip check || true
       - name: Test with pytest
         run: |
-          python -m pytest tests
+          python -m pytest --cov=figanos
       - name: Report coverage
         run: |
           python -m coveralls
