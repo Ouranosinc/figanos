@@ -4,8 +4,7 @@
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given.
+Contributions are welcome, and they are greatly appreciated! Every little bit helps, and credit will always be given.
 
 You can contribute in many ways:
 
@@ -32,15 +31,12 @@ wanted" is open to whoever wants to implement it.
 Implement Features
 ~~~~~~~~~~~~~~~~~~
 
-Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
+Look through the GitHub issues for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
 
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-figanos could always use more documentation, whether as part of the
-official figanos docs, in docstrings, or even on the web in blog posts,
-articles, and such.
+``figanos`` could always use more documentation, whether as part of the official ``figanos`` docs, in docstrings, or even on the web in blog posts, articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
@@ -57,14 +53,14 @@ If you are proposing a feature:
 Get Started!
 -------------------------------------------------
 
-Ready to contribute? Here's how to set up `figanos` for local development for developers outside Ouranos.
+Ready to contribute? Here's how to set up ``figanos`` for local development for developers outside Ouranos.
 
-#. Fork the `figanos` repo on GitHub.
+#. Fork the ``figanos`` repo on GitHub.
 #. Clone your fork locally::
 
     $ git clone git@github.com:your_name_here/figanos.git
 
-#. Install your local copy into a development environment. Using `mamba`, you can create a new development environment with::
+#. Install your local copy into a development environment. Using ``mamba``, you can create a new development environment with::
 
     $ mamba env create -f environment-dev.yml
     $ conda activate figanos
@@ -85,16 +81,17 @@ Ready to contribute? Here's how to set up `figanos` for local development for de
 
    Now you can make your changes locally.
 
-#. When you're done making changes, check that your changes pass black, flake8, isort, and the
-   tests, including testing other Python versions with tox::
+#. When you're done making changes, check that your changes pass ``black``, ``blackdoc``, ``flake8``, ``isort``, ``ruff``, and the tests, including testing other Python versions with tox::
 
     $ black --check figanos tests
+    $ isort --check figanos tests
+    $ ruff figanos tests
     $ flake8 figanos tests
-    $ isort --check-only --diff figanos tests
+    $ blackdoc --check figanos docs
     $ python -m pytest
     $ tox
 
-   To get flake8, black, and tox, just pip install them into your virtualenv.
+   To get ``black``, ``blackdoc``, ``flake8``, ``isort``, ``ruff``, and tox, just pip install them into your virtualenv.
 
 #. Commit your changes and push your branch to GitHub::
 
@@ -117,9 +114,7 @@ Pull Request Guidelines
 Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put
-   your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
+2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring, and add the feature to the list in ``README.rst``.
 3. The pull request should work for all major supported Python versions (3.8, 3.9, 3.10, and 3.11).
 
 Tips
@@ -132,36 +127,43 @@ $ pytest tests.test_figanos
 Versioning/Tagging
 ------------------
 
-A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run::
+A reminder for the maintainers on how to deploy. This section is only relevant for maintainers when they are producing a new point release for the package.
+
+In a new branch, make sure all your release information has been committed (in ``CHANGES.rst``). Then run::
 
 $ bumpversion patch # possible: major / minor / patch
 $ git push
 $ git push --tags
 
+This will trigger the CI to build the package and upload it to TestPyPI. In order to upload to PyPI, this can be done by publishing a new version on GitHub. This will trigger the workflow to build and upload the package to PyPI.
+
+.. note::
+
+    The ``bump-version.yml`` GitHub workflow will automatically bump the patch version when pull requests are pushed to the ``main`` branch on GitHub. It is not necessary to manually bump the version in your branch when merging (non-release) pull requests.
+
+.. warning::
+
+    It is important to be aware that any changes to files found within the ``figanos`` folder (with the exception of ``figanos/__init__.py``) will trigger the ``bump-version.yml`` workflow. Be careful not to commit changes to files in this folder when preparing a new release.
+
 Packaging
 ---------
 
-When a new version has been minted (features have been successfully integrated test coverage and stability is adequate),
-maintainers should update the pip-installable package (wheel and source release) on PyPI as well as the binary on conda-forge.
+When a new version has been minted (features have been successfully integrated test coverage and stability is adequate), maintainers should update the pip-installable package (wheel and source release) on PyPI as well as the binary on conda-forge.
 
 The simple approach
 ~~~~~~~~~~~~~~~~~~~
 
-The simplest approach to packaging for general support (pip wheels) requires the following packages installed:
- * build
- * setuptools
- * twine
- * wheel
+The simplest approach to packaging for general support (pip wheels) requires that ``flit`` be installed::
+
+    $ python -m pip install flit
 
 From the command line on your Linux distribution, simply run the following from the clone's main dev branch::
 
     # To build the packages (sources and wheel)
-    $ python -m build --sdist --wheel
+    $ python -m flit build
 
     # To upload to PyPI
-    $ twine upload dist/*
+    $ python -m flit publish dist/*
 
 The new version based off of the version checked out will now be available via `pip` (`$ pip install figanos`).
 
@@ -171,13 +173,20 @@ Releasing on conda-forge
 Initial Release
 ^^^^^^^^^^^^^^^
 
-In order to prepare an initial release on conda-forge, we *strongly* suggest consulting the following links:
+Before preparing an initial release on conda-forge, we *strongly* suggest consulting the following links:
  * https://conda-forge.org/docs/maintainer/adding_pkgs.html
  * https://github.com/conda-forge/staged-recipes
 
+In order to create a new conda build recipe, to be used when proposing packages to the conda-forge repository, we strongly suggest using the ``grayskull`` tool::
+
+    $ python -m pip install grayskull
+    $ grayskull pypi figanos
+
+For more information on ``grayskull``, please see the following link: https://github.com/conda/grayskull
+
 Before updating the main conda-forge recipe, we echo the conda-forge documentation and *strongly* suggest performing the following checks:
  * Ensure that dependencies and dependency versions correspond with those of the tagged version, with open or pinned versions for the `host` requirements.
- * If possible, configure tests within the conda-forge build CI (e.g. `imports: figanos`, `commands: pytest figanos`)
+ * If possible, configure tests within the conda-forge build CI (e.g. `imports: figanos`, `commands: pytest figanos`).
 
 Subsequent releases
 ^^^^^^^^^^^^^^^^^^^
@@ -201,9 +210,9 @@ From the figanos source folder we can enter into the docker container, providing
 
     $ sudo docker run --rm -ti -v $(pwd):/figanos -w /figanos quay.io/pypa/manylinux_2_24_x86_64 bash
 
-Finally, to build the wheel, we run it against the provided Python3.8 binary::
+Finally, to build the wheel, we run it against the provided Python3.9 binary::
 
-    $ /opt/python/cp38-cp38m/bin/python -m build --sdist --wheel
+    $ /opt/python/cp39-cp39m/bin/python -m build --sdist --wheel
 
 This will then place two files in `figanos/dist/` ("figanos-1.2.3-py3-none-any.whl" and "figanos-1.2.3.tar.gz"). We can now leave our docker container (`$ exit`) and continue with uploading the files to PyPI::
 
