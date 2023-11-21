@@ -19,6 +19,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn
 import xarray as xr
 import yaml
 from matplotlib.lines import Line2D
@@ -224,8 +225,9 @@ def get_attributes(
 def set_plot_attrs(
     attr_dict: dict[str, Any],
     xr_obj: xr.DataArray | xr.Dataset,
-    ax: matplotlib.axes.Axes,
+    ax: matplotlib.axes.Axes | None = None,
     title_loc: str = "center",
+    facetgrid: seaborn.axisgrid.FacetGrid | None = None,
     wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
     """Set plot elements according to Dataset or DataArray attributes.
@@ -261,6 +263,7 @@ def set_plot_attrs(
             "xunits",
             "cbar_label",
             "cbar_units",
+            "suptitle",
         ]:
             warnings.warn(f'Use_attrs element "{key}" not supported')
 
@@ -307,7 +310,15 @@ def set_plot_attrs(
     if "cbar_units" in attr_dict:
         pass
 
-    return ax
+    if facetgrid:
+        if "suptitle" in attr_dict:
+            suptitle = get_attributes(attr_dict["suptitle"], xr_obj)
+            facetgrid.fig.suptitle(suptitle, y=1.05)
+            facetgrid.set_titles(template="{value}")
+        return facetgrid
+
+    else:
+        return ax
 
 
 def get_suffix(string: str) -> str:

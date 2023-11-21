@@ -623,8 +623,9 @@ def gridmap(
                 or (getattr(im, "cbar", None) is not None)
             ):
                 im.cbar.outline.set_visible(False)
-        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
-        im.set_titles(template="{value}")
+
+        use_attrs.setdefault("suptitle", "long_name")
+        im = set_plot_attrs(use_attrs, data, facetgrid=im)
         return im
 
 
