@@ -102,7 +102,7 @@ jobs:
           python -m pip check || true
       - name: Test with pytest
         run: |
-          python -m pytest --cov=figanos
+          python -m pytest --cov figanos
       - name: Report coverage
         run: |
           python -m coveralls
