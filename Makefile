@@ -54,7 +54,7 @@ clean-test: ## remove test and coverage artifacts
 
 lint/flake8: ## check style with flake8
 	ruff figanos tests
-	flake8 --config=setup.cfg figanos tests
+	flake8 --config=.flake8 figanos tests
 
 lint/black: ## check style with black
 	black --check figanos tests
