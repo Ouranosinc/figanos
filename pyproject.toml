@@ -166,8 +166,9 @@ exclude = [
   ".pre-commit-config.yaml",
   ".readthedocs.yml",
   ".yamllint.yaml",
-  "docs/modules.rst",
-  "docs/figanos*.rst"
+  "docs/_*",
+  "docs/apidoc/modules.rst",
+  "docs/apidoc/figanos*.rst"
 ]
 
 [tool.isort]
