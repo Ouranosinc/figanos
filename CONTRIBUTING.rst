@@ -63,7 +63,7 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
 
     $ mamba env create -f environment-dev.yml
     $ conda activate figanos
-    $ flit install --symlink .
+    $ flit install --symlink
 
 #. To ensure a consistent style, please install the pre-commit hooks to your repo::
 

@@ -28,12 +28,14 @@ Then you can create the environment and install the package:
 .. code-block:: console
 
     $ cd figanos
-    $ conda env create -f environment.yml
+    $ conda env create -f environment-dev.yml
 
-Finally, perform an `--editable` install of figanos:
+Finally, perform an `--symlink` install of figanos:
 
 .. code-block:: console
 
-    $ python -m pip install .
+    $ flit install --symlink
+    # Or
+    $ make dev
 
 .. _Github repo: https://github.com/Ouranosinc/figanos

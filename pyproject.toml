@@ -79,16 +79,12 @@ docs = [
   "ipython",
   "jupyter_client",
   "nbsphinx",
-  "sphinx-click",
   "sphinx-codeautolink",
   "sphinx-copybutton",
   "sphinx>=6.2.0",
   "sphinx-book-theme>=1.0",
   "sphinxcontrib-napoleon"
 ]
-
-[project.scripts]
-figanos = "figanos.cli:cli"
 
 [project.urls]
 "Homepage" = "https://figanos.readthedocs.io/"
@@ -143,26 +139,26 @@ include = [
   "CHANGES.rst",
   "CONTRIBUTING.rst",
   "LICENSE",
+  "Makefile",
   "README.rst",
-  "docs/**/*.gif",
-  "docs/**/*.jpg",
-  "docs/**/*.png",
-  "docs/**/*.rst",
+  "docs/*.rst",
   "docs/Makefile",
+  "docs/_static/_images/*.gif",
+  "docs/_static/_images/*.jpg",
+  "docs/_static/_images/*.png",
+  "docs/_static/_images/*.rst",
   "docs/conf.py",
   "docs/make.bat",
-  "setup.cfg",
+  "docs/notebooks/.ipynb",
+  "environment-docs.yml",
+  "environment-dev.yml",
   "tests/*.py",
-  "figanos/**/*.json",
-  "figanos/**/*.mplstyle",
-  "figanos/**/*.png",
-  "figanos/**/*.py",
-  "figanos/**/*.txt",
-  "figanos/**/*.yml"
+  "figanos",
+  "tox.ini"
 ]
 exclude = [
-  "**/*.py[co]",
-  "**/__pycache__",
+  "*.py[co]",
+  "__pycache__",
   ".coveralls.yml",
   ".editorconfig",
   ".flake8",
@@ -170,12 +166,8 @@ exclude = [
   ".pre-commit-config.yaml",
   ".readthedocs.yml",
   ".yamllint.yaml",
-  "Makefile",
   "docs/modules.rst",
-  "docs/figanos*.rst",
-  "environment-docs.yml",
-  "environment-dev.yml",
-  "tox.ini"
+  "docs/figanos*.rst"
 ]
 
 [tool.isort]
