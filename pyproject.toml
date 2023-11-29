@@ -151,7 +151,6 @@ include = [
   "docs/conf.py",
   "docs/make.bat",
   "docs/notebooks/.ipynb",
-  "environment-docs.yml",
   "environment-dev.yml",
   "tests/*.py",
   "figanos",
