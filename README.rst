@@ -25,7 +25,6 @@ Pour nous partager vos codes à ajouter dans figanos, s.v.p créer un issue sur 
 * Free software: Apache Software License 2.0
 * Documentation: https://figanos.readthedocs.io.
 
-
 Features
 --------
 
