@@ -80,25 +80,25 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
     $ conda activate figanos
     $ flit install --symlink
 
-  This installs ``figanos`` in an "editable" state, meaning that changes to the code are immediately seen by the environment.
+   This installs ``figanos`` in an "editable" state, meaning that changes to the code are immediately seen by the environment.
 
 #. To ensure a consistent coding style, install the ``pre-commit`` hooks to your local clone::
 
     $ pre-commit install
 
-  On commit, ``pre-commit`` will check that ``black``, ``blackdoc``, ``isort``, ``flake8``, and ``ruff`` checks are passing, perform automatic fixes if possible, and warn of violations that require intervention. If your commit fails the checks initially, simply fix the errors, re-add the files, and re-commit.
+   On commit, ``pre-commit`` will check that ``black``, ``blackdoc``, ``isort``, ``flake8``, and ``ruff`` checks are passing, perform automatic fixes if possible, and warn of violations that require intervention. If your commit fails the checks initially, simply fix the errors, re-add the files, and re-commit.
 
-  You can also run the hooks manually with::
+   You can also run the hooks manually with::
 
     $ pre-commit run -a
 
-  If you want to skip the ``pre-commit`` hooks temporarily, you can pass the ``--no-verify`` flag to `$ git commit`.
+   If you want to skip the ``pre-commit`` hooks temporarily, you can pass the ``--no-verify`` flag to `$ git commit`.
 
 #. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
-  Now you can make your changes locally.
+   Now you can make your changes locally.
 
 #. When you're done making changes, we **strongly** suggest running the tests in your environment or with the help of ``tox``::
 
@@ -112,7 +112,7 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-  If ``pre-commit`` hooks fail, try re-committing your changes (or, if need be, you can skip them with `$ git commit --no-verify`).
+   If ``pre-commit`` hooks fail, try re-committing your changes (or, if need be, you can skip them with `$ git commit --no-verify`).
 
 #. Submit a `Pull Request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_ through the GitHub website.
 
@@ -128,11 +128,11 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
 
 #. Once your Pull Request has been accepted and merged to the ``main`` branch, several automated workflows will be triggered:
 
-    - The ``bump-version.yml`` workflow will automatically bump the patch version when pull requests are pushed to the ``main`` branch on GitHub. **It is not recommended to manually bump the version in your branch when merging (non-release) pull requests (this will cause the version to be bumped twice).**
-    - `ReadTheDocs` will automatically build the documentation and publish it to the `latest` branch of `figanos` documentation website.
-    - If your branch is not a fork (ie: you are a maintainer), your branch will be automatically deleted.
+   - The ``bump-version.yml`` workflow will automatically bump the patch version when pull requests are pushed to the ``main`` branch on GitHub. **It is not recommended to manually bump the version in your branch when merging (non-release) pull requests (this will cause the version to be bumped twice).**
+   - `ReadTheDocs` will automatically build the documentation and publish it to the `latest` branch of `figanos` documentation website.
+   - If your branch is not a fork (ie: you are a maintainer), your branch will be automatically deleted.
 
-  You will have contributed your first changes to ``figanos``!
+You will have contributed your first changes to ``figanos``!
 
 Pull Request Guidelines
 -----------------------
@@ -151,7 +151,7 @@ Tips
 
 To run a subset of tests::
 
-$ pytest tests.test_figanos
+    $ pytest tests.test_figanos
 
 To run specific code style checks::
 
@@ -161,7 +161,7 @@ To run specific code style checks::
     $ ruff figanos tests
     $ flake8 figanos tests
 
-To get ``black``, ``isort ``blackdoc``, ``ruff``, and ``flake8`` (with plugins ``flake8-alphabetize`` and ``flake8-rst-docstrings``) simply `$ pip install` them into your environment.
+To get ``black``, ``isort ``blackdoc``, ``ruff``, and ``flake8`` (with plugins ``flake8-alphabetize`` and ``flake8-rst-docstrings``) simply install them with `pip` (or `conda`) into your environment.
 
 Versioning/Tagging
 ------------------

@@ -93,7 +93,7 @@ jobs:
         run: |
           mamba --version
           echo "micromamba $(micromamba --version)"
-      - name: Compile catalogs and install figanos
+      - name: Install figanos
         run: |
           python -m pip install --no-deps .
       - name: Check versions
