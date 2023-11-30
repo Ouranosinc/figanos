@@ -416,7 +416,6 @@ def gridmap(
         Arguments to pass to `plt.figure()`.
     plot_kw:  dict, optional
         Arguments to pass to the `xarray.plot.pcolormesh()` or 'xarray.plot.contourf()' function.
-        If 'data' is a dictionary, can be a nested dictionary with the same keys as 'data'.
     projection : ccrs.Projection
         The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
     transform : ccrs.Projection, optional
@@ -513,8 +512,16 @@ def gridmap(
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
         plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+        cfig_kw = fig_kw.copy()
+        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
+            plot_kw.setdefault("figsize", fig_kw["figsize"])
+            cfig_kw.pop("figsize")
+        if cfig_kw:
+            warnings.warn(
+                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+            )
 
-        # create cbar label
+    # create cbar label
     if (
         "cbar_units" in use_attrs
         and len(get_attributes(use_attrs["cbar_units"], data)) >= 1
@@ -579,15 +586,6 @@ def gridmap(
     plotting = {"transform": transform, "cmap": cmap, **plot_kw}
     if ax:
         plotting.setdefault("ax", ax)
-    else:
-        cfig_kw = fig_kw.copy()
-        if "figsize" in fig_kw:
-            plotting.setdefault("figsize", fig_kw["figsize"])
-            cfig_kw.pop("figsize")
-        if cfig_kw:
-            warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
-            )
 
     if contourf is False:
         im = plot_data.plot.pcolormesh(**plotting)
@@ -623,7 +621,7 @@ def gridmap(
                 projection,
                 features,
                 geometries_kw,
-                show_time,
+                False,
                 frame,
                 plot_data,
             )
@@ -633,6 +631,25 @@ def gridmap(
                 or (getattr(im, "cbar", None) is not None)
             ):
                 im.cbar.outline.set_visible(False)
+        if show_time:
+            if show_time == "top left":
+                plt.figtext(0.8, 1.025, "Additional Text", ha="center", fontsize=12)
+            elif show_time == "top right":
+                plt.figtext(0.2, -0.075, "Additional Text", ha="center", fontsize=12)
+            elif show_time == "bottom left":
+                plt.figtext(0.2, -0.075, "Additional Text", ha="center", fontsize=12)
+            elif show_time == "bottom right" or show_time is True:
+                plt.figtext(0.8, -0.075, "Additional Text", ha="center", fontsize=12)
+            elif isinstance(show_time, tuple):
+                plt.figtext(
+                    show_time[0],
+                    show_time[1],
+                    "Additional Text",
+                    ha="center",
+                    fontsize=12,
+                )
+            else:
+                raise TypeError("show_time must be a bool, string,or tuple")
 
         use_attrs.setdefault("suptitle", "long_name")
         im = set_plot_attrs(use_attrs, data, facetgrid=im)
@@ -1262,7 +1279,6 @@ def scattermap(
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | None = None,
     divergent: bool | int | float = False,
-    cbar_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
@@ -1273,7 +1289,6 @@ def scattermap(
     ----------
     data : dict, DataArray or Dataset
         Input data do plot. If dictionary, must have only one entry.
-        If a Dataset with multiple variables, the first one will be plotted against the colormap.
     ax : matplotlib axis, optional
         Matplotlib axis on which to plot, with the same projection as the one specified.
     use_attrs : dict, optional
@@ -1296,7 +1311,7 @@ def scattermap(
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
     sizes : bool or str, optional
-        Name of the variable to use for determining point size. If True, use the same data as in the colorbar.
+        String name of the coordinate to use for determining point size. If True, use the same data as in the colorbar.
     size_range : tuple
         Tuple of the minimum and maximum size of the points.
     cmap : matplotlib.colors.Colormap or str, optional
@@ -1308,10 +1323,9 @@ def scattermap(
         Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    cbar_kw : dict, optional
-        Arguments to pass to plt.colorbar().
     legend_kw : dict, optional
-        Arguments to pass to plt.legend().
+        Arguments to pass to plt.legend(). Some defaults {"loc": "lower left", "facecolor": "w", "framealpha": 1,
+            "edgecolor": "w", "bbox_to_anchor": (-0.05, 0)}
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
@@ -1343,7 +1357,6 @@ def scattermap(
     use_attrs = empty_dict(use_attrs)
     fig_kw = empty_dict(fig_kw)
     plot_kw = empty_dict(plot_kw)
-    cbar_kw = empty_dict(cbar_kw)
     legend_kw = empty_dict(legend_kw)
 
     # set default use_attrs values
@@ -1364,17 +1377,22 @@ def scattermap(
     # if data is dict, extract
     if isinstance(data, dict):
         if len(data) == 1:
-            data = list(data.values())[0]
+            data = list(data.values())[0].squeeze()
+            if len(data.data_vars) > 1:
+                warnings.warn(
+                    "data is xr.Dataset; only the first variable will be used in plot"
+                )
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
-
-    if sizes and isinstance(data, xr.Dataset):
-        data = masknan_sizes_key(data, sizes)
 
     # select data to plot
     if isinstance(data, xr.DataArray):
         plot_data = data
     elif isinstance(data, xr.Dataset):
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
+            )
         plot_data = data[list(data.keys())[0]]
     else:
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
@@ -1394,6 +1412,14 @@ def scattermap(
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
         plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+        cfig_kw = fig_kw.copy()
+        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
+            plot_kw.setdefault("figsize", fig_kw["figsize"])
+            cfig_kw.pop("figsize")
+        if cfig_kw:
+            warnings.warn(
+                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+            )
 
     # create cbar label
     if (
@@ -1412,6 +1438,7 @@ def scattermap(
     if "add_colorbar" not in plot_kw or plot_kw["add_colorbar"] is not False:
         plot_kw.setdefault("cbar_kwargs", {})
         plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
+        plot_kw["cbar_kwargs"].setdefault("pad", 0.015)
 
     # colormap
     if isinstance(cmap, str):
@@ -1428,6 +1455,14 @@ def scattermap(
             divergent=divergent,
         )
 
+    # nans (not required for plotting since xarray.plot handles np.nan, but needs to be found for sizes legend and to
+    # inform user on how many stations were dropped)
+    mask = ~np.isnan(plot_data.values)
+    if np.sum(mask) < len(mask):
+        warnings.warn(
+            f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the color values"
+        )
+
     # point sizes
     if sizes:
         if sizes is True:
@@ -1435,21 +1470,31 @@ def scattermap(
         elif isinstance(sizes, str):
             if hasattr(data, "name") and getattr(data, "name") == sizes:
                 sdata = plot_data
-            elif hasattr(data, sizes):
-                sdata = getattr(data, sizes)
+            elif sizes in list(data.coords.keys()):
+                sdata = data[sizes]
             else:
                 raise ValueError(f"{sizes} not found")
         else:
             raise TypeError("sizes must be a string or a bool")
 
+        # nans sizes
+        smask = ~np.isnan(sdata.values) & mask
+        if np.sum(smask) < np.sum(mask):
+            warnings.warn(
+                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size"
+            )
+            mask = smask
+
         pt_sizes = norm2range(
-            data=np.resize(sdata.values, (sdata.values.size, 1)),
+            data=sdata.values,
             target_range=size_range,
             data_range=None,
         )
-
+        plot_kw.setdefault("add_legend", False)
         if ax:
             plot_kw.setdefault("s", pt_sizes)
+        else:
+            plot_kw.setdefault("s", pt_sizes[0])
 
     # norm
     plot_kw.setdefault("vmin", np.nanmin(plot_data.values))
@@ -1499,10 +1544,7 @@ def scattermap(
             im.colorbar.outline.set_visible(False)
 
     else:
-        if sizes:
-            pt_sizes2 = np.resize(pt_sizes, sdata.shape)
-            n = 0
-        for fax in im.axes.flat:
+        for i, fax in enumerate(im.axs.flat):
             fax = add_features_map(
                 data,
                 fax,
@@ -1515,21 +1557,19 @@ def scattermap(
                 plot_data,
             )
 
-            # correct markersize for facetgrid
-            scat = fax.collections[0]
-            scat.set_sizes(pt_sizes2[n])
-            n += 1
+            if sizes:
+                # correct markersize for facetgrid
+                scat = fax.collections[0]
+                scat.set_sizes(pt_sizes[i])
 
-            if (frame is False) and (im.cbar is not None):
-                im.cbar.outline.set_visible(False)
-        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
-        im.set_titles(template="{value}")
+        if (frame is False) and (im.cbar is not None):
+            im.cbar.outline.set_visible(False)
 
     # size legend
     if sizes:
         legend_elements = size_legend_elements(
-            np.resize(sdata.values, (sdata.values.size, 1)),
-            pt_sizes,
+            np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
+            np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
             max_entries=6,
             marker=plot_kw["marker"],
         )
@@ -1546,6 +1586,7 @@ def scattermap(
             "edgecolor": "w",
             "labelspacing": ls,
             "handles": legend_elements,
+            "bbox_to_anchor": (-0.05, -0.1),
         } | legend_kw
 
         if "title" not in legend_kw:
@@ -1561,14 +1602,16 @@ def scattermap(
 
         if ax:
             lgd = ax.legend(**legend_kw)
+            lgd.set_zorder(11)
         else:
-            legend_kw.setdefault("bbox_to_anchor", (1.05, 1))
-            lgd = plt.legend(**legend_kw)
-        lgd.set_zorder(11)
+            im.figlegend = im.fig.legend(**legend_kw)
+        # im._adjust_fig_for_guide(im.figlegend)
 
     if ax:
         return ax
     else:
+        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
+        im.set_titles(template="{value}")
         return im
 
 
