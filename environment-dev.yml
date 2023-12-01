@@ -4,6 +4,7 @@ channels:
   - default
 dependencies:
   - python>=3.11,<3.12
+  - flit
   # Main
   - cartopy
   - cairosvg
