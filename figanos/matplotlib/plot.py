@@ -20,6 +20,7 @@ import pandas as pd
 import seaborn as sns
 import xarray as xr
 from cartopy import crs as ccrs
+from collections.abc import Iterable
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 from matplotlib.projections import PolarAxes
@@ -395,7 +396,7 @@ def gridmap(
     geometries_kw: dict[str, Any] | None = None,
     contourf: bool = False,
     cmap: str | matplotlib.colors.Colormap | None = None,
-    levels: int | None = None,
+    levels: int | list | np.ndarray | None = None,
     divergent: bool | int | float = False,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
@@ -434,8 +435,8 @@ def gridmap(
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    levels : int, optional
-        Number of levels to divide the colormap into.
+    levels : int, list, np.ndarray, optional
+        Number of levels to divide the colormap into or list of level boundaries (in data units).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
@@ -543,15 +544,17 @@ def gridmap(
             divergent=divergent,
         )
 
-    if levels:
-        lin = custom_cmap_norm(
-            cmap,
-            np.nanmin(plot_data.values),
-            np.nanmax(plot_data.values),
-            levels=levels,
-            divergent=divergent,
-            linspace_out=True,
-        )
+    if levels is not None:
+        lin = levels
+        if not isinstance(lin, Iterable):
+            lin = custom_cmap_norm(
+                cmap,
+                np.nanmin(plot_data.values),
+                np.nanmax(plot_data.values),
+                levels=levels,
+                divergent=divergent,
+                linspace_out=True,
+            )
         plot_kw.setdefault("levels", lin)
 
     elif divergent and "levels" not in plot_kw:
@@ -594,6 +597,16 @@ def gridmap(
     else:
         plotting.setdefault("levels", levels)
         im = plot_data.plot.contourf(**plotting)
+
+    # just a few notes for the subsequent if block:
+    # if we have a facetgrid
+    xr.plot.facetgrid.FacetGrid
+    # facets of facetgrid are
+    cartopy.mpl.geoaxes.GeoAxes
+    # if we don't have a facetgrid, depending on contourf we have either
+    cartopy.mpl.contour.GeoContourSet  # or
+    cartopy.mpl.geoaxes.GeoAxes
+    # use im.axs to access the axes instead of im.axes
 
     if ax:
         ax = add_features_map(
