@@ -1412,7 +1412,7 @@ def add_features_map(
 
 
 def masknan_sizes_key(data, sizes) -> xr.Dataset:
-    """Mask  the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
+    """Mask the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
 
     Parameters
     ----------
