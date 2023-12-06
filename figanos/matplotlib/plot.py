@@ -1640,7 +1640,7 @@ def scattermap(
     if ax:
         return ax
     else:
-        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
+        im.fig.suptitle(get_attributes("long_name", data))
         im.set_titles(template="{value}")
         return im
 
