@@ -501,7 +501,7 @@ def gridmap(
     if transform is None:
         if "lat" in data.dims and "lon" in data.dims:
             transform = ccrs.PlateCarree()
-        elif "rlat" in data.dims and "rlon" in data.dims:
+        if "rlat" in data.dims and "rlon" in data.dims:
             if hasattr(data, "rotated_pole"):
                 transform = get_rotpole(data)
 
@@ -549,6 +549,7 @@ def gridmap(
             get_var_group(path_to_json=cdata, da=plot_data),
             divergent=divergent,
         )
+    plot_kw.setdefault("cmap", cmap)
 
     if levels:
         lin = custom_cmap_norm(
@@ -582,18 +583,42 @@ def gridmap(
         plot_kw.setdefault("cbar_kwargs", {})
         plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
 
+    if transform and ("xlim" in plot_kw and "ylim" in plot_kw):
+        extend = [
+            plot_kw["xlim"][0],
+            plot_kw["xlim"][1],
+            plot_kw["ylim"][0],
+            plot_kw["ylim"][1],
+        ]
+        plot_kw.pop("xlim")
+        plot_kw.pop("ylim")
+    elif transform and ("xlim" in plot_kw or "ylim" in plot_kw):
+        extend = None
+        warnings.warn(
+            "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
+        )
+        if "xlim" in plot_kw.keys():
+            plot_kw.pop("xlim")
+        if "ylim" in plot_kw.keys():
+            plot_kw.pop("ylim")
+    else:
+        extend = None
+    # extend = None
+
     # plot
-    plotting = {"transform": transform, "cmap": cmap, **plot_kw}
     if ax:
-        plotting.setdefault("ax", ax)
+        plot_kw.setdefault("ax", ax)
+    if transform:
+        plot_kw.setdefault("transform", transform)
 
     if contourf is False:
-        im = plot_data.plot.pcolormesh(**plotting)
+        im = plot_data.plot.pcolormesh(**plot_kw)
     else:
-        plotting.setdefault("levels", levels)
-        im = plot_data.plot.contourf(**plotting)
+        im = plot_data.plot.contourf(**plot_kw)
 
     if ax:
+        if extend:
+            ax.set_extend(extend)
         ax = add_features_map(
             data,
             ax,
@@ -605,6 +630,7 @@ def gridmap(
             frame,
             plot_data,
         )
+
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
             (getattr(im, "colorbar", None) is not None)
@@ -613,10 +639,10 @@ def gridmap(
             im.colorbar.outline.set_visible(False)
         return ax
     else:
-        for ax in im.axes.flat:
-            ax = add_features_map(
+        for i, fax in enumerate(im.axs.flat):
+            add_features_map(
                 data,
-                ax,
+                fax,
                 use_attrs,
                 projection,
                 features,
@@ -626,11 +652,12 @@ def gridmap(
                 plot_data,
             )
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
-            if (frame is False) and (
-                (getattr(im, "colorbar", None) is not None)
-                or (getattr(im, "cbar", None) is not None)
-            ):
-                im.cbar.outline.set_visible(False)
+        if (frame is False) and (
+            (getattr(im, "colorbar", None) is not None)
+            or (getattr(im, "cbar", None) is not None)
+        ):
+            im.cbar.outline.set_visible(False)
+
         if show_time:
             if show_time == "top left":
                 plt.figtext(0.8, 1.025, "Additional Text", ha="center", fontsize=12)
@@ -651,9 +678,12 @@ def gridmap(
             else:
                 raise TypeError("show_time must be a bool, string,or tuple")
 
+        if extend:
+            for i, fax in enumerate(im.axs.flat):
+                fax.set_extent(extend)
+
         use_attrs.setdefault("suptitle", "long_name")
-        im = set_plot_attrs(use_attrs, data, facetgrid=im)
-        return im
+        return set_plot_attrs(use_attrs, data, facetgrid=im)
 
 
 def gdfmap(
