@@ -2109,31 +2109,27 @@ def partition(
     if ax is None:
         fig, ax = plt.subplots(**fig_kw)
 
-    # Compute fraction
-    # TODO: should be done elsewhere
-    da = data / data.sel(uncertainty="total") * 100
-    # da = variance
-
     # Select data from reference year onward
     if start_year:
-        da = da.sel(time=slice(start_year, None))
+        data = data.sel(time=slice(start_year, None))
 
         # Lead time coordinate
-        time = _add_lead_time_coord(da, start_year)
+        time = _add_lead_time_coord(data, start_year)
         ax.set_xlabel(f"Lead time [years from {start_year}]")
     else:
-        time = da.time.dt.year
+        time = data.time.dt.year
 
     # fill_kw that are direct (not with uncertainty as key)
-    fk_direct = {k: v for k, v in fill_kw.items() if (k not in da.uncertainty.values)}
+    fk_direct = {k: v for k, v in fill_kw.items() if (k not in data.uncertainty.values)}
 
     # Draw areas
     past_y = 0
     black_lines = []
-    for u in da.uncertainty.values:
+    for u in data.uncertainty.values:
         if u not in ["total", "variability"]:
-            present_y = past_y + da.sel(uncertainty=u)
-            label = f"{u} ({data.sel(uncertainty=u).num.values})" if show_num else u
+            present_y = past_y + data.sel(uncertainty=u)
+            num = len(data.sel(uncertainty=u).elements.values.tolist())
+            label = f"{u} ({num})" if show_num else u
             ax.fill_between(
                 time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
             )
@@ -2155,7 +2151,7 @@ def partition(
     ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10))
     ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=2))
 
-    ax.set_ylabel("Fraction of total variance [%]")  # TODO: take it from attrs
+    ax.set_ylabel(f"{data.attrs['long_name']} ({data.attrs['units']})")  #
 
     ax.set_ylim(0, 100)
     ax.legend(**legend_kw)
