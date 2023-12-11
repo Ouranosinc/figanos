@@ -1,4 +1,4 @@
-# noqa: D100
+"""Plotting functions for figanos figure-creation."""
 from __future__ import annotations
 
 import math

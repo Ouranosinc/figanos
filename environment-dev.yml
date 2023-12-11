@@ -8,6 +8,7 @@ dependencies:
   # Main
   - cartopy
   - cairosvg
+  - cycler
   - matplotlib-base
   - seaborn
   - geopandas

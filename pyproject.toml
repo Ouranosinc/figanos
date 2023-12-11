@@ -36,6 +36,7 @@ dynamic = ["description", "version"]
 dependencies = [
   "cartopy",
   "cairosvg",
+  "cycler",
   "geopandas",
   "matplotlib",
   "numpy",
