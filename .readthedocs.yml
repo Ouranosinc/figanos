@@ -10,5 +10,23 @@ sphinx:
   # disabled but this also means those errors will fail silently, choose wisely.
   fail_on_warning: true
 
+formats:
+  - pdf
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "mambaforge-22.9"
+  jobs:
+    pre_build:
+      - sphinx-apidoc -o docs/apidoc --module-first figanos
+
 conda:
-  environment: environment-docs.yml
+  environment: environment-dev.yml
+
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs

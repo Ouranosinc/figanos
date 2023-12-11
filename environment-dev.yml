@@ -1,0 +1,55 @@
+name: figanos
+channels:
+  - conda-forge
+  - default
+dependencies:
+  - python>=3.11,<3.12
+  - flit
+  # Main
+  - cartopy
+  - cairosvg
+  - matplotlib-base
+  - seaborn
+  - geopandas
+  - numpy
+  - pandas
+  - platformdirs
+  - pyyaml
+  - scikit-image
+  - xarray
+  - xclim >=0.38
+  # To make the package and notebooks usable
+  - dask
+  - h5py
+  - netcdf4
+  - pyyaml
+  - zarr
+  - geoviews
+  - holoviews
+  # Development
+  - black
+  - bump-my-version >=0.12.0
+  - coverage >=6.2,<7.0
+  - coveralls >=3.3.1
+  - flake8
+  - flake8-rst-docstrings
+  - isort
+  - pip
+  - pre-commit
+  - pytest
+  - pytest-cov
+  - tox
+  - twine
+  - wheel
+  # Docs
+  - ipykernel
+  - jupyter_client
+  - nbsphinx
+  - notebook
+  - pandoc
+  - sphinx >=6.2.0
+  - sphinx-autoapi
+  - sphinx-book-theme >=1.0.0
+  - sphinx-codeautolink
+  - sphinx-copybutton
+  - sphinxcontrib-napoleon

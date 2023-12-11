@@ -35,6 +35,11 @@ clean-build: ## remove build artifacts
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -f {} +
 
+clean-docs: ## remove docs artifacts
+	rm -f docs/apidoc/figanos*.rst
+	rm -f docs/apidoc/modules.rst
+	$(MAKE) -C docs clean
+
 clean-pyc: ## remove Python file artifacts
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
@@ -48,41 +53,52 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint/flake8: ## check style with flake8
-	flake8 spirograph tests
+	ruff figanos tests
+	flake8 --config=.flake8 figanos tests
+
 lint/black: ## check style with black
-	black --check spirograph tests
+	black --check figanos tests
+	blackdoc --check figanos docs
+	isort --check figanos tests
 
 lint: lint/flake8 lint/black ## check style
 
 test: ## run tests quickly with the default Python
-	pytest
+	python -m pytest
 
 test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source spirograph -m pytest
+	coverage run --source figanos -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
-docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/spirograph.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ spirograph
-	$(MAKE) -C docs clean
+
+autodoc: clean-docs ## create sphinx-apidoc files:
+	sphinx-apidoc -o docs/apidoc --private --module-first figanos
+
+linkcheck: autodoc ## run checks over all external links found throughout the documentation
+	$(MAKE) -C docs linkcheck
+
+docs: autodoc ## generate Sphinx HTML documentation, including API docs
 	$(MAKE) -C docs html
+ifndef READTHEDOCS
 	$(BROWSER) docs/_build/html/index.html
+endif
 
 servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
-release: dist ## package and upload a release
-	twine upload dist/*
-
 dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
+	python -m flit build
 	ls -l dist
 
+release: dist ## package and upload a release
+	python -m flit publish dist/*
+
 install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+	python -m flit install
+
+dev: clean ## install the package to the active Python's site-packages
+	python -m flit install --symlink

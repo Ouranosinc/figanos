@@ -1,0 +1,59 @@
+#Ouranos matplotlib style-sheet
+#should not have plotting style already in paper or poster
+#classic matplotlib version: https://github.com/matplotlib/matplotlib/blob/6a9a07155c0e7f91c20dd4c7e280198ec652c4ae/lib/matplotlib/mpl-data/stylelib/classic.mplstyle
+#refer to IPCC style guide
+
+# --- AXES ---
+axes.facecolor      : w
+axes.edgecolor      : k
+axes.linewidth      : 0.5
+axes.grid           : True
+axes.grid.axis      : y
+axes.axisbelow      : True
+
+axes.prop_cycle     : cycler('color', ['052946', 'ce153d', '18bbbb', 'fdc414', '6850af', '196a5e', '7a5315'])
+
+axes.spines.bottom  : True
+axes.spines.left    : True
+axes.spines.right   : False
+axes.spines.top     : False
+
+axes.xmargin        : 0
+axes.ymargin        : 0.05
+
+axes.labelsize      : 11
+axes.titlelocation  : center
+axes.titlesize      : 14
+axes.titlepad       : 10.0
+
+# --- GRIDS ---
+grid.linestyle      : -
+grid.linewidth      : 0.5
+grid.color          : k
+grid.alpha          : 0.4
+
+# --- LINES ---
+lines.linewidth     : 1.5
+
+# --- TICKS ---
+xtick.major.size    : 2
+ytick.major.size    : 2
+xtick.minor.visible : False
+
+xtick.labelsize     : 11
+ytick.labelsize     : 11
+xtick.direction     : in
+ytick.direction     : in
+xtick.color         : k
+ytick.color         : k
+
+# --- FONTS ---
+font.size           : 11
+font.family         : sans-serif
+font.sans-serif     : DejaVu Sans
+
+# --- LEGEND ---
+legend.facecolor      : w
+legend.edgecolor      : w
+legend.frameon        : True
+legend.framealpha     : 1

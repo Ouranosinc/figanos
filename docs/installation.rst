@@ -2,48 +2,40 @@
 Installation
 ============
 
+Official Source
+---------------
 
-Stable release
---------------
-
-To install spirograph, run this command in your terminal:
-
-.. code-block:: console
-
-    $ pip install spirograph
-
-This is the preferred method to install spirograph, as it will always install the most recent stable release.
-
-If you don't have `pip`_ installed, this `Python installation guide`_ can guide
-you through the process.
-
-.. _pip: https://pip.pypa.io
-.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
-
-
-From sources
-------------
-
-The sources for spirograph can be downloaded from the `Github repo`_.
-
-You can either clone the public repository:
+To install figanos, run these commands in your terminal:
 
 .. code-block:: console
 
-    $ git clone git@github.com:Zeitsperre/spirograph
+    $ mamba install -c conda-forge gdal
+    $ python -m pip install figanos
 
-Or download the `tarball`_:
+Development Installation (conda + pip)
+--------------------------------------
+
+For development purposes, we provide the means for generating a conda environment with the latest dependencies in an `environment.yml` file at the top-level of the `Github repo`_.
+
+In order to get started, first clone the repo locally:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/Zeitsperre/spirograph/tarball/master
+    $ git clone git@github.com:Ouranosinc/figanos.git
 
-Once you have a copy of the source, you can install it with:
+Then you can create the environment and install the package:
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ cd figanos
+    $ conda env create -f environment-dev.yml
 
+Finally, perform an `--symlink` install of figanos:
 
-.. _Github repo: https://github.com/Zeitsperre/spirograph
-.. _tarball: https://github.com/Zeitsperre/spirograph/tarball/master
+.. code-block:: console
+
+    $ flit install --symlink
+    # Or
+    $ make dev
+
+.. _Github repo: https://github.com/Ouranosinc/figanos

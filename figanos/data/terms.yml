@@ -1,0 +1,14 @@
+time:
+  fr: temps
+"{}th-{}th percentiles":
+  fr: "{}e-{}e centiles"
+"min-max range":
+  fr: "intervalle min-max"
+"standard deviation":
+  fr: "écart-type"
+"correlation":
+  fr: corrélation
+"pearson correlation":
+  fr: corrélation de Pearson
+"reference":
+  fr: référence
