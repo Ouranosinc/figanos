@@ -27,7 +27,7 @@ def test_content(response):
 
 def test_package_metadata():
     """Test the package metadata."""
-    project = pkgutil.get_loader("figanos").get_filename()
+    project = pkgutil.get_loader("figanos").get_filename()  # noqa
 
     metadata = pathlib.Path(project).resolve().parent.joinpath("__init__.py")
 
@@ -35,4 +35,4 @@ def test_package_metadata():
         contents = f.read()
         assert """Sarah-Claude Bourdeau-Goulet""" in contents
         assert '__email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"' in contents
-        assert '__version__ = "0.2.0"' in contents
+        assert '__version__ = "0.2.1"' in contents

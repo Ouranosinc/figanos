@@ -76,10 +76,10 @@ def get_localized_term(term, locale=None):
     return TERMS[term][locale]
 
 
-def empty_dict(param):
+def empty_dict(param) -> dict:
     """Return empty dict if input is None."""
     if param is None:
-        param = {}
+        param = dict()
     return param
 
 
@@ -176,7 +176,7 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
 
 
 def get_attributes(
-    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None
+    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str | None = None
 ) -> str:
     """Fetch attributes or dims corresponding to keys from Xarray objects.
 
@@ -371,8 +371,8 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 
 
 def loc_mpl(
-    loc: str | tuple[float, float] | int,
-) -> tuple[tuple[float, float], tuple[float, float], str, str]:
+    loc: str | tuple[int | float, int | float] | int,
+) -> tuple[tuple[float, float], tuple[int | float, int | float], str, str]:
     """Find coordinates and alignment associated to loc string.
 
     Parameters
@@ -585,11 +585,11 @@ def load_image(
         The scaled image.
     """
     if pathlib.Path(im).suffix == ".png":
-        im = mpl.pyplot.imread(im)
-        original_height, original_width = im.shape[:2]
+        image = mpl.pyplot.imread(im)
+        original_height, original_width = image.shape[:2]
 
         if height is None and width is None:
-            return im
+            return image
 
         warnings.warn(
             "The scikit-image library is used to resize PNG images. This may affect logo image quality."
@@ -607,7 +607,7 @@ def load_image(
                 # Only height is provided, derive zoom factor for width based on aspect ratio
                 width = (height / original_height) * original_width
 
-        return resize(im, (height, width, im.shape[2]), anti_aliasing=True)
+        return resize(image, (height, width, image.shape[2]), anti_aliasing=True)
 
     elif pathlib.Path(im).suffix == ".svg":
         cairo_kwargs = dict(url=im)
@@ -790,7 +790,7 @@ def fill_between_label(
 def get_var_group(
     path_to_json: str | pathlib.Path,
     da: xr.DataArray | None = None,
-    unique_str: str = None,
+    unique_str: str | None = None,
 ) -> str:
     """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
 
@@ -1058,7 +1058,7 @@ def get_mpl_styles() -> dict[str, str]:
     folder = pathlib.Path(__file__).parent / "style/"
     paths = sorted(folder.glob("*.mplstyle"))
     names = [str(p).split("/")[-1].removesuffix(".mplstyle") for p in paths]
-    styles = {name: path for name, path in zip(names, paths)}
+    styles = {str(name): path for name, path in zip(names, paths)}
 
     return styles
 
@@ -1172,14 +1172,16 @@ def custom_cmap_norm(
 
     # center
     center = None
-    if divergent:
+    if divergent is not False:
         if divergent is True:
             center = 0
-        else:
+        elif isinstance(divergent, (int, float)):
             center = divergent
 
     # build norm with options
-    if levels and center and isinstance(levels, int):
+    if center is not None and isinstance(levels, int):
+        if center <= rvmin or center >= rvmax:
+            raise ValueError("vmin, center and vmax must be in ascending order.")
         if levels % 2 == 1:
             half_levels = int((levels + 1) / 2) + 1
         else:
@@ -1196,8 +1198,12 @@ def custom_cmap_norm(
         if linspace_out:
             return lin
 
-    elif levels:
+    elif levels is not None:
         if isinstance(levels, list):
+            if center is not None:
+                warnings.warn(
+                    "Divergent argument ignored when levels is a list. Use levels as a number instead."
+                )
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
         else:
             lin = np.linspace(rvmin, rvmax, num=levels + 1)
@@ -1206,7 +1212,7 @@ def custom_cmap_norm(
             if linspace_out:
                 return lin
 
-    elif center:
+    elif center is not None:
         norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)
     else:
         norm = matplotlib.colors.Normalize(rvmin, rvmax)
