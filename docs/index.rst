@@ -21,7 +21,7 @@ Need help?
    api
    contributing
    authors
-   history
+   changes
 
 .. toctree::
    :maxdepth: 1

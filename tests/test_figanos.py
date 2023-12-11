@@ -27,7 +27,7 @@ def test_content(response):
 
 def test_package_metadata():
     """Test the package metadata."""
-    project = pkgutil.get_loader("figanos").get_filename()
+    project = pkgutil.get_loader("figanos").get_filename()  # noqa
 
     metadata = pathlib.Path(project).resolve().parent.joinpath("__init__.py")
 
