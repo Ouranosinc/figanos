@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import logging
 import shutil
 import urllib.parse
 import urllib.request
 import warnings
 from pathlib import Path
-from typing import Optional, Union
 
 import platformdirs
 import yaml
@@ -56,10 +57,10 @@ class Logos:
 
     def __init__(self) -> None:
         """Initialize the Logo class instance."""
-        self._config = None
-        self._catalogue = None
-        self._default = None
-        self._logos = {}
+        self._config: Path = Path(platformdirs.user_config_dir("figanos")) / "logos"
+        self._catalogue: Path = self._config / LOGO_CONFIG_FILE
+        self._default: Path = self._config / "figanos_logo.png"
+        self._logos: dict[str, str] = {}
         self.reload_config()
 
         if not self._logos.get("default"):
@@ -68,29 +69,17 @@ class Logos:
             self.set_logo(_figanos_logo, name="default")
 
     @property
-    def config(self) -> Path:
-        """The path to the logo configuration folder."""
-        if self._config is None:
-            self._config = (
-                Path(platformdirs.user_config_dir("figanos", ensure_exists=True))
-                / "logos"
-            )
-        return self._config
-
-    @property
     def catalogue(self) -> Path:
         """The path to the logo configuration file."""
-        if self._catalogue is None:
-            self._catalogue = self.config / LOGO_CONFIG_FILE
         return self._catalogue
 
     @property
-    def default(self) -> str:
+    def default(self) -> Path:
         """The path to the default logo."""
         return self._default
 
     @default.setter
-    def default(self, value: Union[str, Path]):
+    def default(self, value: Path):
         """Set a default logo."""
         self._default = value
 
@@ -103,7 +92,7 @@ class Logos:
                 warnings.warn(
                     f"No logo configuration file found. Creating one at {self.catalogue}."
                 )
-            self.config.mkdir(parents=True, exist_ok=True)
+            self._config.mkdir(parents=True, exist_ok=True)
             with open(self.catalogue, "w") as f:
                 yaml.dump(dict(logos={}), f)
 
@@ -115,13 +104,13 @@ class Logos:
         """Return the default logo filepath."""
         return f"{self._default}"
 
-    def __getitem__(self, args) -> Optional[str]:
+    def __getitem__(self, args) -> str | None:
         """Retrieve a logo filepath by its name.
 
         If it does not exist, it will be installed, with the filepath returned.
         """
         try:
-            return self._logos[args]
+            return str(self._logos[args])
         except (KeyError, TypeError):
             if isinstance(args, tuple):
                 return self.set_logo(*args)
@@ -141,9 +130,7 @@ class Logos:
         """Retrieve a list of installed logos."""
         return list(self._logos.keys())
 
-    def set_logo(
-        self, path: Union[str, Path], name: Optional[str] = None
-    ) -> Optional[str]:
+    def set_logo(self, path: str | Path, name: str | None = None) -> str | None:
         """Copy an image at a given path to the config folder and map it to a given name in the catalogue."""
         _logo_mapping = yaml.safe_load(self.catalogue.read_text())["logos"]
 
@@ -151,7 +138,7 @@ class Logos:
         if logo_path.exists() and logo_path.is_file():
             if name is None:
                 name = logo_path.stem.replace("-", "_")
-            install_logo_path = self.config / logo_path.name
+            install_logo_path = self._config / logo_path.name
 
             if not install_logo_path.exists():
                 shutil.copy(logo_path, install_logo_path)
@@ -163,12 +150,13 @@ class Logos:
             if name != "default":
                 return self._logos[name]
             else:
-                return self._default
+                return str(self._default)
 
         elif not logo_path.exists():
             warnings.warn(f"Logo file `{logo_path}` not found. Not setting logo.")
         elif not logo_path.is_file():
             warnings.warn(f"Logo path `{logo_path}` is a folder. Not setting logo.")
+        return None
 
     def install_ouranos_logos(self, *, permitted: bool = False) -> None:
         """Fetch and install the Ouranos logo.
@@ -184,11 +172,11 @@ class Logos:
             for orientation in ["horizontal", "vertical"]:
                 for colour in ["couleur", "blanc", "noir"]:
                     file = f"logo-ouranos-{orientation}-{colour}.svg"
-                    if not (self.config / file).exists():
+                    if not (self._config / file).exists():
                         logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
                         try:
-                            urllib.request.urlretrieve(logo_url, self.config / file)
-                            self.set_logo(self.config / file)
+                            urllib.request.urlretrieve(logo_url, self._config / file)
+                            self.set_logo(self._config / file)
                         except Exception as e:
                             logging.error(
                                 f"Error downloading or setting Ouranos logo: {e}"
@@ -196,12 +184,12 @@ class Logos:
 
             if Path(self.default).stem == "figanos_logo":
                 _default_ouranos_logo = (
-                    self.config / "logo-ouranos-horizontal-couleur.svg"
+                    self._config / "logo-ouranos-horizontal-couleur.svg"
                 )
                 warnings.warn(f"Setting default logo to {_default_ouranos_logo}.")
                 self.set_logo(_default_ouranos_logo, name="default")
             self.reload_config()
-            print(f"Ouranos logos installed at: {self.config}.")
+            print(f"Ouranos logos installed at: {self._config}.")
         else:
             warnings.warn(
                 "You have not indicated that you have permission to use the Ouranos logo. "

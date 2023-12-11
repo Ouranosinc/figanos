@@ -22,7 +22,7 @@ build:
       - sphinx-apidoc -o docs/apidoc --module-first figanos
 
 conda:
-  environment: environment.yml
+  environment: environment-dev.yml
 
 python:
   install:
