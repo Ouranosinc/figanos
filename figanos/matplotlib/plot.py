@@ -2059,7 +2059,10 @@ def partition(
 ) -> matplotlib.axes.Axes:
     """Figure of the partition of total uncertainty by components.
 
-    See Hawkins and Sutton (2009) and Lafferty and Sriver (2023) for example.
+    Uncertainty fractions can be computed with xclim
+    (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
+    Make sure the use `fraction=True` in the xclim function call.
+
 
     Parameters
     ----------
@@ -2089,6 +2092,18 @@ def partition(
     -------
     mpl.axes.Axes
     """
+    if isinstance(data, xr.Dataset):
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
+            )
+        data = data[list(data.keys())[0]].squeeze()
+
+    if data.attrs["units"] != "%":
+        raise ValueError(
+            "The units are not %. Use `fraction=True` in the xclim function call."
+        )
+
     fill_kw = empty_dict(fill_kw)
     line_kw = empty_dict(line_kw)
     fig_kw = empty_dict(fig_kw)
@@ -2115,7 +2130,7 @@ def partition(
 
         # Lead time coordinate
         time = _add_lead_time_coord(data, start_year)
-        ax.set_xlabel(f"Lead time [years from {start_year}]")
+        ax.set_xlabel(f"Lead time (years from {start_year})")
     else:
         time = data.time.dt.year
 
@@ -2144,7 +2159,6 @@ def partition(
     line_kw.setdefault("lw", 2)
     ax.plot(time, np.array(black_lines).T, **line_kw)
 
-    # TODO: think if this needs to be accessible
     ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=5))
 
