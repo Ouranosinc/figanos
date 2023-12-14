@@ -2143,7 +2143,7 @@ def partition(
     for u in data.uncertainty.values:
         if u not in ["total", "variability"]:
             present_y = past_y + data.sel(uncertainty=u)
-            num = len(data.sel(uncertainty=u).elements.values.tolist())
+            num = len(data.attrs[u])
             label = f"{u} ({num})" if show_num else u
             ax.fill_between(
                 time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
