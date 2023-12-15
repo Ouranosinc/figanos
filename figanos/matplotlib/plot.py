@@ -2112,7 +2112,7 @@ def partition(
     # select data to plot
     if isinstance(data, xr.DataArray):
         data = data.squeeze()
-    elif isinstance(data, xr.Dataset):  # in case, it was save to disk before plotting.
+    elif isinstance(data, xr.Dataset):  # in case, it was saved to disk before plotting.
         if len(data.data_vars) > 1:
             warnings.warn(
                 "data is xr.Dataset; only the first variable will be used in plot"
