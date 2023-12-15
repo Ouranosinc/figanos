@@ -2075,8 +2075,8 @@ def partition(
       If None, the x-axis will be the time in year.
       If str, the x-axis will show the number of year since start_year.
     show_num: bool
-        If True, show the number of components in parenthesis in the legend.
-        `variance` should have a coordinate `num`.
+        If True, show the number of elements for each uncertainty components in parenthesis in the legend.
+        `data` should have attributes named after the components with a list its the elements.
     fill_kw: dict
         Keyword arguments passed to `ax.fill_between`.
         It is possible to pass a dictionary of keywords for each component (uncertainty coordinates).
