@@ -29,18 +29,18 @@ repos:
     hooks:
       - id: rst-inline-touching-normal
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.11.0
+    rev: 23.12.1
     hooks:
       - id: black
         exclude: ^docs/
   - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+    rev: 5.13.2
     hooks:
       - id: isort
         args: [ '--profile=black', '--filter-files', "--add_imports='from __future__ import annotations'" ]
         exclude: ^docs/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.4
+    rev: v0.1.9
     hooks:
       - id: ruff
   - repo: https://github.com/pycqa/flake8
@@ -66,7 +66,7 @@ repos:
       - id: yamllint
         args: [ '--config-file=.yamllint.yaml' ]
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.1
+    rev: 0.27.3
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
