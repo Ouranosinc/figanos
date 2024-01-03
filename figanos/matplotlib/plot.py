@@ -2082,7 +2082,7 @@ def partition(
         It is possible to pass a dictionary of keywords for each component (uncertainty coordinates).
     line_kw: dict
         Keyword arguments passed to `ax.plot` for the lines in between the components.
-        The default is {color="k", lw=2. We recommend always using lw>=2.
+        The default is {color="k", lw=2}. We recommend always using lw>=2.
     fig_kw: dict
         Keyword arguments passed to `plt.subplots`.
     legend_kw: dict
