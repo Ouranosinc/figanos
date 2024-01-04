@@ -105,10 +105,10 @@ target-version = [
 ]
 
 [tool.bumpversion]
-current_version = "0.2.1"
+current_version = "0.2.2"
 commit = true
 tag = false
-tag_name = "{new_version}"
+tag_name = "v{new_version}"
 allow_dirty = false
 serialize = ["{major}.{minor}.{patch}"]
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
@@ -127,6 +127,7 @@ replace = "__version__ = \"{new_version}\""
 filename = ".cruft.json"
 search = "\"version\": \"{current_version}\""
 replace = "\"version\": \"{new_version}\""
+
 
 [tool.coverage.run]
 relative_files = true
