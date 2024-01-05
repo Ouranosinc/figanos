@@ -16,6 +16,7 @@ New features and enhancements
 * Use small geojson in the notebook. (:pull:`124`).
 * Add the Colours of Figanos page (:issue:`126`, :pull:`127`).
 * Figanos now adheres to PEPs 517/518/621 using the `flit` backend for building and packaging. (:pull:`135`).
+* New function ``fg.partition`` (:pull:`134`).
 
 Bug fixes
 ^^^^^^^^^
