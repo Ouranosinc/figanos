@@ -436,7 +436,7 @@ def gridmap(
         Number of levels to divide the colormap into.
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
         of the text. If a string or an int, the same values as those of the 'loc' parameter
@@ -625,10 +625,15 @@ def gridmap(
             projection,
             features,
             geometries_kw,
-            show_time,
             frame,
-            plot_data,
         )
+
+        if show_time is True:
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
 
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
@@ -637,6 +642,7 @@ def gridmap(
         ):
             im.colorbar.outline.set_visible(False)
         return ax
+
     else:
         for i, fax in enumerate(im.axs.flat):
             add_features_map(
@@ -646,10 +652,11 @@ def gridmap(
                 projection,
                 features,
                 geometries_kw,
-                False,
                 frame,
-                plot_data,
             )
+            if extend:
+                fax.set_extent(extend)
+
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
             (getattr(im, "colorbar", None) is not None)
@@ -657,29 +664,15 @@ def gridmap(
         ):
             im.cbar.outline.set_visible(False)
 
-        if show_time:
-            if show_time == "top left":
-                plt.figtext(0.8, 1.025, "Additional Text", ha="center", fontsize=12)
-            elif show_time == "top right":
-                plt.figtext(0.2, -0.075, "Additional Text", ha="center", fontsize=12)
-            elif show_time == "bottom left":
-                plt.figtext(0.2, -0.075, "Additional Text", ha="center", fontsize=12)
-            elif show_time == "bottom right" or show_time is True:
-                plt.figtext(0.8, -0.075, "Additional Text", ha="center", fontsize=12)
-            elif isinstance(show_time, tuple):
-                plt.figtext(
-                    show_time[0],
-                    show_time[1],
-                    "Additional Text",
-                    ha="center",
-                    fontsize=12,
+        if show_time is not False:
+            if show_time is True:
+                plot_coords(
+                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            else:
-                raise TypeError("show_time must be a bool, string,or tuple")
-
-        if extend:
-            for i, fax in enumerate(im.axs.flat):
-                fax.set_extent(extend)
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
 
         use_attrs.setdefault("suptitle", "long_name")
         return set_plot_attrs(use_attrs, data, facetgrid=im)
@@ -1355,7 +1348,7 @@ def scattermap(
     legend_kw : dict, optional
         Arguments to pass to plt.legend(). Some defaults {"loc": "lower left", "facecolor": "w", "framealpha": 1,
             "edgecolor": "w", "bbox_to_anchor": (-0.05, 0)}
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
         of the text. If a string or an int, the same values as those of the 'loc' parameter
@@ -1565,10 +1558,16 @@ def scattermap(
             projection,
             features,
             geometries_kw,
-            show_time,
             frame,
-            plot_data,
         )
+
+        if show_time is True:
+            plot_coords(
+                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+            )
+        elif isinstance(show_time, (str, tuple, int)):
+            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
+
         if (frame is False) and (im.colorbar is not None):
             im.colorbar.outline.set_visible(False)
 
@@ -1581,9 +1580,7 @@ def scattermap(
                 projection,
                 features,
                 geometries_kw,
-                show_time,
                 frame,
-                plot_data,
             )
 
             if sizes:
@@ -1593,6 +1590,16 @@ def scattermap(
 
         if (frame is False) and (im.cbar is not None):
             im.cbar.outline.set_visible(False)
+
+        if show_time is not False:
+            if show_time is True:
+                plot_coords(
+                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
+                )
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
 
     # size legend
     if sizes:
@@ -1937,7 +1944,7 @@ def hatchmap(
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
     legend_kw : dict, optional
         Arguments to pass to `ax.legend()`.
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
         of the text. If a string or an int, the same values as those of the 'loc' parameter

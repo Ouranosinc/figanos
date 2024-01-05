@@ -383,7 +383,7 @@ def loc_mpl(
 
     Returns
     -------
-    tuple(float, float), str, str
+    tuple(float, float), tuple(float, float), str, str
     """
     ha = "left"
     va = "bottom"
@@ -478,7 +478,7 @@ def loc_mpl(
 
 
 def plot_coords(
-    ax: matplotlib.axes.Axes,
+    ax: matplotlib.axes.Axes | None,
     xr_obj: xr.DataArray | xr.Dataset,
     loc: str | tuple[float, float] | int,
     param: str | None = None,
@@ -488,8 +488,9 @@ def plot_coords(
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes or None
         Matplotlib axes object on which to place the text.
+        If None, will use plt.figtext instead (should be used for facetgrids).
     xr_obj : xr.DataArray or xr.Dataset
         The xarray object from which to fetch the text content.
     param : {"location", "time"}, optional
@@ -524,25 +525,53 @@ def plot_coords(
     loc, box_a, ha, va = loc_mpl(loc)
 
     if text:
-        t = mpl.offsetbox.TextArea(
-            text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
-        )
+        if ax:
+            t = mpl.offsetbox.TextArea(
+                text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
+            )
 
-        tt = mpl.offsetbox.AnnotationBbox(
-            t,
-            loc,
-            xycoords="axes fraction",
-            box_alignment=box_a,
-            pad=0.05,
-            bboxprops=dict(
-                facecolor="white",
-                alpha=backgroundalpha,
-                edgecolor="w",
-                boxstyle="Square, pad=0.5",
-            ),
-        )
-        ax.add_artist(tt)
-    return ax
+            tt = mpl.offsetbox.AnnotationBbox(
+                t,
+                loc,
+                xycoords="axes fraction",
+                box_alignment=box_a,
+                pad=0.05,
+                bboxprops=dict(
+                    facecolor="white",
+                    alpha=backgroundalpha,
+                    edgecolor="w",
+                    boxstyle="Square, pad=0.5",
+                ),
+            )
+            ax.add_artist(tt)
+            return ax
+        elif not ax:
+            """
+            if loc == "top left":
+                plt.figtext(0.8, 1.025, text, ha="center", fontsize=12)
+            elif loc == "top right":
+                plt.figtext(0.2, -0.075, text, ha="center", fontsize=12)
+            elif loc == "bottom left":
+                plt.figtext(0.2, -0.075, text, ha="center", fontsize=12)
+            elif loc == "bottom right" or loc is True:
+                plt.figtext(0.8, -0.075, text, ha="center", fontsize=12)
+            elif isinstance(loc, tuple):
+                        else:
+                raise ValueError(
+                    f"{loc} option does not work with facetgrids. Try 'top left', ''top right', 'bottom left', "
+                    f"'bottom right' or a tuple of coordinates."
+                )
+            """
+            plt.figtext(
+                loc[0],
+                loc[1],
+                text,
+                ha=ha,
+                va=va,
+                fontsize=12,
+            )
+
+            return None
 
 
 def find_logo(logo: str | pathlib.Path) -> str:
@@ -1324,9 +1353,7 @@ def add_features_map(
     projection,
     features,
     geometries_kw,
-    show_time,
     frame,
-    plot_data,
 ) -> matplotlib.axes.Axes:
     """Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
 
@@ -1347,30 +1374,8 @@ def add_features_map(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
-        If True, show time (as date) at the bottom right of the figure.
-        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
-        of the text. If a string or an int, the same values as those of the 'loc' parameter
-        of matplotlib's legends are accepted.
-
-        ==================   =============
-        Location String      Location Code
-        ==================   =============
-        'upper right'        1
-        'upper left'         2
-        'lower left'         3
-        'lower right'        4
-        'right'              5
-        'center left'        6
-        'center right'       7
-        'lower center'       8
-        'upper center'       9
-        'center'             10
-        ==================   =============
     frame : bool
         Show or hide frame. Default False.
-    plot_data: xr.DataArray
-        xr.DataArray used for plotting. Used to get the time coordinate.
 
     Returns
     -------
@@ -1379,16 +1384,6 @@ def add_features_map(
     # add features
     if features:
         add_cartopy_features(ax, features)
-
-    if show_time:
-        if show_time is True:
-            plot_coords(
-                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
-            )
-        elif isinstance(show_time, (str, tuple, int)):
-            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
-        else:
-            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
     set_plot_attrs(use_attrs, data, ax)
 
