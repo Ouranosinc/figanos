@@ -510,15 +510,7 @@ def gridmap(
     elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
-        cfig_kw = fig_kw.copy()
-        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw.setdefault("figsize", fig_kw["figsize"])
-            cfig_kw.pop("figsize")
-        if cfig_kw:
-            warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
-            )
+        plot_kw = {"subplot_kws": {"projection": projection, **fig_kw}} | plot_kw
 
     # create cbar label
     if (
@@ -1437,15 +1429,7 @@ def scattermap(
     elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
-        cfig_kw = fig_kw.copy()
-        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw.setdefault("figsize", fig_kw["figsize"])
-            cfig_kw.pop("figsize")
-        if cfig_kw:
-            warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
-            )
+        plot_kw = {"subplot_kws": {"projection": projection, **fig_kw}} | plot_kw
 
     # create cbar label
     if (
@@ -2084,19 +2068,10 @@ def hatchmap(
     ):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        {
-            v.setdefault("subplot_kws", {}).setdefault("projection", projection)
-            for v in plot_kw.values()
-        }
-        cfig_kw = fig_kw.copy()
-        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw.setdefault("figsize", fig_kw["figsize"])
-            {v.setdefault("figsize", fig_kw["figsize"]) for v in plot_kw.values()}
-            cfig_kw.pop("figsize")
-        if cfig_kw:
-            warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
-            )
+        for v in plot_kw.values():
+            s = {"projection": projection} | fig_kw
+            v.setdefault("subplot_kws", {})
+            v["subplot_kws"] = s | v["subplot_kws"]
 
     pat_leg = []
     n = 0
