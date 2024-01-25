@@ -17,6 +17,7 @@ New features and enhancements
 * Add the Colours of Figanos page (:issue:`126`, :pull:`127`).
 * Figanos now adheres to PEPs 517/518/621 using the `flit` backend for building and packaging. (:pull:`135`).
 * New function ``fg.partition`` (:pull:`134`).
+* Add wrapper around ``xarray.plot.facetgrid`` for map functions (``fg.gridmap``, ``fg.scattermap``, ``fg.hatchmap``). (:issue:`51`, :pull:`136`).
 
 Bug fixes
 ^^^^^^^^^
