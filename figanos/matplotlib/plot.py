@@ -515,9 +515,10 @@ def gridmap(
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
             plot_kw.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
-        if cfig_kw:
+        if len(cfig_kw) >= 1:
+            plot_kw = {"subplot_kws": {"projection": cfig_kw}} | plot_kw
             warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
 
     # create cbar label
@@ -1442,9 +1443,10 @@ def scattermap(
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
             plot_kw.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
-        if cfig_kw:
+        if len(cfig_kw) >= 1:
+            plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
             warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
 
     # create cbar label
@@ -2090,12 +2092,13 @@ def hatchmap(
         }
         cfig_kw = fig_kw.copy()
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw.setdefault("figsize", fig_kw["figsize"])
-            {v.setdefault("figsize", fig_kw["figsize"]) for v in plot_kw.values()}
+            plot_kw[0].setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
         if cfig_kw:
+            for v in plot_kw.values():
+                {"subplots_kws": cfig_kw} | v
             warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
 
     pat_leg = []
