@@ -1,4 +1,5 @@
 """Utility functions for figanos figure-creation."""
+
 from __future__ import annotations
 
 import json
