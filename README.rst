@@ -41,7 +41,6 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
 .. _Cookiecutter: https://github.com/cookiecutter/cookiecutter
 .. _`Ouranosinc/cookiecutter-pypackage`: https://github.com/Ouranosinc/cookiecutter-pypackage
 
-
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
         :target: https://github.com/psf/black
         :alt: Python Black
@@ -50,24 +49,24 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
         :target: https://github.com/Ouranosinc/figanos/actions
         :alt: Build Status
 
-.. |coveralls| image:: https://coveralls.io/repos/github/Sarahclaude/figanos/badge.svg
-        :target: https://coveralls.io/github/Sarahclaude/figanos
+.. |coveralls| image:: https://coveralls.io/repos/github/Ouranosinc/figanos/badge.svg
+        :target: https://coveralls.io/github/Ouranosinc/figanos
         :alt: Coveralls
 
 .. |docs| image:: https://readthedocs.org/projects/figanos/badge/?version=latest
-        :target: https://figanos.readthedocs.io/en/latest/?version=latest
+        :target: https://figanos.readthedocs.io/en/latest/
         :alt: Documentation Status
 
 .. |license| image:: https://img.shields.io/pypi/l/figanos
         :target: https://github.com/Ouranosinc/figanos/blob/main/LICENSE
         :alt: License
 
-.. |ossf| image:: https://api.securityscorecards.dev/projects/github.com/Sarahclaude/figanos/badge
-        :target: https://securityscorecards.dev/viewer/?uri=github.com/Sarahclaude/figanos
+.. |ossf| image:: https://api.securityscorecards.dev/projects/github.com/Ouranosinc/figanos/badge
+        :target: https://securityscorecards.dev/viewer/?uri=github.com/Ouranosinc/figanos
         :alt: OpenSSF Scorecard
 
-.. |pre-commit| image:: https://results.pre-commit.ci/badge/github/Sarahclaude/figanos/main.svg
-        :target: https://results.pre-commit.ci/latest/github/Sarahclaude/figanos/main
+.. |pre-commit| image:: https://results.pre-commit.ci/badge/github/Ouranosinc/figanos/main.svg
+        :target: https://results.pre-commit.ci/latest/github/Ouranosinc/figanos/main
         :alt: pre-commit.ci status
 
 .. |pypi| image:: https://img.shields.io/pypi/v/figanos.svg
