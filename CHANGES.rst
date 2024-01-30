@@ -8,7 +8,7 @@ Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-* New function hatchmap (:pull:`107`).
+* New function ``fg.matplotlib.hatchmap`` (:pull:`107`).
 * Support for translating figures. Activating a locale through `xclim`'s ``metadata_locales`` option will try to use metadata saved by `xclim` or `xscen` in this locale and to translate common terms appearing in the figures. `figanos` currently ships with French translations of those terms. (:pull:`109`, :issue:`64`).
 * New ``figanos.Logos`` class added to manage and install logos stored in user's Home configuration directory. The ``figanos.utils.plot_logo`` function call signature has changed to support the new system. (:issue:`115`, :pull:`119`).
 * Logo sizing and placement now depends on `scikit-image` for resizing, and uses ``"width"`` and ``"height"`` instead of ``"zoom"``. (:issue:`123`, :pull:`119`).
@@ -16,12 +16,12 @@ New features and enhancements
 * Use small geojson in the notebook. (:pull:`124`).
 * Add the Colours of Figanos page (:issue:`126`, :pull:`127`).
 * `figanos` now adheres to PEPs 517/518/621 using the `flit` backend for building and packaging. (:pull:`135`).
-* New function ``fg.partition``. (:pull:`134`).
+* New function ``fg.matplotlib.partition``. (:pull:`134`).
 * `figanos` now uses `Semantic Versioning v2.0 <https://semver.org/spec/v2.0.0.html>`_. (:pull:`143`).
 
 Bug fixes
 ^^^^^^^^^
-* Fixed issue with the `Manifest.in` not bundling a YAML file loaded on import. (:pull:`118`).
+* Fixed packaging issue with the `Manifest.in` not bundling a YAML file loaded on import. (:pull:`118`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
@@ -32,7 +32,7 @@ Internal changes
     * Added a few `pre-commit` hooks for cleaning up notebooks and ensuring that docstrings are properly formatted.
     * Cleaned up the docstrings of a few functions, added some module-level strings, minor typo fixes.
     * Set `nbsphinx` in the documentation to always run (with th exception of one complex cell).
-    * The `environment.yml` Python version is set to 3.11 to reduce the dependency solver complexity.
+    * The `environment-dev.yml` Python version is set to `3.11` to reduce the dependency solver complexity.
 * The `cookiecutter` template has been updated to the latest commits via `cruft`. (:pull:`138`, :pull:`143`):
     * `Manifest.in`, `requirements_dev.txt`, `requirements_docs.txt` and `setup.py` have been removed.
     * `pyproject.toml` has been added, with most package configurations migrated into it.
