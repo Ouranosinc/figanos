@@ -13,8 +13,10 @@
     - any-glob-to-any-file:
       - '.editorconfig'
       - '.flake8'
+      - '.github/*.yml'
+      - '.github/workflows/*.yml'
       - '.pre-commit-config.yaml'
+      - '.readthedocs.yml'
       - '.yamllint.yml'
-      - '.github/workflows/*'
-      - 'tox.ini'
       - 'Makefile'
+      - 'tox.ini'
