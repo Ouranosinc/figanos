@@ -20,7 +20,7 @@ build:
   jobs:
     pre_build:
       - sphinx-apidoc -o docs/apidoc --private --module-first figanos
-      - sphinx-build -M gettext docs docs/_build
+      # - sphinx-build -M gettext docs docs/_build
 
 conda:
   environment: environment-dev.yml
