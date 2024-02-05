@@ -17,7 +17,7 @@ dependencies:
   - pyyaml
   - scikit-image
   - xarray
-  - xclim >=0.47
+  - xclim >=0.38
   # To make the package and notebooks usable
   - dask
   - h5py
