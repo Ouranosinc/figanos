@@ -1,6 +1,7 @@
-# This workflow requires a personal access token named `BUMPVERSION_TOKEN` with the following privileges:
-# - repo
-# - workflow
+# This workflow requires a personal access token named `BUMP_VERSION_TOKEN` with the following privileges:
+# - Contents: Read and Write
+# - Metadata: Read-Only
+# - Pull Requests: Read and Write
 
 name: "Bump Patch Version"
 
@@ -31,10 +32,25 @@ on:
       - figanos/__init__.py
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   bump_patch_version:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          disable-sudo: true
+          egress-policy: block
+          allowed-endpoints: >
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
       - uses: actions/checkout@v4.1.1
         with:
           persist-credentials: false
@@ -45,14 +61,23 @@ jobs:
         run: |
           git config --local user.email "bumpversion[bot]@ouranos.ca"
           git config --local user.name "bumpversion[bot]"
-      - name: Current Version
-        run: echo "current_version=$(grep -E '__version__'  figanos/__init__.py | cut -d ' ' -f3)"
-      - name: Bump Patch Version
+      - name: Install bump-my-version
         run: |
-          pip install bump-my-version
-          echo "Bumping version"
-          bump-my-version bump --tag patch
-          echo "new_version=$(grep -E '__version__'  figanos/__init__.py | cut -d ' ' -f3)"
+          python -m pip install "bump-my-version>=0.17.1"
+      - name: Current Version
+        run: |
+          bump-my-version show current_version
+          CURRENT_VERSION="$(grep -E '__version__'  figanos/__init__.py | cut -d ' ' -f3)"
+          echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
+      - name: Conditional Bump Version
+        run: |
+          if [[ ${{ env.CURRENT_VERSION }} =~ -dev(\.\d+)? ]]; then
+            echo "Development version (ends in 'dev(\.\d+)?'), bumping 'build' version"
+            bump-my-version show new_version --increment build
+          else
+            echo "Version is stable, bumping 'patch' version"
+            bump-my-version show new_version --increment patch
+          fi
       - name: Push Changes
         uses: ad-m/github-push-action@v0.8.0
         with:
