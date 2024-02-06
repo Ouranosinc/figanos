@@ -18,6 +18,7 @@ Need help?
    usage
    notebooks/figanos_docs
    notebooks/figanos_colours
+   notebooks/figanos_multiplots
    api
    contributing
    authors
