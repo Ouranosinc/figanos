@@ -20,6 +20,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn
 import xarray as xr
 import yaml
 from matplotlib.lines import Line2D
@@ -225,8 +226,9 @@ def get_attributes(
 def set_plot_attrs(
     attr_dict: dict[str, Any],
     xr_obj: xr.DataArray | xr.Dataset,
-    ax: matplotlib.axes.Axes,
+    ax: matplotlib.axes.Axes | None = None,
     title_loc: str = "center",
+    facetgrid: seaborn.axisgrid.FacetGrid | None = None,
     wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
     """Set plot elements according to Dataset or DataArray attributes.
@@ -262,6 +264,7 @@ def set_plot_attrs(
             "xunits",
             "cbar_label",
             "cbar_units",
+            "suptitle",
         ]:
             warnings.warn(f'Use_attrs element "{key}" not supported')
 
@@ -308,7 +311,15 @@ def set_plot_attrs(
     if "cbar_units" in attr_dict:
         pass
 
-    return ax
+    if facetgrid:
+        if "suptitle" in attr_dict:
+            suptitle = get_attributes(attr_dict["suptitle"], xr_obj)
+            facetgrid.fig.suptitle(suptitle, y=1.05)
+            facetgrid.set_titles(template="{value}")
+        return facetgrid
+
+    else:
+        return ax
 
 
 def get_suffix(string: str) -> str:
@@ -373,7 +384,7 @@ def loc_mpl(
 
     Returns
     -------
-    tuple(float, float), str, str
+    tuple(float, float), tuple(float, float), str, str
     """
     ha = "left"
     va = "bottom"
@@ -468,7 +479,7 @@ def loc_mpl(
 
 
 def plot_coords(
-    ax: matplotlib.axes.Axes,
+    ax: matplotlib.axes.Axes | None,
     xr_obj: xr.DataArray | xr.Dataset,
     loc: str | tuple[float, float] | int,
     param: str | None = None,
@@ -478,8 +489,9 @@ def plot_coords(
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes or None
         Matplotlib axes object on which to place the text.
+        If None, will use plt.figtext instead (should be used for facetgrids).
     xr_obj : xr.DataArray or xr.Dataset
         The xarray object from which to fetch the text content.
     param : {"location", "time"}, optional
@@ -514,25 +526,53 @@ def plot_coords(
     loc, box_a, ha, va = loc_mpl(loc)
 
     if text:
-        t = mpl.offsetbox.TextArea(
-            text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
-        )
+        if ax:
+            t = mpl.offsetbox.TextArea(
+                text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
+            )
 
-        tt = mpl.offsetbox.AnnotationBbox(
-            t,
-            loc,
-            xycoords="axes fraction",
-            box_alignment=box_a,
-            pad=0.05,
-            bboxprops=dict(
-                facecolor="white",
-                alpha=backgroundalpha,
-                edgecolor="w",
-                boxstyle="Square, pad=0.5",
-            ),
-        )
-        ax.add_artist(tt)
-    return ax
+            tt = mpl.offsetbox.AnnotationBbox(
+                t,
+                loc,
+                xycoords="axes fraction",
+                box_alignment=box_a,
+                pad=0.05,
+                bboxprops=dict(
+                    facecolor="white",
+                    alpha=backgroundalpha,
+                    edgecolor="w",
+                    boxstyle="Square, pad=0.5",
+                ),
+            )
+            ax.add_artist(tt)
+            return ax
+        elif not ax:
+            """
+            if loc == "top left":
+                plt.figtext(0.8, 1.025, text, ha="center", fontsize=12)
+            elif loc == "top right":
+                plt.figtext(0.2, -0.075, text, ha="center", fontsize=12)
+            elif loc == "bottom left":
+                plt.figtext(0.2, -0.075, text, ha="center", fontsize=12)
+            elif loc == "bottom right" or loc is True:
+                plt.figtext(0.8, -0.075, text, ha="center", fontsize=12)
+            elif isinstance(loc, tuple):
+                        else:
+                raise ValueError(
+                    f"{loc} option does not work with facetgrids. Try 'top left', ''top right', 'bottom left', "
+                    f"'bottom right' or a tuple of coordinates."
+                )
+            """
+            plt.figtext(
+                loc[0],
+                loc[1],
+                text,
+                ha=ha,
+                va=va,
+                fontsize=12,
+            )
+
+            return None
 
 
 def find_logo(logo: str | pathlib.Path) -> str:
@@ -1216,7 +1256,7 @@ def norm2range(
     """Normalize data across a specific range."""
     if data_range is None:
         if len(data) > 1:
-            data_range = (min(data), max(data))
+            data_range = (np.nanmin(data), np.nanmax(data))
         else:
             raise ValueError(" if data is not an array, data_range must be specified")
 
@@ -1305,3 +1345,102 @@ def size_legend_elements(
         return [legend_elements[i] for i in np.arange(0, max_entries + 1, 2)]
     else:
         return legend_elements
+
+
+def add_features_map(
+    data,
+    ax,
+    use_attrs,
+    projection,
+    features,
+    geometries_kw,
+    frame,
+) -> matplotlib.axes.Axes:
+    """Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
+
+    Parameters
+    ----------
+    data : dict, DataArray or Dataset
+        Input data do plot. If dictionary, must have only one entry.
+    ax : matplotlib axis
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'title': 'description', 'cbar_label': 'long_name', 'cbar_units': 'units'}.
+        Only the keys found in the default dict can be used.
+    projection : ccrs.Projection
+        The projection to use, taken from the cartopy.crs options. Ignored if ax is not None.
+    features : list or dict
+        Features to use, as a list or a nested dict containing kwargs. Options are the predefined features from
+        cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
+    geometries_kw : dict
+        Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
+    frame : bool
+        Show or hide frame. Default False.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    # add features
+    if features:
+        add_cartopy_features(ax, features)
+
+    set_plot_attrs(use_attrs, data, ax)
+
+    if frame is False:
+        ax.spines["geo"].set_visible(False)
+
+    # add geometries
+    if geometries_kw:
+        if "geoms" not in geometries_kw.keys():
+            warnings.warn(
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+            )
+        if "crs" in geometries_kw.keys():
+            geometries_kw["geoms"] = gpd_to_ccrs(
+                geometries_kw["geoms"], geometries_kw["crs"]
+            )
+        else:
+            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
+        geometries_kw = {
+            "crs": projection,
+            "facecolor": "none",
+            "edgecolor": "black",
+        } | geometries_kw
+
+        ax.add_geometries(**geometries_kw)
+    return ax
+
+
+def masknan_sizes_key(data, sizes) -> xr.Dataset:
+    """Mask the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
+
+    Parameters
+    ----------
+    data: xr.Dataset
+        xr.Dataset used to plot
+    sizes: str
+        Variable used to plot markersize
+
+    Returns
+    -------
+    xr.Dataset
+    """
+    # find variable name
+    kl = list(data.keys())
+    kl.remove(sizes)
+    key = kl[0]
+
+    # Create a mask for missing 'sizes' data
+    size_mask = np.isnan(data[sizes])
+
+    # Set 'key' values to NaN where 'sizes' is missing
+    data[key] = data[key].where(~size_mask)
+
+    # Create a mask for missing 'key' data
+    key_mask = np.isnan(data[key])
+
+    # Set 'sizes' values to NaN where 'key' is missing
+    data[sizes] = data[sizes].where(~key_mask)
+    return data
