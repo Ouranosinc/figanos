@@ -46,7 +46,7 @@ dependencies = [
   "seaborn",
   "scikit-image",
   "xarray",
-  "xclim>=0.38"
+  "xclim>=0.47"
 ]
 
 [project.optional-dependencies]
