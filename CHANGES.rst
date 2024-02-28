@@ -2,7 +2,7 @@
 Changelog
 =========
 
-0.3.0 (Unreleased)
+0.3.0 (2024-02-16)
 ------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
 
@@ -15,9 +15,11 @@ New features and enhancements
 * Logo plotting now supports both PNG and SVG file types (via `cairosvg`). (:pull:`119`).
 * Use small geojson in the notebook. (:pull:`124`).
 * Add the Colours of Figanos page (:issue:`126`, :pull:`127`).
-* `figanos` now adheres to PEPs 517/518/621 using the `flit` backend for building and packaging. (:pull:`135`).
-* New function ``fg.matplotlib.partition``. (:pull:`134`).
+* Figanos now adheres to PEPs 517/518/621 using the `flit` backend for building and packaging. (:pull:`135`).
+* New function ``fg.partition`` (:pull:`134`).
+* Add wrapper around ``xarray.plot.facetgrid`` for map functions (``fg.gridmap``, ``fg.scattermap``, ``fg.hatchmap``). (:issue:`51`, :pull:`136`).
 * `figanos` now uses `Semantic Versioning v2.0 <https://semver.org/spec/v2.0.0.html>`_. (:pull:`143`).
+* Add wrapper around ``xarray.plot.facetgrid`` for multiple functions (``fg.gridmap``, ``fg.scattermap``, ``fg.hatchmap``, ``fg.timeseries``). (:issue:`51`, :pull:`136`).
 
 Bug fixes
 ^^^^^^^^^
