@@ -73,10 +73,10 @@ jobs:
         run: |
           if [[ ${{ env.CURRENT_VERSION }} =~ -dev(\.\d+)? ]]; then
             echo "Development version (ends in 'dev(\.\d+)?'), bumping 'build' version"
-            bump-my-version bump build build
+            bump-my-version bump build
           else
             echo "Version is stable, bumping 'patch' version"
-            bump-my-version bump build patch
+            bump-my-version bump patch
           fi
           bump-my-version show-bump
       - name: Push Changes
