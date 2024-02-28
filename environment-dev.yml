@@ -29,16 +29,16 @@ dependencies:
   # Development
   - black ==24.1.1
   - blackdoc ==0.3.9
-  - bump-my-version >=0.17.1
+  - bump-my-version >=0.18.3
   - coverage >=6.2,<7.0
   - coveralls >=3.3.1
-  - flake8
-  - flake8-rst-docstrings
+  - flake8 >=6.1.0
+  - flake8-rst-docstrings >=0.3.0
   - isort ==5.13.2
   - pip
   - pre-commit
-  - pytest
-  - pytest-cov
+  - pytest >=7.3.1
+  - pytest-cov >=4.0.0
   - tox
   - twine
   - wheel

@@ -46,28 +46,29 @@ dependencies = [
   "seaborn",
   "scikit-image",
   "xarray",
-  "xclim>=0.38"
+  "xclim >=0.38"
 ]
 
 [project.optional-dependencies]
 dev = [
   # Dev tools and testing
-  "pip>=23.3",
-  "bump-my-version>=0.17.1",
-  "watchdog>=3.0.0",
-  "flake8>=6.1.0",
-  "flake8-alphabetize>=0.0.21",
-  "flake8-rst-docstrings>=0.3.0",
-  "flit>=3.9.0",
-  "tox>=4.5.1",
-  "coverage>=6.2.2,<8.0.0",
-  "coveralls>=3.3.1",
-  "pytest>=7.3.1",
-  "pytest-cov>=4.0.0",
-  "black==24.2.0",
-  "blackdoc==0.3.9",
-  "isort==5.13.2",
-  "pre-commit>=3.3.2"
+  "pip >=23.3",
+  "bump-my-version >=0.18.3",
+  "watchdog >=3.0.0",
+  "flake8 >=6.1.0",
+  "flake8-alphabetize >=0.0.21",
+  "flake8-rst-docstrings >=0.3.0",
+  "flit >=3.9.0",
+  "tox >=4.5.1",
+  "coverage >=6.2.2,<8.0.0",
+  "coveralls >=3.3.1",
+  "pytest >=7.3.1",
+  "pytest-cov >=4.0.0",
+  "black ==24.2.0",
+  "blackdoc ==0.3.9",
+  "isort ==5.13.2",
+  "ruff >=0.2.0",
+  "pre-commit >=3.3.2"
 ]
 docs = [
   # Documentation and examples
@@ -81,11 +82,11 @@ docs = [
   "ipython",
   "jupyter_client",
   "nbsphinx",
-  "sphinx-book-theme>=1.0",
+  "sphinx-book-theme >=1.0",
   "sphinx-codeautolink",
   "sphinx-copybutton",
   "sphinx-intl",
-  "sphinx>=6.2.0",
+  "sphinx >=6.2.0",
   "sphinxcontrib-napoleon"
 ]
 
@@ -227,16 +228,20 @@ filterwarnings = ["ignore::UserWarning"]
 testpaths = "tests"
 
 [tool.ruff]
-src = [""]
+src = ["figanos"]
 line-length = 150
 target-version = "py38"
 exclude = [
   ".eggs",
   ".git",
   "build",
-  "docs",
-  "tests"
+  "docs"
 ]
+
+[tool.ruff.format]
+line-ending = "auto"
+
+[tool.ruff.lint]
 ignore = [
   "D205",
   "D400",
@@ -250,28 +255,25 @@ select = [
   "W"
 ]
 
-[tool.ruff.flake8-bandit]
+[tool.ruff.lint.flake8-bandit]
 check-typed-exception = true
 
-[tool.ruff.format]
-line-ending = "auto"
-
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["figanos"]
 case-sensitive = true
 detect-same-package = false
 lines-after-imports = 1
 no-lines-before = ["future", "standard-library"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 15
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "figanos/**/__init__.py" = ["F401", "F403"]
 "figanos/matplotlib/**/*.py" = ["C901"]
 
-[tool.ruff.pycodestyle]
+[tool.ruff.lint.pycodestyle]
 max-doc-length = 180
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "numpy"
