@@ -2,6 +2,17 @@
 Changelog
 =========
 
+0.4.0 (unreleased)
+------------------
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`).
+
+Internal changes
+^^^^^^^^^^^^^^^^
+* Updated the `cookiecutter` template to the latest version. (:pull:`168`):
+    * Addresses a handful of misconfigurations in the GitHub Workflows.
+    * Updated `ruff` to v0.2.0 and `black` to v24.2.0.
+* Removed several unnecessary `noqa` comments from the codebase. (:pull:`168`).
+
 0.3.0 (2024-02-16)
 ------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).

@@ -7,7 +7,6 @@ import warnings
 from pathlib import Path
 from typing import Any
 
-import cartopy.feature as cfeature  # noqa
 import cartopy.mpl.geoaxes
 import geopandas as gpd
 import matplotlib

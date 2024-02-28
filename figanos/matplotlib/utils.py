@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 import cairosvg
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature  # noqa
+import cartopy.feature as cfeature
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
@@ -958,7 +958,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
         )
         return rotpole
 
-    except AttributeError:  # noqa
+    except AttributeError:
         warnings.warn("Rotated pole not found. Specify a transform if necessary.")
         return None
 

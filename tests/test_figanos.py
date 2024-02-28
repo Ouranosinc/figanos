@@ -5,7 +5,7 @@ import pkgutil
 
 import pytest
 
-# import figanos
+import figanos  # noqa: F401
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def test_content(response):
 
 def test_package_metadata():
     """Test the package metadata."""
-    project = pkgutil.get_loader("figanos").get_filename()  # noqa
+    project = pkgutil.get_loader("figanos").get_filename()
 
     metadata = pathlib.Path(project).resolve().parent.joinpath("__init__.py")
 
