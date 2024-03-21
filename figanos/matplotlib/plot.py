@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import math
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +21,6 @@ import pandas as pd
 import seaborn as sns
 import xarray as xr
 from cartopy import crs as ccrs
-from collections.abc import Iterable
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 from matplotlib.projections import PolarAxes
@@ -741,7 +741,6 @@ def gridmap(
     else:
         extent = None
 
-
     # plot
     if ax:
         plot_kw.setdefault("ax", ax)
@@ -752,8 +751,6 @@ def gridmap(
         im = plot_data.plot.pcolormesh(**plot_kw)
     else:
         im = plot_data.plot.contourf(**plot_kw)
-
-
 
     if ax:
         if extent:

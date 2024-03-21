@@ -7,9 +7,9 @@ import math
 import pathlib
 import re
 import warnings
+from copy import deepcopy
 from tempfile import NamedTemporaryFile
 from typing import Any, Callable
-from copy import deepcopy
 
 import cairosvg
 import cartopy.crs as ccrs
