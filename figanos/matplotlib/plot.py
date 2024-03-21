@@ -552,14 +552,6 @@ def gridmap(
         )
     plot_kw.setdefault("cmap", cmap)
 
-    # if levels:
-    #     lin = custom_cmap_norm(
-    #         cmap,
-    #         np.nanmin(plot_data.values),
-    #         np.nanmax(plot_data.values),
-    #         divergent=divergent,
-    #         linspace_out=True,
-    #     )
     if levels is not None:
         lin = levels
         if not isinstance(lin, Iterable):
@@ -614,7 +606,6 @@ def gridmap(
             plot_kw.pop("ylim")
     else:
         extent = None
-    # extent = None
 
     # plot
     if ax:
@@ -1578,12 +1569,6 @@ def scattermap(
     if ax:
         plot_kw_pop.setdefault("ax", ax)
     im = data.plot.scatter(**plot_kw_pop)
-    # im = (data
-    #       .where(xr.DataArray(mask, dims=plot_data.dims), drop=True)
-    #       .plot.scatter(**plot_kw_pop)
-    #       )
-    # alternative (not sure if this would always work - does plot_data always have only one dimension?)
-    # data.sel({plot_data.dims[0]: mask})
 
     # add features
     if ax:
