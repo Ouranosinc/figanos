@@ -684,7 +684,7 @@ def gridmap(
     plot_kw.setdefault("cmap", cmap)
 
     if levels is not None:
-        if isinstance(lin, Iterable):
+        if isinstance(levels, Iterable):
             lin = levels
         else:
             lin = custom_cmap_norm(
@@ -794,8 +794,8 @@ def gridmap(
                 geometries_kw,
                 frame,
             )
-            if extend:
-                fax.set_extent(extend)
+            if extent:
+                fax.set_extent(extent   )
 
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
