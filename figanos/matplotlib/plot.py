@@ -1,12 +1,12 @@
 # noqa: D100
 from __future__ import annotations
 
+import copy
 import math
 import warnings
 from pathlib import Path
 from typing import Any
 
-import cartopy.feature as cfeature  # noqa
 import cartopy.mpl.geoaxes
 import geopandas as gpd
 import matplotlib
@@ -26,7 +26,7 @@ from matplotlib.lines import Line2D
 from matplotlib.projections import PolarAxes
 from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCurveLinear
 
-from figanos.matplotlib.utils import (
+from figanos.matplotlib.utils import (  # masknan_sizes_key,
     add_cartopy_features,
     add_features_map,
     check_timeindex,
@@ -42,7 +42,6 @@ from figanos.matplotlib.utils import (
     get_scen_color,
     get_var_group,
     gpd_to_ccrs,
-    masknan_sizes_key,
     norm2range,
     plot_coords,
     process_keys,
@@ -103,6 +102,159 @@ def _plot_realizations(
     return ax
 
 
+def _plot_timeseries(
+    ax: matplotlib.axes.Axes,
+    name: str,
+    arr: xr.DataArray | xr.Dataset,
+    plot_kw: dict[str, Any],
+    non_dict_data: bool,
+    array_categ: dict[str, Any],
+    legend: str,
+) -> matplotlib.axes.Axes:
+    """Plot figanos timeseries.
+
+    Parameters
+    ----------
+    ax: matplotlib.axes.Axes
+        Axe to be used for plotting.
+    name : str
+        Dictionnary key of the plotted data.
+    arr : Dataset/DataArray
+        Data to be plotted.
+    plot_kw : dict
+        Dictionary of kwargs coming from the timeseries() input.
+    non_dic_data : bool
+        If True, plot_kw is not a dictionary.
+    array_categ: dict
+        Categories of data.
+    legend: str
+        Legend type.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    lines_dict = {}  # created to facilitate accessing line properties later
+    # look for SSP, RCP, CMIP model color
+    cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+    if get_scen_color(name, cat_colors):
+        plot_kw[name].setdefault("color", get_scen_color(name, cat_colors))
+
+    #  remove 'label' to avoid error due to double 'label' args
+    if "label" in plot_kw[name]:
+        del plot_kw[name]["label"]
+        warnings.warn(f'"label" entry in plot_kw[{name}] will be ignored.')
+
+    if array_categ[name] == "ENS_REALS_DA":
+        _plot_realizations(ax, arr, name, plot_kw, non_dict_data)
+
+    elif array_categ[name] == "ENS_REALS_DS":
+        if len(arr.data_vars) >= 2:
+            raise TypeError(
+                "To plot multiple ensembles containing realizations, use DataArrays outside a Dataset"
+            )
+        for k, sub_arr in arr.data_vars.items():
+            _plot_realizations(ax, sub_arr, name, plot_kw, non_dict_data)
+
+    elif array_categ[name] == "ENS_PCT_DIM_DS":
+        for k, sub_arr in arr.data_vars.items():
+            sub_name = (
+                sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
+            )
+
+            # extract each percentile array from the dims
+            array_data = {}
+            for pct in sub_arr.percentiles.values:
+                array_data[str(pct)] = sub_arr.sel(percentiles=pct)
+
+            # create a dictionary labeling the middle, upper and lower line
+            sorted_lines = sort_lines(array_data)
+
+            # plot
+            lines_dict[sub_name] = ax.plot(
+                array_data[sorted_lines["middle"]]["time"],
+                array_data[sorted_lines["middle"]].values,
+                label=sub_name,
+                **plot_kw[name],
+            )
+
+            ax.fill_between(
+                array_data[sorted_lines["lower"]]["time"],
+                array_data[sorted_lines["lower"]].values,
+                array_data[sorted_lines["upper"]].values,
+                color=lines_dict[sub_name][0].get_color(),
+                linewidth=0.0,
+                alpha=0.2,
+                label=fill_between_label(sorted_lines, name, array_categ, legend),
+            )
+
+    # other ensembles
+    elif array_categ[name] in [
+        "ENS_PCT_VAR_DS",
+        "ENS_STATS_VAR_DS",
+        "ENS_PCT_DIM_DA",
+    ]:
+        # extract each array from the datasets
+        array_data = {}
+        if array_categ[name] == "ENS_PCT_DIM_DA":
+            for pct in arr.percentiles:
+                array_data[str(int(pct))] = arr.sel(percentiles=int(pct))
+        else:
+            for k, v in arr.data_vars.items():
+                array_data[k] = v
+
+        # create a dictionary labeling the middle, upper and lower line
+        sorted_lines = sort_lines(array_data)
+
+        # plot
+        lines_dict[name] = ax.plot(
+            array_data[sorted_lines["middle"]]["time"],
+            array_data[sorted_lines["middle"]].values,
+            label=name,
+            **plot_kw[name],
+        )
+
+        ax.fill_between(
+            array_data[sorted_lines["lower"]]["time"],
+            array_data[sorted_lines["lower"]].values,
+            array_data[sorted_lines["upper"]].values,
+            color=lines_dict[name][0].get_color(),
+            linewidth=0.0,
+            alpha=0.2,
+            label=fill_between_label(sorted_lines, name, array_categ, legend),
+        )
+
+    #  non-ensemble Datasets
+    elif array_categ[name] == "DS":
+        ignore_label = False
+        for k, sub_arr in arr.data_vars.items():
+            sub_name = (
+                sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
+            )
+
+            #  if kwargs are specified by user, all lines are the same and we want one legend entry
+            if plot_kw[name]:
+                label = name if not ignore_label else ""
+                ignore_label = True
+            else:
+                label = sub_name
+
+            lines_dict[sub_name] = ax.plot(
+                sub_arr["time"], sub_arr.values, label=label, **plot_kw[name]
+            )
+
+    #  non-ensemble DataArrays
+    elif array_categ[name] in ["DA"]:
+        lines_dict[name] = ax.plot(arr["time"], arr.values, label=name, **plot_kw[name])
+
+    else:
+        raise ValueError(
+            "Data structure not supported"
+        )  # can probably be removed along with elif logic above,
+        # given that get_array_categ() also does this check
+    return ax
+
+
 def timeseries(
     data: dict[str, Any] | xr.DataArray | xr.Dataset,
     ax: matplotlib.axes.Axes | None = None,
@@ -129,9 +281,9 @@ def timeseries(
     plot_kw : dict, optional
         Arguments to pass to the `plot()` function. Changes how the line looks.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
-    legend : str (default 'lines')
+    legend : str (default 'lines') or dict
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
-         'edge' (out of plot), 'none' (no legend).
+         'edge' (out of plot), 'facetgrid' under figure, 'none' (no legend). If dict, arguments to pass to ax.legend().
     show_lat_lon : bool, tuple, str or int
         If True, show latitude and longitude at the bottom right of the figure.
         Can be a tuple of axis coordinates (from 0 to 1, as a fraction of the axis length) representing
@@ -196,192 +348,170 @@ def timeseries(
     # check: 'time' dimension and calendar format
     data = check_timeindex(data)
 
+    # set fig, ax if not provided
+    if ax is None and (
+        "row" not in list(plot_kw.values())[0].keys()
+        and "col" not in list(plot_kw.values())[0].keys()
+    ):
+        fig, ax = plt.subplots(**fig_kw)
+    elif ax is not None and (
+        "col" in list(plot_kw.values())[0].keys()
+        or "row" in list(plot_kw.values())[0].keys()
+    ):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        cfig_kw = fig_kw.copy()
+        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
+            list(plot_kw.values())[0].setdefault("figsize", fig_kw["figsize"])
+            cfig_kw.pop("figsize")
+        if cfig_kw:
+            for v in plot_kw.values():
+                {"subplots_kws": cfig_kw} | v
+            warnings.warn(
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
+            )
+
     # set default use_attrs values
-    use_attrs.setdefault("title", "description")
+    if ax:
+        use_attrs.setdefault("title", "description")
+    else:
+        use_attrs.setdefault("suptitle", "description")
     use_attrs.setdefault("ylabel", "long_name")
     use_attrs.setdefault("yunits", "units")
 
-    # set fig, ax if not provided
-    if ax is None:
-        fig, ax = plt.subplots(**fig_kw)
-
     # dict of array 'categories'
     array_categ = {name: get_array_categ(array) for name, array in data.items()}
-
-    lines_dict = {}  # created to facilitate accessing line properties later
-
+    cp_plot_kw = copy.deepcopy(plot_kw)
     # get data and plot
     for name, arr in data.items():
-        # look for SSP, RCP, CMIP model color
-        cat_colors = (
-            Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
-        )
-        if get_scen_color(name, cat_colors):
-            plot_kw[name].setdefault("color", get_scen_color(name, cat_colors))
-
-        #  remove 'label' to avoid error due to double 'label' args
-        if "label" in plot_kw[name]:
-            del plot_kw[name]["label"]
-            warnings.warn(f'"label" entry in plot_kw[{name}] will be ignored.')
-
-        if array_categ[name] == "ENS_REALS_DA":
-            _plot_realizations(ax, arr, name, plot_kw, non_dict_data)
-
-        elif array_categ[name] == "ENS_REALS_DS":
-            if len(arr.data_vars) >= 2:
-                raise TypeError(
-                    "To plot multiple ensembles containing realizations, use DataArrays outside a Dataset"
-                )
-            for k, sub_arr in arr.data_vars.items():
-                _plot_realizations(ax, sub_arr, name, plot_kw, non_dict_data)
-
-        elif array_categ[name] == "ENS_PCT_DIM_DS":
-            for k, sub_arr in arr.data_vars.items():
-                sub_name = (
-                    sub_arr.name
-                    if non_dict_data is True
-                    else (name + "_" + sub_arr.name)
-                )
-
-                # extract each percentile array from the dims
-                array_data = {}
-                for pct in sub_arr.percentiles.values:
-                    array_data[str(pct)] = sub_arr.sel(percentiles=pct)
-
-                # create a dictionary labeling the middle, upper and lower line
-                sorted_lines = sort_lines(array_data)
-
-                # plot
-                lines_dict[sub_name] = ax.plot(
-                    array_data[sorted_lines["middle"]]["time"],
-                    array_data[sorted_lines["middle"]].values,
-                    label=sub_name,
-                    **plot_kw[name],
-                )
-
-                ax.fill_between(
-                    array_data[sorted_lines["lower"]]["time"],
-                    array_data[sorted_lines["lower"]].values,
-                    array_data[sorted_lines["upper"]].values,
-                    color=lines_dict[sub_name][0].get_color(),
-                    linewidth=0.0,
-                    alpha=0.2,
-                    label=fill_between_label(sorted_lines, name, array_categ, legend),
-                )
-
-        # other ensembles
-        elif array_categ[name] in [
-            "ENS_PCT_VAR_DS",
-            "ENS_STATS_VAR_DS",
-            "ENS_PCT_DIM_DA",
-        ]:
-            # extract each array from the datasets
-            array_data = {}
-            if array_categ[name] == "ENS_PCT_DIM_DA":
-                for pct in arr.percentiles:
-                    array_data[str(int(pct))] = arr.sel(percentiles=int(pct))
-            else:
-                for k, v in arr.data_vars.items():
-                    array_data[k] = v
-
-            # create a dictionary labeling the middle, upper and lower line
-            sorted_lines = sort_lines(array_data)
-
-            # plot
-            lines_dict[name] = ax.plot(
-                array_data[sorted_lines["middle"]]["time"],
-                array_data[sorted_lines["middle"]].values,
-                label=name,
-                **plot_kw[name],
-            )
-
-            ax.fill_between(
-                array_data[sorted_lines["lower"]]["time"],
-                array_data[sorted_lines["lower"]].values,
-                array_data[sorted_lines["upper"]].values,
-                color=lines_dict[name][0].get_color(),
-                linewidth=0.0,
-                alpha=0.2,
-                label=fill_between_label(sorted_lines, name, array_categ, legend),
-            )
-
-        #  non-ensemble Datasets
-        elif array_categ[name] == "DS":
-            ignore_label = False
-            for k, sub_arr in arr.data_vars.items():
-                sub_name = (
-                    sub_arr.name
-                    if non_dict_data is True
-                    else (name + "_" + sub_arr.name)
-                )
-
-                #  if kwargs are specified by user, all lines are the same and we want one legend entry
-                if plot_kw[name]:
-                    label = name if not ignore_label else ""
-                    ignore_label = True
-                else:
-                    label = sub_name
-
-                lines_dict[sub_name] = ax.plot(
-                    sub_arr["time"], sub_arr.values, label=label, **plot_kw[name]
-                )
-
-        #  non-ensemble DataArrays
-        elif array_categ[name] in ["DA"]:
-            lines_dict[name] = ax.plot(
-                arr["time"], arr.values, label=name, **plot_kw[name]
-            )
-
+        if ax:
+            _plot_timeseries(ax, name, arr, plot_kw, non_dict_data, array_categ, legend)
         else:
-            raise ValueError(
-                "Data structure not supported"
-            )  # can probably be removed along with elif logic above,
-            # given that get_array_categ() also does this check
+            if name == list(data.keys())[0]:
+                # create empty DataArray with same dimensions as data first entry to create an empty xr.plot.FacetGrid
+                if isinstance(arr, xr.Dataset):
+                    da = arr[list(arr.keys())[0]]
+                else:
+                    da = arr
+                da = da.where(da == np.nan)
+                im = da.plot(**plot_kw[name], color="white")
+
+            [
+                cp_plot_kw[name].pop(key)
+                for key in ["row", "col", "figsize"]
+                if key in cp_plot_kw[name].keys()
+            ]
+
+            # plot data in every axis of the facetgrid
+            for i in range(0, im.axs.shape[0]):
+                for j in range(0, im.axs.shape[1]):
+                    sel_arr = {}
+
+                    if "row" in plot_kw[name]:
+                        sel_arr[plot_kw[name]["row"]] = i
+                    if "col" in plot_kw[name]:
+                        sel_arr[plot_kw[name]["col"]] = j
+
+                    _plot_timeseries(
+                        im.axs[i, j],
+                        name,
+                        arr.isel(**sel_arr).squeeze(),
+                        cp_plot_kw,
+                        non_dict_data,
+                        array_categ,
+                        legend,
+                    )
 
     #  add/modify plot elements according to the first entry.
-    set_plot_attrs(
-        use_attrs,
-        list(data.values())[0],
-        ax,
-        title_loc="left",
-        wrap_kw={"min_line_len": 35, "max_line_len": 48},
-    )
-    ax.set_xlabel(
-        get_localized_term("time").capitalize()
-    )  # check_timeindex() already checks for 'time'
+    if ax:
+        set_plot_attrs(
+            use_attrs,
+            list(data.values())[0],
+            ax,
+            title_loc="left",
+            wrap_kw={"min_line_len": 35, "max_line_len": 48},
+        )
+        ax.set_xlabel(
+            get_localized_term("time").capitalize()
+        )  # check_timeindex() already checks for 'time'
 
-    # other plot elements
-    if show_lat_lon:
-        if show_lat_lon is True:
-            plot_coords(
-                ax,
-                list(data.values())[0],
-                param="location",
-                loc="lower right",
-                backgroundalpha=1,
-            )
-        elif isinstance(show_lat_lon, (str, tuple, int)):
-            plot_coords(
-                ax,
-                list(data.values())[0],
-                param="location",
-                loc=show_lat_lon,
-                backgroundalpha=1,
-            )
-        else:
-            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+        # other plot elements
+        if show_lat_lon:
+            if show_lat_lon is True:
+                plot_coords(
+                    ax,
+                    list(data.values())[0],
+                    param="location",
+                    loc="lower right",
+                    backgroundalpha=1,
+                )
+            elif isinstance(show_lat_lon, (str, tuple, int)):
+                plot_coords(
+                    ax,
+                    list(data.values())[0],
+                    param="location",
+                    loc=show_lat_lon,
+                    backgroundalpha=1,
+                )
+            else:
+                raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
-    if legend is not None:
-        if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
-            pass
-        elif legend == "in_plot":
-            split_legend(ax, in_plot=True)
-        elif legend == "edge":
-            split_legend(ax, in_plot=False)
-        else:
-            ax.legend()
+        if legend is not None:
+            if not ax.get_legend_handles_labels()[0]:  # check if legend is empty
+                pass
+            elif legend == "in_plot":
+                split_legend(ax, in_plot=True)
+            elif legend == "edge":
+                split_legend(ax, in_plot=False)
+            elif isinstance(legend, dict):
+                ax.legend(**legend)
+            else:
+                ax.legend()
 
-    return ax
+        return ax
+    else:
+
+        if legend is not None:
+            if not im.axs[-1, -1].get_legend_handles_labels()[
+                0
+            ]:  # check if legend is empty
+                pass
+            elif legend == "in_plot":
+                split_legend(im.axs[-1, -1], in_plot=True)
+            elif legend == "edge":
+                split_legend(im.axs[-1, -1], in_plot=False)
+            elif isinstance(legend, dict):
+                handles, labels = im.axs[-1, -1].get_legend_handles_labels()
+                legend = {"handles": handles, "labels": labels} | legend
+                im.fig.legend(**legend)
+            elif legend == "facetgrid":
+                handles, labels = im.axs[-1, -1].get_legend_handles_labels()
+                im.fig.legend(
+                    handles,
+                    labels,
+                    loc="lower center",
+                    ncol=len(im.axs[-1, -1].lines),
+                    bbox_to_anchor=(0.5, -0.05),
+                )
+
+        if show_lat_lon:
+            if show_lat_lon is True:
+                plot_coords(
+                    None,
+                    list(data.values())[0].isel(lat=0, lon=0),
+                    param="location",
+                    loc="lower right",
+                    backgroundalpha=1,
+                )
+            elif isinstance(show_lat_lon, (str, tuple, int)):
+                plot_coords(
+                    None,
+                    list(data.values())[0].isel(lat=0, lon=0),
+                    param="location",
+                    loc=show_lat_lon,
+                    backgroundalpha=1,
+                )
+        return im
 
 
 def gridmap(
@@ -438,7 +568,7 @@ def gridmap(
         Number of levels to divide the colormap into or list of level boundaries (in data units).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
         of the text. If a string or an int, the same values as those of the 'loc' parameter
@@ -517,9 +647,10 @@ def gridmap(
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
             plot_kw.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
-        if cfig_kw:
+        if len(cfig_kw) >= 1:
+            plot_kw = {"subplot_kws": {"projection": cfig_kw}} | plot_kw
             warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
 
     # create cbar label
@@ -565,7 +696,7 @@ def gridmap(
             )
         plot_kw.setdefault("levels", lin)
 
-    elif divergent and "levels" not in plot_kw:
+    elif (divergent is not False) and ("levels" not in plot_kw):
         norm = custom_cmap_norm(
             cmap,
             np.nanmin(plot_data.values),
@@ -586,6 +717,8 @@ def gridmap(
         plot_kw.setdefault("cbar_kwargs", {})
         plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
 
+    # bug xlim / ylim + transfrom in facetgrids
+    # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
     if transform and ("xlim" in plot_kw and "ylim" in plot_kw):
         extent = [
             plot_kw["xlim"][0],
@@ -607,6 +740,7 @@ def gridmap(
     else:
         extent = None
 
+
     # plot
     if ax:
         plot_kw.setdefault("ax", ax)
@@ -618,19 +752,12 @@ def gridmap(
     else:
         im = plot_data.plot.contourf(**plot_kw)
 
-    # just a few notes for the subsequent if block:
-    # if we have a facetgrid
-    xr.plot.facetgrid.FacetGrid
-    # facets of facetgrid are
-    cartopy.mpl.geoaxes.GeoAxes
-    # if we don't have a facetgrid, depending on contourf we have either
-    cartopy.mpl.contour.GeoContourSet  # or
-    cartopy.mpl.geoaxes.GeoAxes
-    # use im.axs to access the axes instead of im.axes
+
 
     if ax:
         if extent:
             ax.set_extent(extent)
+
         ax = add_features_map(
             data,
             ax,
@@ -638,10 +765,17 @@ def gridmap(
             projection,
             features,
             geometries_kw,
-            show_time,
             frame,
-            plot_data,
         )
+        if show_time:
+            if isinstance(show_time, bool):
+                plot_coords(
+                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+                )
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
 
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
@@ -650,6 +784,7 @@ def gridmap(
         ):
             im.colorbar.outline.set_visible(False)
         return ax
+
     else:
         for i, fax in enumerate(im.axs.flat):
             add_features_map(
@@ -659,10 +794,11 @@ def gridmap(
                 projection,
                 features,
                 geometries_kw,
-                False,
                 frame,
-                plot_data,
             )
+            if extend:
+                fax.set_extent(extend)
+
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
             (getattr(im, "colorbar", None) is not None)
@@ -671,28 +807,14 @@ def gridmap(
             im.cbar.outline.set_visible(False)
 
         if show_time:
-            if show_time == "top left":
-                plt.figtext(0.8, 1.025, "Additional Text", ha="center", fontsize=12)
-            elif show_time == "top right":
-                plt.figtext(0.2, -0.075, "Additional Text", ha="center", fontsize=12)
-            elif show_time == "bottom left":
-                plt.figtext(0.2, -0.075, "Additional Text", ha="center", fontsize=12)
-            elif show_time == "bottom right" or show_time is True:
-                plt.figtext(0.8, -0.075, "Additional Text", ha="center", fontsize=12)
-            elif isinstance(show_time, tuple):
-                plt.figtext(
-                    show_time[0],
-                    show_time[1],
-                    "Additional Text",
-                    ha="center",
-                    fontsize=12,
+            if isinstance(show_time, bool):
+                plot_coords(
+                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            else:
-                raise TypeError("show_time must be a bool, string,or tuple")
-
-        if extent:
-            for i, fax in enumerate(im.axs.flat):
-                fax.set_extent(extent)
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
 
         use_attrs.setdefault("suptitle", "long_name")
         return set_plot_attrs(use_attrs, data, facetgrid=im)
@@ -798,7 +920,7 @@ def gdfmap(
     plot_kw.setdefault("vmin", df[df_col].min())
     plot_kw.setdefault("vmax", df[df_col].max())
 
-    if levels or divergent:
+    if (levels is not None) or (divergent is not False):
         norm = custom_cmap_norm(
             cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
         )
@@ -1368,7 +1490,7 @@ def scattermap(
     legend_kw : dict, optional
         Arguments to pass to plt.legend(). Some defaults {"loc": "lower left", "facecolor": "w", "framealpha": 1,
             "edgecolor": "w", "bbox_to_anchor": (-0.05, 0)}
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
         of the text. If a string or an int, the same values as those of the 'loc' parameter
@@ -1459,9 +1581,10 @@ def scattermap(
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
             plot_kw.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
-        if cfig_kw:
+        if len(cfig_kw) >= 1:
+            plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
             warnings.warn(
-                f"{list(cfig_kw.keys())} can't be passed to xr.plot(); the only option is figsize"
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
 
     # create cbar label
@@ -1579,10 +1702,19 @@ def scattermap(
             projection,
             features,
             geometries_kw,
-            show_time,
             frame,
-            plot_data,
         )
+
+        if show_time:
+            if isinstance(show_time, bool):
+                plot_coords(
+                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+                )
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
+
         if (frame is False) and (im.colorbar is not None):
             im.colorbar.outline.set_visible(False)
 
@@ -1595,9 +1727,7 @@ def scattermap(
                 projection,
                 features,
                 geometries_kw,
-                show_time,
                 frame,
-                plot_data,
             )
 
             if sizes:
@@ -1607,6 +1737,16 @@ def scattermap(
 
         if (frame is False) and (im.cbar is not None):
             im.cbar.outline.set_visible(False)
+
+        if show_time:
+            if isinstance(show_time, bool):
+                plot_coords(
+                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
+                )
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
 
     # size legend
     if sizes:
@@ -1653,7 +1793,7 @@ def scattermap(
     if ax:
         return ax
     else:
-        im.fig.suptitle(get_attributes("long_name", data), y=1.05)
+        im.fig.suptitle(get_attributes("long_name", data))
         im.set_titles(template="{value}")
         return im
 
@@ -1951,7 +2091,7 @@ def hatchmap(
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
     legend_kw : dict, optional
         Arguments to pass to `ax.legend()`.
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
+    show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
         of the text. If a string or an int, the same values as those of the 'loc' parameter
@@ -2044,13 +2184,60 @@ def hatchmap(
             if hasattr(list(plot_data.values())[0], "rotated_pole"):
                 transform = get_rotpole(list(plot_data.values())[0])
 
-    # setup fig, ax
-    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
-        fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
-    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
-        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    # bug xlim / ylim + transfrom in facetgrids
+    # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
+    if transform and (
+        "xlim" in list(plot_kw.values())[0] and "ylim" in list(plot_kw.values())[0]
+    ):
+        extend = [
+            list(plot_kw.values())[0]["xlim"][0],
+            list(plot_kw.values())[0]["xlim"][1],
+            list(plot_kw.values())[0]["ylim"][0],
+            list(plot_kw.values())[0]["ylim"][1],
+        ]
+        {v.pop("xlim") for v in plot_kw.values()}
+        {v.pop("ylim") for v in plot_kw.values()}
+
+    elif transform and (
+        "xlim" in list(plot_kw.values())[0] or "ylim" in list(plot_kw.values())[0]
+    ):
+        extend = None
+        warnings.warn(
+            "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
+        )
+        if "xlim" in list(plot_kw.values())[0].keys():
+            {v.pop("xlim") for v in plot_kw.values()}
+        if "ylim" in list(plot_kw.values())[0].keys():
+            {v.pop("ylim") for v in plot_kw.values()}
     else:
-        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+        extend = None
+
+    # setup fig, ax
+    if ax is None and (
+        "row" not in list(plot_kw.values())[0].keys()
+        and "col" not in list(plot_kw.values())[0].keys()
+    ):
+        fig, ax = plt.subplots(subplot_kw={"projection": projection}, **fig_kw)
+    elif ax is not None and (
+        "col" in list(plot_kw.values())[0].keys()
+        or "row" in list(plot_kw.values())[0].keys()
+    ):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        {
+            v.setdefault("subplot_kws", {}).setdefault("projection", projection)
+            for v in plot_kw.values()
+        }
+        cfig_kw = fig_kw.copy()
+        if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
+            plot_kw[0].setdefault("figsize", fig_kw["figsize"])
+            cfig_kw.pop("figsize")
+        if cfig_kw:
+            for v in plot_kw.values():
+                {"subplots_kws": cfig_kw} | v
+            warnings.warn(
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
+            )
 
     pat_leg = []
     n = 0
@@ -2082,11 +2269,17 @@ def hatchmap(
             else:
                 v.coords["mask"] = (("rlat", "rlon"), mask)
 
-            im = v.where(mask is not True).plot.contourf(
-                ax=ax, transform=transform, **plot_kw[k]
-            )
+            plot_kw[k].setdefault("transform", transform)
+            if ax:
+                plot_kw[k].setdefault("ax", ax)
+
+            im = v.where(mask is not True).plot.contourf(**plot_kw[k])
             artists, labels = im.legend_elements(str_format="{:2.1f}".format)
-            ax.legend(artists, labels, **legend_kw)
+
+            if ax:
+                ax.legend(artists, labels, **legend_kw)
+            else:
+                im.figlegend = im.fig.legend(**legend_kw)
 
         elif len(plot_data) > 1 and "levels" in plot_kw[k]:
             raise TypeError(
@@ -2095,10 +2288,46 @@ def hatchmap(
         else:
             # since pattern remove colors and colorbar from plotting (done by gridmap)
             plot_kw[k] = {"colors": "none", "add_colorbar": False} | plot_kw[k]
+
             if "hatches" not in plot_kw[k].keys():
                 plot_kw[k]["hatches"] = dfh[n]
                 n += 1
-            im = v.plot.contourf(ax=ax, transform=transform, **plot_kw[k])
+
+            plot_kw[k].setdefault("transform", transform)
+            if ax:
+                im = v.plot.contourf(ax=ax, **plot_kw[k])
+
+            if not ax:
+                if k == list(plot_data.keys())[0]:
+                    im = v.plot.contourf(**plot_kw[k])
+
+                for i, fax in enumerate(im.axs.flat):
+                    if len(plot_data) > 1 and k != list(plot_data.keys())[0]:
+                        # select data to plot from DataSet in loop to plot on facetgrids axis
+                        c_pkw = plot_kw[k].copy()
+                        c_pkw.pop("subplot_kws")
+                        sel = {}
+                        if "row" in c_pkw.keys():
+                            sel[c_pkw["row"]] = i
+                            c_pkw.pop("row")
+                        elif "col" in c_pkw.keys():
+                            sel[c_pkw["col"]] = i
+                            c_pkw.pop("col")
+                        v.isel(sel).plot.contourf(ax=fax, **c_pkw)
+
+                    if k == list(plot_data.keys())[-1]:
+                        add_features_map(
+                            dattrs,
+                            fax,
+                            use_attrs,
+                            projection,
+                            features,
+                            geometries_kw,
+                            frame,
+                        )
+                        if extend:
+                            fax.set_extent(extend)
+
             pat_leg.append(
                 matplotlib.patches.Patch(
                     hatch=plot_kw[k]["hatches"], fill=False, label=k
@@ -2111,47 +2340,201 @@ def hatchmap(
             "handleheight": 2,
             "handlelength": 4,
         } | legend_kw
-        ax.legend(handles=pat_leg, **legend_kw)
+
+        if ax:
+            ax.legend(handles=pat_leg, **legend_kw)
+        else:
+            im.figlegend = im.fig.legend(handles=pat_leg, **legend_kw)
 
     # add features
-    if features:
-        add_cartopy_features(ax, features)
+    if ax:
+        if extend:
+            ax.set_extend(extend)
+        if dattrs:
+            use_attrs.setdefault("title", "description")
 
-    if show_time:
-        if show_time is True:
-            plot_coords(ax, v, param="time", loc="lower right", backgroundalpha=1)
-        elif isinstance(show_time, (str, tuple, int)):
-            plot_coords(ax, v, param="time", loc=show_time, backgroundalpha=1)
-        else:
-            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
+        ax = add_features_map(
+            dattrs,
+            ax,
+            use_attrs,
+            projection,
+            features,
+            geometries_kw,
+            frame,
+        )
 
-    if frame is False:
-        ax.spines["geo"].set_visible(False)
-        if im.colorbar is not None:
+        if show_time:
+            if isinstance(show_time, bool):
+                plot_coords(
+                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+                )
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
+                )
+
+        # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
+        if (frame is False) and (
+            (getattr(im, "colorbar", None) is not None)
+            or (getattr(im, "cbar", None) is not None)
+        ):
             im.colorbar.outline.set_visible(False)
 
-    # add geometries
-    if geometries_kw:
-        if "geoms" not in geometries_kw.keys():
+            set_plot_attrs(use_attrs, dattrs, ax, wrap_kw={"max_line_len": 60})
+        return ax
+
+    else:
+        # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
+        if (frame is False) and (
+            (getattr(im, "colorbar", None) is not None)
+            or (getattr(im, "cbar", None) is not None)
+        ):
+            im.cbar.outline.set_visible(False)
+
+        if show_time:
+            if show_time is True:
+                plot_coords(
+                    None, dattrs, param="time", loc="lower right", backgroundalpha=1
+                )
+            elif isinstance(show_time, (str, tuple, int)):
+                plot_coords(
+                    None, dattrs, param="time", loc=show_time, backgroundalpha=1
+                )
+        if dattrs:
+            use_attrs.setdefault("suptitle", "long_name")
+            set_plot_attrs(use_attrs, dattrs, facetgrid=im)
+        return im
+
+
+def _add_lead_time_coord(da, ref):
+    """Add a lead time coordinate to the data. Modifies da in-place."""
+    lead_time = da.time.dt.year - int(ref)
+    da["Lead time"] = lead_time
+    da["Lead time"].attrs["units"] = f"years from {ref}"
+    return lead_time
+
+
+def partition(
+    data: xr.DataArray | xr.Dataset,
+    ax: matplotlib.axes.Axes | None = None,
+    start_year: str | None = None,
+    show_num: bool = True,
+    fill_kw: dict[str, Any] | None = None,
+    line_kw: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | None = None,
+) -> matplotlib.axes.Axes:
+    """Figure of the partition of total uncertainty by components.
+
+    Uncertainty fractions can be computed with xclim
+    (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
+    Make sure the use `fraction=True` in the xclim function call.
+
+
+    Parameters
+    ----------
+    data: xr.DataArray or xr.Dataset
+      Variance over time of the different components of uncertainty.
+      Output of a `xclim.ensembles._partitioning` function.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot
+    start_year: str
+      If None, the x-axis will be the time in year.
+      If str, the x-axis will show the number of year since start_year.
+    show_num: bool
+        If True, show the number of elements for each uncertainty components in parenthesis in the legend.
+        `data` should have attributes named after the components with a list its the elements.
+    fill_kw: dict
+        Keyword arguments passed to `ax.fill_between`.
+        It is possible to pass a dictionary of keywords for each component (uncertainty coordinates).
+    line_kw: dict
+        Keyword arguments passed to `ax.plot` for the lines in between the components.
+        The default is {color="k", lw=2}. We recommend always using lw>=2.
+    fig_kw: dict
+        Keyword arguments passed to `plt.subplots`.
+    legend_kw: dict
+        Keyword arguments passed to `ax.legend`.
+
+    Returns
+    -------
+    mpl.axes.Axes
+    """
+    if isinstance(data, xr.Dataset):
+        if len(data.data_vars) > 1:
             warnings.warn(
-                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+                "data is xr.Dataset; only the first variable will be used in plot"
             )
-        if "crs" in geometries_kw.keys():
-            geometries_kw["geoms"] = gpd_to_ccrs(
-                geometries_kw["geoms"], geometries_kw["crs"]
+        data = data[list(data.keys())[0]].squeeze()
+
+    if data.attrs["units"] != "%":
+        raise ValueError(
+            "The units are not %. Use `fraction=True` in the xclim function call."
+        )
+
+    fill_kw = empty_dict(fill_kw)
+    line_kw = empty_dict(line_kw)
+    fig_kw = empty_dict(fig_kw)
+    legend_kw = empty_dict(legend_kw)
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        data = data.squeeze()
+    elif isinstance(data, xr.Dataset):  # in case, it was saved to disk before plotting.
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
             )
-        else:
-            geometries_kw["geoms"] = gpd_to_ccrs(geometries_kw["geoms"], projection)
-        geometries_kw = {
-            "crs": projection,
-            "facecolor": "none",
-            "edgecolor": "black",
-        } | geometries_kw
+        data = data[list(data.keys())[0]].squeeze()
+    else:
+        raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
-        ax.add_geometries(**geometries_kw)
+    if ax is None:
+        fig, ax = plt.subplots(**fig_kw)
 
-    if dattrs:
-        use_attrs.setdefault("title", "description")
-        set_plot_attrs(use_attrs, dattrs, ax, wrap_kw={"max_line_len": 60})
+    # Select data from reference year onward
+    if start_year:
+        data = data.sel(time=slice(start_year, None))
+
+        # Lead time coordinate
+        time = _add_lead_time_coord(data, start_year)
+        ax.set_xlabel(f"Lead time (years from {start_year})")
+    else:
+        time = data.time.dt.year
+
+    # fill_kw that are direct (not with uncertainty as key)
+    fk_direct = {k: v for k, v in fill_kw.items() if (k not in data.uncertainty.values)}
+
+    # Draw areas
+    past_y = 0
+    black_lines = []
+    for u in data.uncertainty.values:
+        if u not in ["total", "variability"]:
+            present_y = past_y + data.sel(uncertainty=u)
+            num = len(data.attrs.get(u, []))  # compatible with pre PR PR #1529
+            label = f"{u} ({num})" if show_num and num else u
+            ax.fill_between(
+                time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
+            )
+            black_lines.append(present_y)
+            past_y = present_y
+    ax.fill_between(
+        time, past_y, 100, label="variability", **fill_kw.get("variability", fk_direct)
+    )
+
+    # Draw black lines
+    line_kw.setdefault("color", "k")
+    line_kw.setdefault("lw", 2)
+    ax.plot(time, np.array(black_lines).T, **line_kw)
+
+    ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(20))
+    ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=5))
+
+    ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10))
+    ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator(n=2))
+
+    ax.set_ylabel(f"{data.attrs['long_name']} ({data.attrs['units']})")  #
+
+    ax.set_ylim(0, 100)
+    ax.legend(**legend_kw)
 
     return ax

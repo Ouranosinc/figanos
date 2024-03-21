@@ -18,9 +18,16 @@
     {
       "name": "Beaupré-Laperrière, Alexis ",
       "affiliation": "Ouranos, Montréal, Québec, Canada"
+    },
+    {
+      "name": "Rondeau-Genesse, Gabriel",
+      "affiliation": "Ouranos",
+      "orcid": "0000-0003-3389-9406"
     }
   ],
-  "keywords": [],
+  "keywords": [
+    "figanos"
+  ],
   "license": "Apache-2.0",
   "language": "eng",
   "communities": [],

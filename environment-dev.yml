@@ -4,6 +4,7 @@ channels:
   - default
 dependencies:
   - python>=3.11,<3.12
+  - flit
   # Main
   - cartopy
   - cairosvg
@@ -16,7 +17,7 @@ dependencies:
   - pyyaml
   - scikit-image
   - xarray
-  - xclim >=0.38
+  - xclim >=0.47
   # To make the package and notebooks usable
   - dask
   - h5py
@@ -26,16 +27,18 @@ dependencies:
   - geoviews
   - holoviews
   # Development
-  - black
-  - bump2version
-  - coverage
-  - coveralls
-  - flake8
-  - isort
+  - black ==24.1.1
+  - blackdoc ==0.3.9
+  - bump-my-version >=0.18.3
+  - coverage >=6.2,<7.0
+  - coveralls >=3.3.1
+  - flake8 >=6.1.0
+  - flake8-rst-docstrings >=0.3.0
+  - isort ==5.13.2
   - pip
   - pre-commit
-  - pytest
-  - pytest-cov
+  - pytest >=7.3.1
+  - pytest-cov >=4.0.0
   - tox
   - twine
   - wheel
@@ -45,10 +48,9 @@ dependencies:
   - nbsphinx
   - notebook
   - pandoc
-  - sphinx
+  - sphinx >=6.2.0
   - sphinx-autoapi
-  - sphinx-book-theme
-  - sphinx-click
+  - sphinx-book-theme >=1.0.0
   - sphinx-codeautolink
   - sphinx-copybutton
   - sphinxcontrib-napoleon

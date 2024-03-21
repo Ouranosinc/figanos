@@ -1,4 +1,5 @@
 """Utility functions for figanos figure-creation."""
+
 from __future__ import annotations
 
 import json
@@ -12,7 +13,7 @@ from copy import deepcopy
 
 import cairosvg
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature  # noqa
+import cartopy.feature as cfeature
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.axes
@@ -77,11 +78,11 @@ def get_localized_term(term, locale=None):
     return TERMS[term][locale]
 
 
-def empty_dict(param):
+def empty_dict(param) -> dict:
     """Return empty dict if input is None."""
     if param is None:
-        param = {}
-    return deepcopy(param)  # avoid modifying original dict when popping items
+        param = dict()
+    return deepcopy(param)  # avoid modifying original input dict when popping items
 
 
 def check_timeindex(
@@ -177,7 +178,7 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
 
 
 def get_attributes(
-    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str = None
+    string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str | None = None
 ) -> str:
     """Fetch attributes or dims corresponding to keys from Xarray objects.
 
@@ -372,8 +373,8 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 
 
 def loc_mpl(
-    loc: str | tuple[float, float] | int,
-) -> tuple[tuple[float, float], tuple[float, float], str, str]:
+    loc: str | tuple[int | float, int | float] | int,
+) -> tuple[tuple[float, float], tuple[int | float, int | float], str, str]:
     """Find coordinates and alignment associated to loc string.
 
     Parameters
@@ -384,7 +385,7 @@ def loc_mpl(
 
     Returns
     -------
-    tuple(float, float), str, str
+    tuple(float, float), tuple(float, float), str, str
     """
     ha = "left"
     va = "bottom"
@@ -479,7 +480,7 @@ def loc_mpl(
 
 
 def plot_coords(
-    ax: matplotlib.axes.Axes,
+    ax: matplotlib.axes.Axes | None,
     xr_obj: xr.DataArray | xr.Dataset,
     loc: str | tuple[float, float] | int,
     param: str | None = None,
@@ -489,8 +490,9 @@ def plot_coords(
 
     Parameters
     ----------
-    ax : matplotlib.axes.Axes
+    ax : matplotlib.axes.Axes or None
         Matplotlib axes object on which to place the text.
+        If None, will use plt.figtext instead (should be used for facetgrids).
     xr_obj : xr.DataArray or xr.Dataset
         The xarray object from which to fetch the text content.
     param : {"location", "time"}, optional
@@ -525,25 +527,53 @@ def plot_coords(
     loc, box_a, ha, va = loc_mpl(loc)
 
     if text:
-        t = mpl.offsetbox.TextArea(
-            text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
-        )
+        if ax:
+            t = mpl.offsetbox.TextArea(
+                text, textprops=dict(transform=ax.transAxes, ha=ha, va=va)
+            )
 
-        tt = mpl.offsetbox.AnnotationBbox(
-            t,
-            loc,
-            xycoords="axes fraction",
-            box_alignment=box_a,
-            pad=0.05,
-            bboxprops=dict(
-                facecolor="white",
-                alpha=backgroundalpha,
-                edgecolor="w",
-                boxstyle="Square, pad=0.5",
-            ),
-        )
-        ax.add_artist(tt)
-    return ax
+            tt = mpl.offsetbox.AnnotationBbox(
+                t,
+                loc,
+                xycoords="axes fraction",
+                box_alignment=box_a,
+                pad=0.05,
+                bboxprops=dict(
+                    facecolor="white",
+                    alpha=backgroundalpha,
+                    edgecolor="w",
+                    boxstyle="Square, pad=0.5",
+                ),
+            )
+            ax.add_artist(tt)
+            return ax
+        elif not ax:
+            """
+            if loc == "top left":
+                plt.figtext(0.8, 1.025, text, ha="center", fontsize=12)
+            elif loc == "top right":
+                plt.figtext(0.2, -0.075, text, ha="center", fontsize=12)
+            elif loc == "bottom left":
+                plt.figtext(0.2, -0.075, text, ha="center", fontsize=12)
+            elif loc == "bottom right" or loc is True:
+                plt.figtext(0.8, -0.075, text, ha="center", fontsize=12)
+            elif isinstance(loc, tuple):
+                        else:
+                raise ValueError(
+                    f"{loc} option does not work with facetgrids. Try 'top left', ''top right', 'bottom left', "
+                    f"'bottom right' or a tuple of coordinates."
+                )
+            """
+            plt.figtext(
+                loc[0],
+                loc[1],
+                text,
+                ha=ha,
+                va=va,
+                fontsize=12,
+            )
+
+            return None
 
 
 def find_logo(logo: str | pathlib.Path) -> str:
@@ -586,11 +616,11 @@ def load_image(
         The scaled image.
     """
     if pathlib.Path(im).suffix == ".png":
-        im = mpl.pyplot.imread(im)
-        original_height, original_width = im.shape[:2]
+        image = mpl.pyplot.imread(im)
+        original_height, original_width = image.shape[:2]
 
         if height is None and width is None:
-            return im
+            return image
 
         warnings.warn(
             "The scikit-image library is used to resize PNG images. This may affect logo image quality."
@@ -608,7 +638,7 @@ def load_image(
                 # Only height is provided, derive zoom factor for width based on aspect ratio
                 width = (height / original_height) * original_width
 
-        return resize(im, (height, width, im.shape[2]), anti_aliasing=True)
+        return resize(image, (height, width, image.shape[2]), anti_aliasing=True)
 
     elif pathlib.Path(im).suffix == ".svg":
         cairo_kwargs = dict(url=im)
@@ -791,7 +821,7 @@ def fill_between_label(
 def get_var_group(
     path_to_json: str | pathlib.Path,
     da: xr.DataArray | None = None,
-    unique_str: str = None,
+    unique_str: str | None = None,
 ) -> str:
     """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
 
@@ -929,7 +959,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
         )
         return rotpole
 
-    except AttributeError:  # noqa
+    except AttributeError:
         warnings.warn("Rotated pole not found. Specify a transform if necessary.")
         return None
 
@@ -1059,7 +1089,7 @@ def get_mpl_styles() -> dict[str, str]:
     folder = pathlib.Path(__file__).parent / "style/"
     paths = sorted(folder.glob("*.mplstyle"))
     names = [str(p).split("/")[-1].removesuffix(".mplstyle") for p in paths]
-    styles = {name: path for name, path in zip(names, paths)}
+    styles = {str(name): path for name, path in zip(names, paths)}
 
     return styles
 
@@ -1173,14 +1203,16 @@ def custom_cmap_norm(
 
     # center
     center = None
-    if divergent:
+    if divergent is not False:
         if divergent is True:
             center = 0
-        else:
+        elif isinstance(divergent, (int, float)):
             center = divergent
 
     # build norm with options
-    if levels and center and isinstance(levels, int):
+    if center is not None and isinstance(levels, int):
+        if center <= rvmin or center >= rvmax:
+            raise ValueError("vmin, center and vmax must be in ascending order.")
         if levels % 2 == 1:
             half_levels = int((levels + 1) / 2) + 1
         else:
@@ -1197,8 +1229,12 @@ def custom_cmap_norm(
         if linspace_out:
             return lin
 
-    elif levels:
+    elif levels is not None:
         if isinstance(levels, list):
+            if center is not None:
+                warnings.warn(
+                    "Divergent argument ignored when levels is a list. Use levels as a number instead."
+                )
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
         else:
             lin = np.linspace(rvmin, rvmax, num=levels + 1)
@@ -1207,7 +1243,7 @@ def custom_cmap_norm(
             if linspace_out:
                 return lin
 
-    elif center:
+    elif center is not None:
         norm = matplotlib.colors.TwoSlopeNorm(center, vmin=rvmin, vmax=rvmax)
     else:
         norm = matplotlib.colors.Normalize(rvmin, rvmax)
@@ -1319,9 +1355,7 @@ def add_features_map(
     projection,
     features,
     geometries_kw,
-    show_time,
     frame,
-    plot_data,
 ) -> matplotlib.axes.Axes:
     """Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
 
@@ -1342,30 +1376,8 @@ def add_features_map(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    show_time : bool, tuple or {'top left', 'top right', 'bottom left', 'bottom right'}
-        If True, show time (as date) at the bottom right of the figure.
-        Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
-        of the text. If a string or an int, the same values as those of the 'loc' parameter
-        of matplotlib's legends are accepted.
-
-        ==================   =============
-        Location String      Location Code
-        ==================   =============
-        'upper right'        1
-        'upper left'         2
-        'lower left'         3
-        'lower right'        4
-        'right'              5
-        'center left'        6
-        'center right'       7
-        'lower center'       8
-        'upper center'       9
-        'center'             10
-        ==================   =============
     frame : bool
         Show or hide frame. Default False.
-    plot_data: xr.DataArray
-        xr.DataArray used for plotting. Used to get the time coordinate.
 
     Returns
     -------
@@ -1374,16 +1386,6 @@ def add_features_map(
     # add features
     if features:
         add_cartopy_features(ax, features)
-
-    if show_time:
-        if show_time is True:
-            plot_coords(
-                ax, plot_data, param="time", loc="lower right", backgroundalpha=1
-            )
-        elif isinstance(show_time, (str, tuple, int)):
-            plot_coords(ax, plot_data, param="time", loc=show_time, backgroundalpha=1)
-        else:
-            raise TypeError(" show_lat_lon must be a bool, string, int, or tuple")
 
     set_plot_attrs(use_attrs, data, ax)
 

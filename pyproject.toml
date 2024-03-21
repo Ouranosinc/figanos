@@ -1,0 +1,279 @@
+[build-system]
+requires = ["flit_core >=3.8,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "figanos"
+authors = [
+  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"},
+  {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
+  {name = "Alexis Beaupré-Laperrière", email = "Beaupre-Laperriere.Alexis@ouranos.ca"}
+]
+maintainers = [
+  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"},
+  {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
+  {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
+]
+readme = {file = "README.rst", content-type = "text/x-rst"}
+requires-python = ">=3.8.0"
+keywords = ["figanos"]
+license = {file = "LICENSE"}
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  # "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython"
+]
+dynamic = ["description", "version"]
+dependencies = [
+  "cartopy",
+  "cairosvg",
+  "geopandas",
+  "matplotlib",
+  "numpy",
+  "pandas",
+  "platformdirs",
+  "pyyaml",
+  "seaborn",
+  "scikit-image",
+  "xarray",
+  "xclim >=0.47"
+]
+
+[project.optional-dependencies]
+dev = [
+  # Dev tools and testing
+  "pip >=23.3",
+  "bump-my-version >=0.18.3",
+  "watchdog >=3.0.0",
+  "flake8 >=6.1.0",
+  "flake8-alphabetize >=0.0.21",
+  "flake8-rst-docstrings >=0.3.0",
+  "flit >=3.9.0",
+  "tox >=4.5.1",
+  "coverage >=6.2.2,<8.0.0",
+  "coveralls >=3.3.1",
+  "pytest >=7.3.1",
+  "pytest-cov >=4.0.0",
+  "black ==24.3.0",
+  "blackdoc ==0.3.9",
+  "isort ==5.13.2",
+  "ruff >=0.2.0",
+  "pre-commit >=3.3.2"
+]
+docs = [
+  # Documentation and examples
+  "dask",
+  "h5py",
+  "netcdf4",
+  "zarr",
+  "geoviews",
+  "holoviews",
+  "ipykernel",
+  "ipython",
+  "jupyter_client",
+  "nbsphinx",
+  "sphinx-book-theme >=1.0",
+  "sphinx-codeautolink",
+  "sphinx-copybutton",
+  "sphinx-intl",
+  "sphinx >=6.2.0",
+  "sphinxcontrib-napoleon"
+]
+
+[project.urls]
+"Homepage" = "https://figanos.readthedocs.io/"
+"Changelog" = "https://figanos.readthedocs.io/en/stable/changes.html"
+"Issue tracker" = "https://github.com/Ouranosinc/figanos/issues"
+"Source" = "https://github.com/Ouranosinc/figanos"
+"About Ouranos" = "https://www.ouranos.ca/en/"
+
+[tool]
+
+[tool.black]
+target-version = [
+  "py38",
+  "py39",
+  "py310",
+  "py311",
+  "py312"
+]
+
+[tool.bumpversion]
+current_version = "0.3.1-dev.0"
+commit = true
+commit_args = "--no-verify"
+tag = false
+tag_name = "v{new_version}"
+allow_dirty = false
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(\\-(?P<release>[a-z]+)(\\.(?P<build>\\d+)))?"
+serialize = [
+  "{major}.{minor}.{patch}-{release}.{build}",
+  "{major}.{minor}.{patch}"
+]
+
+[[tool.bumpversion.files]]
+filename = "figanos/__init__.py"
+search = "__version__ = \"{current_version}\""
+replace = "__version__ = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "tests/test_figanos.py"
+search = "__version__ = \"{current_version}\""
+replace = "__version__ = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = ".cruft.json"
+search = "\"version\": \"{current_version}\""
+replace = "\"version\": \"{new_version}\""
+
+[tool.bumpversion.parts.build]
+independent = false
+
+[tool.bumpversion.parts.release]
+optional_value = "release"
+values = [
+  "dev",
+  "release"
+]
+
+[tool.coverage.run]
+relative_files = true
+include = ["figanos/*"]
+omit = ["tests/*.py"]
+
+[tool.flit.sdist]
+include = [
+  ".zenodo.json",
+  "AUTHORS.rst",
+  "CHANGES.rst",
+  "CONTRIBUTING.rst",
+  "LICENSE",
+  "Makefile",
+  "README.rst",
+  "docs/*.rst",
+  "docs/Makefile",
+  "docs/_static/_images/*.gif",
+  "docs/_static/_images/*.jpg",
+  "docs/_static/_images/*.png",
+  "docs/_static/_images/*.rst",
+  "docs/conf.py",
+  "docs/make.bat",
+  "docs/notebooks/.ipynb",
+  "environment-dev.yml",
+  "tests/*.py",
+  "figanos",
+  "tox.ini"
+]
+exclude = [
+  "*.py[co]",
+  "__pycache__",
+  ".coveralls.yml",
+  ".editorconfig",
+  ".flake8",
+  ".gitignore",
+  ".pre-commit-config.yaml",
+  ".readthedocs.yml",
+  ".yamllint.yaml",
+  "docs/_*",
+  "docs/apidoc/modules.rst",
+  "docs/apidoc/figanos*.rst",
+  "docs/locales"
+]
+
+[tool.isort]
+profile = "black"
+py_version = 38
+
+[tool.mypy]
+python_version = 3.8
+show_error_codes = true
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+  "cairosvg.*",
+  "cartopy.*",
+  "matplotlib.*",
+  "mpl_toolkits.*",
+  "geopandas.*",
+  "holoviews.*",
+  "numpy.*",
+  "pandas.*",
+  "scipy.*",
+  "seaborn.*",
+  "skimage.transform.*",
+  "xarray.*",
+  "xclim.*",
+  "yaml.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = [
+  "--verbose",
+  "--color=yes"
+]
+filterwarnings = ["ignore::UserWarning"]
+testpaths = "tests"
+
+[tool.ruff]
+src = ["figanos"]
+line-length = 150
+target-version = "py38"
+exclude = [
+  ".eggs",
+  ".git",
+  "build",
+  "docs"
+]
+
+[tool.ruff.format]
+line-ending = "auto"
+
+[tool.ruff.lint]
+ignore = [
+  "D205",
+  "D400",
+  "D401"
+]
+select = [
+  "C9",
+  "D",
+  "E",
+  "F",
+  "W"
+]
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["figanos"]
+case-sensitive = true
+detect-same-package = false
+lines-after-imports = 1
+no-lines-before = ["future", "standard-library"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.per-file-ignores]
+"figanos/**/__init__.py" = ["F401", "F403"]
+"figanos/matplotlib/**/*.py" = ["C901"]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 180
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
