@@ -795,7 +795,7 @@ def gridmap(
                 frame,
             )
             if extent:
-                fax.set_extent(extent   )
+                fax.set_extent(extent)
 
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
