@@ -552,6 +552,14 @@ def gridmap(
         )
     plot_kw.setdefault("cmap", cmap)
 
+    # if levels:
+    #     lin = custom_cmap_norm(
+    #         cmap,
+    #         np.nanmin(plot_data.values),
+    #         np.nanmax(plot_data.values),
+    #         divergent=divergent,
+    #         linspace_out=True,
+    #     )
     if levels is not None:
         lin = levels
         if not isinstance(lin, Iterable):
@@ -587,7 +595,7 @@ def gridmap(
         plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
 
     if transform and ("xlim" in plot_kw and "ylim" in plot_kw):
-        extend = [
+        extent = [
             plot_kw["xlim"][0],
             plot_kw["xlim"][1],
             plot_kw["ylim"][0],
@@ -596,7 +604,7 @@ def gridmap(
         plot_kw.pop("xlim")
         plot_kw.pop("ylim")
     elif transform and ("xlim" in plot_kw or "ylim" in plot_kw):
-        extend = None
+        extent = None
         warnings.warn(
             "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
         )
@@ -605,8 +613,8 @@ def gridmap(
         if "ylim" in plot_kw.keys():
             plot_kw.pop("ylim")
     else:
-        extend = None
-    # extend = None
+        extent = None
+    # extent = None
 
     # plot
     if ax:
@@ -630,8 +638,8 @@ def gridmap(
     # use im.axs to access the axes instead of im.axes
 
     if ax:
-        if extend:
-            ax.set_extend(extend)
+        if extent:
+            ax.set_extent(extent)
         ax = add_features_map(
             data,
             ax,
@@ -691,9 +699,9 @@ def gridmap(
             else:
                 raise TypeError("show_time must be a bool, string,or tuple")
 
-        if extend:
+        if extent:
             for i, fax in enumerate(im.axs.flat):
-                fax.set_extent(extend)
+                fax.set_extent(extent)
 
         use_attrs.setdefault("suptitle", "long_name")
         return set_plot_attrs(use_attrs, data, facetgrid=im)
@@ -1428,9 +1436,10 @@ def scattermap(
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
 
-    # select data to plot
+    # select data to plot and its xr.Dataset
     if isinstance(data, xr.DataArray):
         plot_data = data
+        data = xr.Dataset({plot_data.name: plot_data})
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
@@ -1569,6 +1578,12 @@ def scattermap(
     if ax:
         plot_kw_pop.setdefault("ax", ax)
     im = data.plot.scatter(**plot_kw_pop)
+    # im = (data
+    #       .where(xr.DataArray(mask, dims=plot_data.dims), drop=True)
+    #       .plot.scatter(**plot_kw_pop)
+    #       )
+    # alternative (not sure if this would always work - does plot_data always have only one dimension?)
+    # data.sel({plot_data.dims[0]: mask})
 
     # add features
     if ax:

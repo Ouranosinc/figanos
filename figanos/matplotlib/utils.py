@@ -8,6 +8,7 @@ import re
 import warnings
 from tempfile import NamedTemporaryFile
 from typing import Any, Callable
+from copy import deepcopy
 
 import cairosvg
 import cartopy.crs as ccrs
@@ -80,7 +81,7 @@ def empty_dict(param):
     """Return empty dict if input is None."""
     if param is None:
         param = {}
-    return param
+    return deepcopy(param)  # avoid modifying original dict when popping items
 
 
 def check_timeindex(
