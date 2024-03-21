@@ -684,8 +684,9 @@ def gridmap(
     plot_kw.setdefault("cmap", cmap)
 
     if levels is not None:
-        lin = levels
-        if not isinstance(lin, Iterable):
+        if isinstance(lin, Iterable):
+            lin = levels
+        else:
             lin = custom_cmap_norm(
                 cmap,
                 np.nanmin(plot_data.values),
