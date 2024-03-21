@@ -19,7 +19,7 @@ Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-* Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`???`).
+* Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 * New function ``fg.matplotlib.hatchmap`` (:pull:`107`).
 * Support for translating figures. Activating a locale through `xclim`'s ``metadata_locales`` option will try to use metadata saved by `xclim` or `xscen` in this locale and to translate common terms appearing in the figures. `figanos` currently ships with French translations of those terms. (:pull:`109`, :issue:`64`).
 * New ``figanos.Logos`` class added to manage and install logos stored in user's Home configuration directory. The ``figanos.utils.plot_logo`` function call signature has changed to support the new system. (:issue:`115`, :pull:`119`).
