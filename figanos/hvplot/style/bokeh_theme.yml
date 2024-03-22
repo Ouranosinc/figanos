@@ -5,7 +5,7 @@
 attrs:
   Plot:
     background_fill_color: white
-    border_fill_color: !!null
+    border_fill_color: white #color around plot - could be null to match behind plot
     outline_line_color: !!null
 
   Axis:
@@ -38,8 +38,13 @@ attrs:
     label_standoff: 8
     label_text_color: black
     label_text_font: DejaVu Sans
-    label_text_font_size: 11pt
+    label_text_font_size: 10pt
     label_text_font_style: normal
+
+    title_text_font: DejaVu Sans
+    title_text_font_style: normal
+    title_text_font_size: 11pt
+    title_text_color: black
 
     border_line_alpha: 0
     background_fill_alpha: 1
@@ -77,8 +82,12 @@ attrs:
   figure:
     toolbar_location: below
 
-  LinearColormapper:
+  CategoricalColorMapper:
     palette:
-      - #444444
-      - blue
-      - black
+      - '#052946'
+      - '#ce153d'
+      - '#18bbbb'
+      - '#fdc414'
+      - '#6850af'
+      - '#196a5e'
+      - '#7a5315'
