@@ -4,7 +4,11 @@ Changelog
 
 0.4.0 (unreleased)
 ------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`).
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`)
+
+New features and enhancements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
