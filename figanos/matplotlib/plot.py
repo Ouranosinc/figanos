@@ -1487,7 +1487,7 @@ def scattermap(
         If int or float, becomes center of cmap. Default center is 0.
     legend_kw : dict, optional
         Arguments to pass to plt.legend(). Some defaults {"loc": "lower left", "facecolor": "w", "framealpha": 1,
-            "edgecolor": "w", "bbox_to_anchor": (-0.05, 0)}
+            "edgecolors": "w", "bbox_to_anchor": (-0.05, 0)}
     show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
@@ -1627,6 +1627,15 @@ def scattermap(
             f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the color values"
         )
 
+    # set 'edgecolors' to the same value for all points to avoid plotting edges when np.nan
+    if (
+        "edgecolors" in plot_kw
+        and matplotlib.colors.is_color_like(plot_kw["edgecolors"])
+        and len(plot_kw["edgecolors"]) != len(plot_data.values)
+    ):
+        plot_kw["edgecolors"] = np.repeat(plot_kw["edgecolors"], len(plot_data.values))
+        # plot_kw["edgecolors"] = [plot_kw["edgecolors"] if value else "none" for value in mask]
+
     # point sizes
     if sizes:
         if sizes is True:
@@ -1679,7 +1688,7 @@ def scattermap(
         "transform": transform,
         "zorder": 8,
         "marker": "o",
-        "edgecolor": "none",
+        "edgecolors": "none",
     } | plot_kw
 
     plot_kw_pop = plot_kw.copy()
@@ -2056,7 +2065,7 @@ def hatchmap(
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
     levels: int | None = None,
-    legend_kw: dict[str, Any] | None = None,
+    legend_kw: dict[str, Any] | bool = True,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
@@ -2087,8 +2096,8 @@ def hatchmap(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    legend_kw : dict, optional
-        Arguments to pass to `ax.legend()`.
+    legend_kw : dict or boolean optional
+        Arguments to pass to `ax.legend()`. No legend is added if legend_kw == False.
     show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
@@ -2148,14 +2157,16 @@ def hatchmap(
 
     dattrs = None
     plot_data = {}
-    dc = plot_kw.copy()
+    dc = copy.deepcopy(
+        plot_kw
+    )  # make sure nested dict is not changed outside this function
 
     # convert data to dict (if not one)
     if not isinstance(data, dict):
         if isinstance(data, xr.DataArray):
             plot_data = {data.name: data}
-            if list(data.keys())[0] not in plot_kw.keys():
-                plot_kw = {list(plot_data.keys())[0]: dc}
+            if data.name not in plot_kw.keys():
+                plot_kw = {data.name: dc}
         elif isinstance(data, xr.Dataset):
             dattrs = data
             plot_data = {var: data[var] for var in data.data_vars}
@@ -2187,28 +2198,25 @@ def hatchmap(
     if transform and (
         "xlim" in list(plot_kw.values())[0] and "ylim" in list(plot_kw.values())[0]
     ):
-        extend = [
+        extent = [
             list(plot_kw.values())[0]["xlim"][0],
             list(plot_kw.values())[0]["xlim"][1],
             list(plot_kw.values())[0]["ylim"][0],
             list(plot_kw.values())[0]["ylim"][1],
         ]
-        {v.pop("xlim") for v in plot_kw.values()}
-        {v.pop("ylim") for v in plot_kw.values()}
+        [v.pop(lim) for lim in ["xlim", "ylim"] for v in plot_kw.values() if lim in v]
 
     elif transform and (
         "xlim" in list(plot_kw.values())[0] or "ylim" in list(plot_kw.values())[0]
     ):
-        extend = None
+        extent = None
         warnings.warn(
             "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
         )
-        if "xlim" in list(plot_kw.values())[0].keys():
-            {v.pop("xlim") for v in plot_kw.values()}
-        if "ylim" in list(plot_kw.values())[0].keys():
-            {v.pop("ylim") for v in plot_kw.values()}
+        [v.pop(lim) for lim in ["xlim", "ylim"] for v in plot_kw.values() if lim in v]
+
     else:
-        extend = None
+        extent = None
 
     # setup fig, ax
     if ax is None and (
@@ -2222,11 +2230,11 @@ def hatchmap(
     ):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        {
+        [
             v.setdefault("subplot_kws", {}).setdefault("projection", projection)
             for v in plot_kw.values()
-        }
-        cfig_kw = fig_kw.copy()
+        ]
+        cfig_kw = copy.deepcopy(fig_kw)
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
             plot_kw[0].setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
@@ -2274,9 +2282,9 @@ def hatchmap(
             im = v.where(mask is not True).plot.contourf(**plot_kw[k])
             artists, labels = im.legend_elements(str_format="{:2.1f}".format)
 
-            if ax:
+            if ax and legend_kw:
                 ax.legend(artists, labels, **legend_kw)
-            else:
+            elif legend_kw:
                 im.figlegend = im.fig.legend(**legend_kw)
 
         elif len(plot_data) > 1 and "levels" in plot_kw[k]:
@@ -2290,6 +2298,13 @@ def hatchmap(
             if "hatches" not in plot_kw[k].keys():
                 plot_kw[k]["hatches"] = dfh[n]
                 n += 1
+            elif isinstance(
+                plot_kw[k]["hatches"], str
+            ):  # make sure the hatches are in a list
+                warnings.warn(
+                    "Hatches argument must be of type 'list'. Wrapping string argument as list."
+                )
+                plot_kw[k]["hatches"] = [plot_kw[k]["hatches"]]
 
             plot_kw[k].setdefault("transform", transform)
             if ax:
@@ -2323,31 +2338,31 @@ def hatchmap(
                             geometries_kw,
                             frame,
                         )
-                        if extend:
-                            fax.set_extent(extend)
+                        if extent:
+                            fax.set_extent(extent)
 
             pat_leg.append(
                 matplotlib.patches.Patch(
-                    hatch=plot_kw[k]["hatches"], fill=False, label=k
+                    hatch=plot_kw[k]["hatches"][0], fill=False, label=k
                 )
             )
 
-    if pat_leg:
+    if pat_leg and legend_kw:
         legend_kw = {
             "loc": "lower right",
             "handleheight": 2,
             "handlelength": 4,
         } | legend_kw
 
-        if ax:
+        if ax and legend_kw:
             ax.legend(handles=pat_leg, **legend_kw)
-        else:
+        elif legend_kw:
             im.figlegend = im.fig.legend(handles=pat_leg, **legend_kw)
 
     # add features
     if ax:
-        if extend:
-            ax.set_extend(extend)
+        if extent:
+            ax.set_extent(extent)
         if dattrs:
             use_attrs.setdefault("title", "description")
 
