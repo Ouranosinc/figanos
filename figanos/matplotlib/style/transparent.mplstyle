@@ -1,0 +1,8 @@
+# Pour rendre les figures transparentes
+
+# La couleur de fond de la figure elle-même (blanc avec 0 opacité)
+figure.facecolor: 1.0, 1.0, 1.0, 0.0
+savefig.facecolor: 1.0, 1.0, 1.0, 0.0
+
+# La couleur de fond des axes (blanc à 30%)
+axes.facecolor: 1.0, 1.0, 1.0, 0.3
