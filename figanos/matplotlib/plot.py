@@ -1644,7 +1644,7 @@ def scattermap(
             if hasattr(data, "name") and getattr(data, "name") == sizes:
                 sdata = plot_data
             elif sizes in list(data.coords.keys()):
-                sdata = data[sizes]
+                sdata = plot_data[sizes]
             else:
                 raise ValueError(f"{sizes} not found")
         else:
@@ -1659,7 +1659,7 @@ def scattermap(
             mask = smask
 
         pt_sizes = norm2range(
-            data=sdata.values,
+            data=sdata[mask].values,
             target_range=size_range,
             data_range=None,
         )
@@ -1698,7 +1698,8 @@ def scattermap(
     plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
     if ax:
         plot_kw_pop.setdefault("ax", ax)
-    im = data.plot.scatter(**plot_kw_pop)
+    v = plot_data[mask].to_dataset()
+    im = v.plot.scatter(**plot_kw_pop)
 
     # add features
     if ax:
@@ -1758,8 +1759,8 @@ def scattermap(
     # size legend
     if sizes:
         legend_elements = size_legend_elements(
-            np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
-            np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
+            sdata[mask].values,
+            pt_sizes,
             max_entries=6,
             marker=plot_kw["marker"],
         )
