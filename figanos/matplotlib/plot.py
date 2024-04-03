@@ -1661,8 +1661,8 @@ def scattermap(
             plot_kw.setdefault("s", pt_sizes[0])
 
     # norm
-    plot_kw.setdefault("vmin", np.nanmin(plot_data.values))
-    plot_kw.setdefault("vmax", np.nanmax(plot_data.values))
+    plot_kw.setdefault("vmin", np.nanmin(plot_data[mask].values))
+    plot_kw.setdefault("vmax", np.nanmax(plot_data[mask].values))
 
     norm = custom_cmap_norm(
         cmap,
