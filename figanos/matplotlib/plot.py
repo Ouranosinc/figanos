@@ -1650,7 +1650,7 @@ def scattermap(
             mask = smask
 
         pt_sizes = norm2range(
-            data=sdata[mask].values,
+            data=sdata.where(mask).values,
             target_range=size_range,
             data_range=None,
         )
@@ -1661,8 +1661,8 @@ def scattermap(
             plot_kw.setdefault("s", pt_sizes[0])
 
     # norm
-    plot_kw.setdefault("vmin", np.nanmin(plot_data[mask].values))
-    plot_kw.setdefault("vmax", np.nanmax(plot_data[mask].values))
+    plot_kw.setdefault("vmin", np.nanmin(plot_data.values[mask]))
+    plot_kw.setdefault("vmax", np.nanmax(plot_data.values[mask]))
 
     norm = custom_cmap_norm(
         cmap,
@@ -1689,7 +1689,7 @@ def scattermap(
     plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
     if ax:
         plot_kw_pop.setdefault("ax", ax)
-    v = plot_data[mask].to_dataset()
+    v = plot_data.where(mask).to_dataset()
     im = v.plot.scatter(**plot_kw_pop)
 
     # add features
@@ -1750,8 +1750,8 @@ def scattermap(
     # size legend
     if sizes:
         legend_elements = size_legend_elements(
-            sdata[mask].values,
-            pt_sizes,
+            np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
+            np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
             max_entries=6,
             marker=plot_kw["marker"],
         )

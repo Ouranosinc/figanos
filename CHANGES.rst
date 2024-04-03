@@ -4,11 +4,12 @@ Changelog
 
 0.4.0 (unreleased)
 ------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`)
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
+* Fix NaN issues in ``fg.matplotlib.scattermap``  and extreme values in sizes legend (:pull:`184`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
