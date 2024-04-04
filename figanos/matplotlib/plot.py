@@ -1701,7 +1701,7 @@ def scattermap(
                 plot_kw_pop["edgecolors"] = np.array(plot_kw["edgecolors"])
             plot_kw_pop["edgecolors"] = plot_kw_pop["edgecolors"][mask]
     else:
-        plot_kw_pop.setdefault("edgecolors", "none")
+        plot_kw_pop.setdefault("edgecolor", "none")
 
     for key in ["vmin", "vmax"]:
         plot_kw_pop.pop(key)
