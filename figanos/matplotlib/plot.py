@@ -1526,11 +1526,11 @@ def scattermap(
     if "row" not in plot_kw and "col" not in plot_kw:
         use_attrs.setdefault("title", "description")
 
+    plot_kw_pop = copy.deepcopy(plot_kw)  # copy plot_kw to modify and pop info in it
+
     # extract plot_kw from dict if needed
     if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
-        plot_kw = plot_kw[list(data.keys())[0]]
-
-    plot_kw_pop = plot_kw.copy()  # copy plot_kw to modify and pop info in it
+        plot_kw_pop = plot_kw_pop[list(data.keys())[0]]
 
     # figanos does not use xr.plot.scatter default markersize
     if "markersize" in plot_kw.keys():
