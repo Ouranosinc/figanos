@@ -1675,13 +1675,13 @@ def scattermap(
     )
 
     # set defaults and create copy without vmin, vmax (conflicts with norm)
-    plot_kw = {
+    plot_kw_pop = {
         "cmap": cmap,
         "norm": norm,
         "transform": transform,
         "zorder": 8,
         "marker": "o",
-    } | plot_kw
+    } | plot_kw_pop
 
     # chek if edgecolors in plot_kw and match len of plot_data
     if "edgecolors" in plot_kw:
@@ -1773,7 +1773,7 @@ def scattermap(
             np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
             np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
             max_entries=6,
-            marker=plot_kw["marker"],
+            marker=plot_kw_pop["marker"],
         )
         # legend spacing
         if size_range[1] > 200:
