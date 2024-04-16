@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import math
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -525,7 +526,7 @@ def gridmap(
     geometries_kw: dict[str, Any] | None = None,
     contourf: bool = False,
     cmap: str | matplotlib.colors.Colormap | None = None,
-    levels: int | None = None,
+    levels: int | list | np.ndarray | None = None,
     divergent: bool | int | float = False,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
@@ -563,8 +564,8 @@ def gridmap(
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    levels : int, optional
-        Number of levels to divide the colormap into.
+    levels : int, list, np.ndarray, optional
+        Number of levels to divide the colormap into or list of level boundaries (in data units).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple, string or int.
@@ -682,15 +683,18 @@ def gridmap(
         )
     plot_kw.setdefault("cmap", cmap)
 
-    if levels:
-        lin = custom_cmap_norm(
-            cmap,
-            np.nanmin(plot_data.values),
-            np.nanmax(plot_data.values),
-            levels=levels,
-            divergent=divergent,
-            linspace_out=True,
-        )
+    if levels is not None:
+        if isinstance(levels, Iterable):
+            lin = levels
+        else:
+            lin = custom_cmap_norm(
+                cmap,
+                np.nanmin(plot_data.values),
+                np.nanmax(plot_data.values),
+                levels=levels,
+                divergent=divergent,
+                linspace_out=True,
+            )
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
@@ -717,7 +721,7 @@ def gridmap(
     # bug xlim / ylim + transfrom in facetgrids
     # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
     if transform and ("xlim" in plot_kw and "ylim" in plot_kw):
-        extend = [
+        extent = [
             plot_kw["xlim"][0],
             plot_kw["xlim"][1],
             plot_kw["ylim"][0],
@@ -726,7 +730,7 @@ def gridmap(
         plot_kw.pop("xlim")
         plot_kw.pop("ylim")
     elif transform and ("xlim" in plot_kw or "ylim" in plot_kw):
-        extend = None
+        extent = None
         warnings.warn(
             "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
         )
@@ -735,7 +739,7 @@ def gridmap(
         if "ylim" in plot_kw.keys():
             plot_kw.pop("ylim")
     else:
-        extend = None
+        extent = None
 
     # plot
     if ax:
@@ -749,8 +753,8 @@ def gridmap(
         im = plot_data.plot.contourf(**plot_kw)
 
     if ax:
-        if extend:
-            ax.set_extend(extend)
+        if extent:
+            ax.set_extent(extent)
 
         ax = add_features_map(
             data,
@@ -790,8 +794,8 @@ def gridmap(
                 geometries_kw,
                 frame,
             )
-            if extend:
-                fax.set_extent(extend)
+            if extent:
+                fax.set_extent(extent)
 
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
@@ -1543,9 +1547,10 @@ def scattermap(
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
 
-    # select data to plot
+    # select data to plot and its xr.Dataset
     if isinstance(data, xr.DataArray):
         plot_data = data
+        data = xr.Dataset({plot_data.name: plot_data})
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
