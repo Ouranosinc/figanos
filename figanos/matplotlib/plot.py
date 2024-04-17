@@ -1627,14 +1627,14 @@ def scattermap(
             f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the color values"
         )
 
-    # set 'edgecolors' to the same value for all points to avoid plotting edges when np.nan
-    if (
-        "edgecolors" in plot_kw
-        and matplotlib.colors.is_color_like(plot_kw["edgecolors"])
-        and len(plot_kw["edgecolors"]) != len(plot_data.values)
-    ):
-        plot_kw["edgecolors"] = np.repeat(plot_kw["edgecolors"], len(plot_data.values))
-        # plot_kw["edgecolors"] = [plot_kw["edgecolors"] if value else "none" for value in mask]
+    # # set 'edgecolors' to the same value for all points to avoid plotting edges when np.nan
+    # if (
+    #     "edgecolors" in plot_kw
+    #     and matplotlib.colors.is_color_like(plot_kw["edgecolors"])
+    #     and len(plot_kw["edgecolors"]) != len(plot_data.values)
+    # ):
+    #     plot_kw["edgecolors"] = np.repeat(plot_kw["edgecolors"], len(plot_data.values))
+    #     # plot_kw["edgecolors"] = [plot_kw["edgecolors"] if value else "none" for value in mask]
 
     # point sizes
     if sizes:
@@ -1699,7 +1699,8 @@ def scattermap(
     if ax:
         plot_kw_pop.setdefault("ax", ax)
     v = plot_data[mask].to_dataset()
-    im = v.plot.scatter(**plot_kw_pop)
+    if np.any(mask):
+        im = v.plot.scatter(**plot_kw_pop)
 
     # add features
     if ax:
@@ -2097,7 +2098,7 @@ def hatchmap(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    legend_kw : dict or boolean optional
+    legend_kw : dict or boolean, optional
         Arguments to pass to `ax.legend()`. No legend is added if legend_kw == False.
     show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
