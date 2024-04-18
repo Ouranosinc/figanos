@@ -19,3 +19,4 @@ Contributors
 ------------
 
 * Gabriel Rondeau-Genesse <rondeau-genesse.gabriel@ouranos.ca> `@RondeauG <https://github.com/RondeauG>`_
+* Marco Braun <Braun.Marco@ouranos.ca> `@vindelico <https://github.com/vindelico>`_

@@ -7,6 +7,7 @@ import math
 import pathlib
 import re
 import warnings
+from copy import deepcopy
 from tempfile import NamedTemporaryFile
 from typing import Any, Callable
 
@@ -81,7 +82,7 @@ def empty_dict(param) -> dict:
     """Return empty dict if input is None."""
     if param is None:
         param = dict()
-    return param
+    return deepcopy(param)  # avoid modifying original input dict when popping items
 
 
 def check_timeindex(
@@ -1337,7 +1338,7 @@ def size_legend_elements(
                 lw=0,
                 markerfacecolor="w",
                 label=label,
-                markersize=np.sqrt(s),
+                markersize=np.sqrt(np.abs(s)),
             )
         )
 

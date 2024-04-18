@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import math
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -525,7 +526,7 @@ def gridmap(
     geometries_kw: dict[str, Any] | None = None,
     contourf: bool = False,
     cmap: str | matplotlib.colors.Colormap | None = None,
-    levels: int | None = None,
+    levels: int | list | np.ndarray | None = None,
     divergent: bool | int | float = False,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
@@ -563,8 +564,8 @@ def gridmap(
         If None, look for common variables (from data/ipcc_colors/varaibles_groups.json) in the name of the DataArray
         or its 'history' attribute and use corresponding colormap, aligned with the IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
-    levels : int, optional
-        Number of levels to divide the colormap into.
+    levels : int, list, np.ndarray, optional
+        Number of levels to divide the colormap into or list of level boundaries (in data units).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
     show_time : bool, tuple, string or int.
@@ -682,15 +683,18 @@ def gridmap(
         )
     plot_kw.setdefault("cmap", cmap)
 
-    if levels:
-        lin = custom_cmap_norm(
-            cmap,
-            np.nanmin(plot_data.values),
-            np.nanmax(plot_data.values),
-            levels=levels,
-            divergent=divergent,
-            linspace_out=True,
-        )
+    if levels is not None:
+        if isinstance(levels, Iterable):
+            lin = levels
+        else:
+            lin = custom_cmap_norm(
+                cmap,
+                np.nanmin(plot_data.values),
+                np.nanmax(plot_data.values),
+                levels=levels,
+                divergent=divergent,
+                linspace_out=True,
+            )
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
@@ -717,7 +721,7 @@ def gridmap(
     # bug xlim / ylim + transfrom in facetgrids
     # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
     if transform and ("xlim" in plot_kw and "ylim" in plot_kw):
-        extend = [
+        extent = [
             plot_kw["xlim"][0],
             plot_kw["xlim"][1],
             plot_kw["ylim"][0],
@@ -726,7 +730,7 @@ def gridmap(
         plot_kw.pop("xlim")
         plot_kw.pop("ylim")
     elif transform and ("xlim" in plot_kw or "ylim" in plot_kw):
-        extend = None
+        extent = None
         warnings.warn(
             "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
         )
@@ -735,7 +739,7 @@ def gridmap(
         if "ylim" in plot_kw.keys():
             plot_kw.pop("ylim")
     else:
-        extend = None
+        extent = None
 
     # plot
     if ax:
@@ -749,8 +753,8 @@ def gridmap(
         im = plot_data.plot.contourf(**plot_kw)
 
     if ax:
-        if extend:
-            ax.set_extend(extend)
+        if extent:
+            ax.set_extent(extent)
 
         ax = add_features_map(
             data,
@@ -790,8 +794,8 @@ def gridmap(
                 geometries_kw,
                 frame,
             )
-            if extend:
-                fax.set_extent(extend)
+            if extent:
+                fax.set_extent(extent)
 
             # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
         if (frame is False) and (
@@ -1522,15 +1526,17 @@ def scattermap(
     if "row" not in plot_kw and "col" not in plot_kw:
         use_attrs.setdefault("title", "description")
 
+    plot_kw_pop = copy.deepcopy(plot_kw)  # copy plot_kw to modify and pop info in it
+
+    # extract plot_kw from dict if needed
+    if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
+        plot_kw_pop = plot_kw_pop[list(data.keys())[0]]
+
     # figanos does not use xr.plot.scatter default markersize
     if "markersize" in plot_kw.keys():
         if not sizes:
             sizes = plot_kw["markersize"]
-        plot_kw.pop("markersize")
-
-    # extract plot_kw from dict if needed
-    if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
-        plot_kw = plot_kw[list(data.keys())[0]]
+        plot_kw_pop.pop("markersize")
 
     # if data is dict, extract
     if isinstance(data, dict):
@@ -1543,9 +1549,10 @@ def scattermap(
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
 
-    # select data to plot
+    # select data to plot and its xr.Dataset
     if isinstance(data, xr.DataArray):
         plot_data = data
+        data = xr.Dataset({plot_data.name: plot_data})
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
@@ -1569,13 +1576,13 @@ def scattermap(
     elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+        plot_kw_pop = {"subplot_kws": {"projection": projection}} | plot_kw_pop
         cfig_kw = fig_kw.copy()
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw.setdefault("figsize", fig_kw["figsize"])
+            plot_kw_pop.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
         if len(cfig_kw) >= 1:
-            plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+            plot_kw_pop = {"subplot_kws": {"projection": projection}} | plot_kw_pop
             warnings.warn(
                 "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
@@ -1595,9 +1602,9 @@ def scattermap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     if "add_colorbar" not in plot_kw or plot_kw["add_colorbar"] is not False:
-        plot_kw.setdefault("cbar_kwargs", {})
-        plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
-        plot_kw["cbar_kwargs"].setdefault("pad", 0.015)
+        plot_kw_pop.setdefault("cbar_kwargs", {})
+        plot_kw_pop["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
+        plot_kw_pop["cbar_kwargs"].setdefault("pad", 0.015)
 
     # colormap
     if isinstance(cmap, str):
@@ -1630,7 +1637,7 @@ def scattermap(
             if hasattr(data, "name") and getattr(data, "name") == sizes:
                 sdata = plot_data
             elif sizes in list(data.coords.keys()):
-                sdata = data[sizes]
+                sdata = plot_data[sizes]
             else:
                 raise ValueError(f"{sizes} not found")
         else:
@@ -1645,46 +1652,65 @@ def scattermap(
             mask = smask
 
         pt_sizes = norm2range(
-            data=sdata.values,
+            data=sdata.where(mask).values,
             target_range=size_range,
             data_range=None,
         )
-        plot_kw.setdefault("add_legend", False)
+        plot_kw_pop.setdefault("add_legend", False)
         if ax:
-            plot_kw.setdefault("s", pt_sizes)
+            plot_kw_pop.setdefault("s", pt_sizes)
         else:
-            plot_kw.setdefault("s", pt_sizes[0])
+            plot_kw_pop.setdefault("s", pt_sizes[0])
 
     # norm
-    plot_kw.setdefault("vmin", np.nanmin(plot_data.values))
-    plot_kw.setdefault("vmax", np.nanmax(plot_data.values))
+    plot_kw_pop.setdefault("vmin", np.nanmin(plot_data.values[mask]))
+    plot_kw_pop.setdefault("vmax", np.nanmax(plot_data.values[mask]))
 
     norm = custom_cmap_norm(
         cmap,
-        vmin=plot_kw["vmin"],
-        vmax=plot_kw["vmax"],
+        vmin=plot_kw_pop["vmin"],
+        vmax=plot_kw_pop["vmax"],
         levels=levels,
         divergent=divergent,
     )
 
     # set defaults and create copy without vmin, vmax (conflicts with norm)
-    plot_kw = {
+    plot_kw_pop = {
         "cmap": cmap,
         "norm": norm,
         "transform": transform,
         "zorder": 8,
         "marker": "o",
-        "edgecolor": "none",
-    } | plot_kw
+    } | plot_kw_pop
 
-    plot_kw_pop = plot_kw.copy()
+    # chek if edgecolors in plot_kw and match len of plot_data
+    if "edgecolors" in plot_kw:
+        if matplotlib.colors.is_color_like(plot_kw["edgecolors"]):
+            plot_kw_pop["edgecolors"] = np.repeat(
+                plot_kw["edgecolors"], len(plot_data.where(mask).values)
+            )
+        elif len(plot_kw["edgecolors"]) != len(plot_data.values):
+            plot_kw_pop["edgecolors"] = np.repeat(
+                plot_kw["edgecolors"][0], len(plot_data.where(mask).values)
+            )
+            warnings.warn(
+                "Length of edgecolors does not match length of data. Only first edgecolor is used for plotting."
+            )
+        else:
+            if isinstance(plot_kw["edgecolors"], list):
+                plot_kw_pop["edgecolors"] = np.array(plot_kw["edgecolors"])
+            plot_kw_pop["edgecolors"] = plot_kw_pop["edgecolors"][mask]
+    else:
+        plot_kw_pop.setdefault("edgecolor", "none")
+
     for key in ["vmin", "vmax"]:
         plot_kw_pop.pop(key)
     # plot
     plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
     if ax:
         plot_kw_pop.setdefault("ax", ax)
-    im = data.plot.scatter(**plot_kw_pop)
+    v = plot_data.where(mask).to_dataset()
+    im = v.plot.scatter(**plot_kw_pop)
 
     # add features
     if ax:
@@ -1747,7 +1773,7 @@ def scattermap(
             np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
             np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
             max_entries=6,
-            marker=plot_kw["marker"],
+            marker=plot_kw_pop["marker"],
         )
         # legend spacing
         if size_range[1] > 200:
