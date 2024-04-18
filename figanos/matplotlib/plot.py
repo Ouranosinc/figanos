@@ -1487,7 +1487,7 @@ def scattermap(
         If int or float, becomes center of cmap. Default center is 0.
     legend_kw : dict, optional
         Arguments to pass to plt.legend(). Some defaults {"loc": "lower left", "facecolor": "w", "framealpha": 1,
-            "edgecolors": "w", "bbox_to_anchor": (-0.05, 0)}
+            "edgecolor": "w", "bbox_to_anchor": (-0.05, 0)}
     show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
@@ -1629,15 +1629,6 @@ def scattermap(
             f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the color values"
         )
 
-    # # set 'edgecolors' to the same value for all points to avoid plotting edges when np.nan
-    # if (
-    #     "edgecolors" in plot_kw
-    #     and matplotlib.colors.is_color_like(plot_kw["edgecolors"])
-    #     and len(plot_kw["edgecolors"]) != len(plot_data.values)
-    # ):
-    #     plot_kw["edgecolors"] = np.repeat(plot_kw["edgecolors"], len(plot_data.values))
-    #     # plot_kw["edgecolors"] = [plot_kw["edgecolors"] if value else "none" for value in mask]
-
     # point sizes
     if sizes:
         if sizes is True:
@@ -1682,6 +1673,11 @@ def scattermap(
         levels=levels,
         divergent=divergent,
     )
+
+    # matplotlib treats "edgecolor" and "edgecolors" as aliases, we choose to use "edgecolors" only
+    if "edgecolor" in plot_kw_pop and "edgecolors" not in plot_kw_pop:
+        plot_kw_pop["edgecolors"] = plot_kw_pop["edgecolor"]
+        plot_kw_pop.pop("edgecolor")
 
     # set defaults and create copy without vmin, vmax (conflicts with norm)
     plot_kw_pop = {
