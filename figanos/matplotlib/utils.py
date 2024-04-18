@@ -1338,7 +1338,7 @@ def size_legend_elements(
                 lw=0,
                 markerfacecolor="w",
                 label=label,
-                markersize=np.sqrt(s),
+                markersize=np.sqrt(np.abs(s)),
             )
         )
 
