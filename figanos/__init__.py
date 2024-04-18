@@ -2,7 +2,7 @@
 
 __author__ = """Sarah-Claude Bourdeau-Goulet"""
 __email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"
-__version__ = "0.3.1-dev.3"
+__version__ = "0.3.1-dev.4"
 
 from . import matplotlib
 from ._logo import Logos
