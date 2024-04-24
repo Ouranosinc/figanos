@@ -1526,17 +1526,15 @@ def scattermap(
     if "row" not in plot_kw and "col" not in plot_kw:
         use_attrs.setdefault("title", "description")
 
-    plot_kw_pop = copy.deepcopy(plot_kw)  # copy plot_kw to modify and pop info in it
-
     # extract plot_kw from dict if needed
     if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
-        plot_kw_pop = plot_kw_pop[list(data.keys())[0]]
+        plot_kw = plot_kw[list(data.keys())[0]]
 
     # figanos does not use xr.plot.scatter default markersize
     if "markersize" in plot_kw.keys():
         if not sizes:
             sizes = plot_kw["markersize"]
-        plot_kw_pop.pop("markersize")
+        plot_kw.pop("markersize")
 
     # if data is dict, extract
     if isinstance(data, dict):
@@ -1576,13 +1574,13 @@ def scattermap(
     elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        plot_kw_pop = {"subplot_kws": {"projection": projection}} | plot_kw_pop
+        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
         cfig_kw = fig_kw.copy()
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw_pop.setdefault("figsize", fig_kw["figsize"])
+            plot_kw.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
         if len(cfig_kw) >= 1:
-            plot_kw_pop = {"subplot_kws": {"projection": projection}} | plot_kw_pop
+            plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
             warnings.warn(
                 "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
             )
@@ -1602,9 +1600,9 @@ def scattermap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     if "add_colorbar" not in plot_kw or plot_kw["add_colorbar"] is not False:
-        plot_kw_pop.setdefault("cbar_kwargs", {})
-        plot_kw_pop["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
-        plot_kw_pop["cbar_kwargs"].setdefault("pad", 0.015)
+        plot_kw.setdefault("cbar_kwargs", {})
+        plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
+        plot_kw["cbar_kwargs"].setdefault("pad", 0.015)
 
     # colormap
     if isinstance(cmap, str):
@@ -1656,47 +1654,47 @@ def scattermap(
             target_range=size_range,
             data_range=None,
         )
-        plot_kw_pop.setdefault("add_legend", False)
+        plot_kw.setdefault("add_legend", False)
         if ax:
-            plot_kw_pop.setdefault("s", pt_sizes)
+            plot_kw.setdefault("s", pt_sizes)
         else:
-            plot_kw_pop.setdefault("s", pt_sizes[0])
+            plot_kw.setdefault("s", pt_sizes[0])
 
     # norm
-    plot_kw_pop.setdefault("vmin", np.nanmin(plot_data.values[mask]))
-    plot_kw_pop.setdefault("vmax", np.nanmax(plot_data.values[mask]))
+    plot_kw.setdefault("vmin", np.nanmin(plot_data.values[mask]))
+    plot_kw.setdefault("vmax", np.nanmax(plot_data.values[mask]))
 
     norm = custom_cmap_norm(
         cmap,
-        vmin=plot_kw_pop["vmin"],
-        vmax=plot_kw_pop["vmax"],
+        vmin=plot_kw["vmin"],
+        vmax=plot_kw["vmax"],
         levels=levels,
         divergent=divergent,
     )
 
-    # matplotlib treats "edgecolor" and "edgecolors" as aliases, we choose to use "edgecolors" only
-    if "edgecolor" in plot_kw_pop and "edgecolors" not in plot_kw_pop:
-        plot_kw_pop["edgecolors"] = plot_kw_pop["edgecolor"]
-        plot_kw_pop.pop("edgecolor")
+    # matplotlib.pyplot.scatter treats "edgecolor" and "edgecolors" as aliases so we accept "edgecolor" and convert it
+    if "edgecolor" in plot_kw and "edgecolors" not in plot_kw:
+        plot_kw["edgecolors"] = plot_kw["edgecolor"]
+        plot_kw.pop("edgecolor")
 
     # set defaults and create copy without vmin, vmax (conflicts with norm)
-    plot_kw_pop = {
+    plot_kw = {
         "cmap": cmap,
         "norm": norm,
         "transform": transform,
         "zorder": 8,
         "marker": "o",
         "edgecolors": "none",
-    } | plot_kw_pop
+    } | plot_kw
 
     # chek if edgecolors in plot_kw and match len of plot_data
     if "edgecolors" in plot_kw:
         if matplotlib.colors.is_color_like(plot_kw["edgecolors"]):
-            plot_kw_pop["edgecolors"] = np.repeat(
+            plot_kw["edgecolors"] = np.repeat(
                 plot_kw["edgecolors"], len(plot_data.where(mask).values)
             )
         elif len(plot_kw["edgecolors"]) != len(plot_data.values):
-            plot_kw_pop["edgecolors"] = np.repeat(
+            plot_kw["edgecolors"] = np.repeat(
                 plot_kw["edgecolors"][0], len(plot_data.where(mask).values)
             )
             warnings.warn(
@@ -1704,21 +1702,21 @@ def scattermap(
             )
         else:
             if isinstance(plot_kw["edgecolors"], list):
-                plot_kw_pop["edgecolors"] = np.array(plot_kw["edgecolors"])
-            plot_kw_pop["edgecolors"] = plot_kw_pop["edgecolors"][mask]
+                plot_kw["edgecolors"] = np.array(plot_kw["edgecolors"])
+            plot_kw["edgecolors"] = plot_kw["edgecolors"][mask]
     else:
-        plot_kw_pop.setdefault("edgecolors", "none")
+        plot_kw.setdefault("edgecolors", "none")
 
     for key in ["vmin", "vmax"]:
-        plot_kw_pop.pop(key)
+        plot_kw.pop(key)
     # plot
-    plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
+    plot_kw = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw
     if ax:
-        plot_kw_pop.setdefault("ax", ax)
+        plot_kw.setdefault("ax", ax)
 
+    # plot_data_masked = plot_data[mask].to_dataset()
     plot_data_masked = plot_data.where(mask).to_dataset()
-    if np.any(mask):
-        im = plot_data_masked.plot.scatter(**plot_kw_pop)
+    im = plot_data_masked.plot.scatter(**plot_kw)
 
     # add features
     if ax:
@@ -1781,7 +1779,7 @@ def scattermap(
             np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
             np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
             max_entries=6,
-            marker=plot_kw_pop["marker"],
+            marker=plot_kw["marker"],
         )
         # legend spacing
         if size_range[1] > 200:
