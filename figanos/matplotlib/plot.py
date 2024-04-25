@@ -1714,7 +1714,6 @@ def scattermap(
     if ax:
         plot_kw.setdefault("ax", ax)
 
-    # plot_data_masked = plot_data[mask].to_dataset()
     plot_data_masked = plot_data.where(mask).to_dataset()
     im = plot_data_masked.plot.scatter(**plot_kw)
 
@@ -2175,26 +2174,23 @@ def hatchmap(
 
     dattrs = None
     plot_data = {}
-    dc = copy.deepcopy(
-        plot_kw
-    )  # make sure nested dict is not changed outside this function
 
     # convert data to dict (if not one)
     if not isinstance(data, dict):
         if isinstance(data, xr.DataArray):
             plot_data = {data.name: data}
             if data.name not in plot_kw.keys():
-                plot_kw = {data.name: dc}
+                plot_kw = {data.name: plot_kw}
         elif isinstance(data, xr.Dataset):
             dattrs = data
             plot_data = {var: data[var] for var in data.data_vars}
             for v in plot_data.keys():
                 if v not in plot_kw.keys():
-                    plot_kw[v] = dc
+                    plot_kw[v] = plot_kw
     else:
         for k, v in data.items():
             if k not in plot_kw.keys():
-                plot_kw[k] = dc
+                plot_kw[k] = plot_kw
             if isinstance(v, xr.Dataset):
                 dattrs = k
                 plot_data[k] = v[list(v.data_vars)[0]]
