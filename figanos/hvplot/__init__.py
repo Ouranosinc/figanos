@@ -1,0 +1,1 @@
+"""Figanos hvplot plotting module."""
