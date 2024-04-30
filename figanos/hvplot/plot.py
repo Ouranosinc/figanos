@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import holoviews as hv
+import hvplot  # noqa: F401
 import hvplot.xarray  # noqa: F401
 import xarray as xr
 
@@ -28,7 +29,7 @@ def _plot_ens_reals(
     arr: xr.DataArray,
     non_dict_data: bool,
     cplot_kw: dict[str, Any],
-    copts_kw: dict[str, Any],
+    copts_kw: dict[str, Any] | list,
 ) -> dict:
     """Plot realizations ensembles"""
     hv_fig = {}
@@ -40,18 +41,21 @@ def _plot_ens_reals(
         else:
             arr = arr[list(arr.data_vars)[0]]
 
-    if non_dict_data:
+    if non_dict_data is True:
+        if not (
+            "groupby" in cplot_kw[name].keys()
+            and cplot_kw[name]["groupby"] == "realization"
+        ):
+            cplot_kw[name] = {"by": "realization", "x": "time"} | cplot_kw[name]
         cplot_kw[name] = {"by": "realization", "x": "time"} | cplot_kw[name]
-        hv_fig = arr.hvplot.line(cplot_kw[name]).opts(**copts_kw[name])
+        return arr.hvplot.line(**cplot_kw[name]).opts(**copts_kw)
     else:
         cplot_kw[name].setdefault("label", name)
         for r in arr.realization:
             hv_fig[f"realization_{r.values.item()}"] = (
-                arr.sel(realization=r)
-                .hvplot.line(**cplot_kw[name])
-                .opts(**copts_kw[name])
+                arr.sel(realization=r).hvplot.line(**cplot_kw[name]).opts(**copts_kw)
             )
-    return hv_fig
+        return hv_fig
 
 
 def _plot_ens_pct_stats(
@@ -92,7 +96,6 @@ def _plot_ens_pct_stats(
 
 
 def _plot_timeseries(
-    plot_kw: dict[str, Any],
     name: str,
     arr: xr.DataArray | xr.Dataset,
     array_categ: dict[str, str],
@@ -151,19 +154,19 @@ def _plot_timeseries(
                 sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
             )
             #  if kwargs are specified by user, all lines are the same and we want one legend entry
-            if plot_kw[name]:
+            if cplot_kw[name]:
                 label = name if not ignore_label else ""
                 ignore_label = True
             else:
                 label = sub_name
 
             hv_fig[sub_name] = sub_arr.hvplot.line(
-                x="time", label=label, **plot_kw[name]
+                x="time", label=label, **cplot_kw[name]
             ).opts(**copts_kw[name])
 
         #  non-ensemble DataArrays
     elif array_categ[name] in ["DA"]:
-        return arr.hvplot.line(label=name, **plot_kw[name]).opts(**copts_kw[name])
+        return arr.hvplot.line(label=name, **cplot_kw[name]).opts(**copts_kw[name])
     else:
         raise ValueError(
             "Data structure not supported"
@@ -237,7 +240,7 @@ def timeseries(
                 warnings.warn(
                     f"Key {name} not found in plot_kw. Using empty dict instead."
                 )
-        for key in plot_kw:
+        for key in cplot_kw:
             if key not in data:
                 raise KeyError(
                     'plot_kw must be a nested dictionary with keys corresponding to the keys in "data"'
@@ -268,13 +271,12 @@ def timeseries(
 
     # get data and plot
     for name, arr in data.items():
-        # add defaults to plot_kw if not present (GReY BACKGORUDN LINES + USER ATTRS
         # ToDo: Add user_attrs here and grey backgrounds lines
         # ToDo: if legend = 'edge' add hook in opts_kw
 
         #  remove 'label' to avoid error due to double 'label' args
-        if "label" in plot_kw[name]:
-            del plot_kw[name]["label"]
+        if "label" in cplot_kw[name]:
+            del cplot_kw[name]["label"]
             warnings.warn(f'"label" entry in plot_kw[{name}] will be ignored.')
 
         # SSP, RCP, CMIP model colors
@@ -285,7 +287,7 @@ def timeseries(
             cplot_kw[name].setdefault("color", get_scen_color(name, cat_colors))
 
         figs[name] = _plot_timeseries(
-            plot_kw, name, arr, array_categ, cplot_kw, copts_kw, non_dict_data, legend
+            name, arr, array_categ, cplot_kw, copts_kw, non_dict_data, legend
         )
 
     if not legend:
