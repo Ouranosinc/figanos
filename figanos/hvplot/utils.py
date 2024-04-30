@@ -1,6 +1,8 @@
-"""Utility functions for figanos figure-creation."""
+"""Utility functions for figanos hvplot figure-creation."""
 
 import collections.abc
+import pathlib
+import warnings
 
 import holoviews as hv
 from bokeh.models import (
@@ -12,6 +14,57 @@ from bokeh.models import (
     Range1d,
     Text,
 )
+from bokeh.themes import Theme
+
+
+def get_hv_styles() -> dict[str, str]:
+    """Get the available matplotlib styles and their paths, as a dictionary."""
+    folder = pathlib.Path(__file__).parent / "style/"
+    paths = sorted(p for ext in ["*.yaml", "*.json", "*.yml"] for p in folder.glob(ext))
+    names = [
+        str(p)
+        .split("/")[-1]
+        .removesuffix(".yaml")
+        .removesuffix(".yml")
+        .removesuffix(".json")
+        for p in paths
+    ]
+    return {str(name): path for name, path in zip(names, paths)}
+
+
+def set_hv_style(*args: str | dict) -> None:
+    """Set the holoviews bokeh style using a yaml file or a dict.
+
+    Parameters
+    ----------
+    args : str or dict
+        Name(s) of figanos bokeh style ('ouranos'), build-ing bokeh theme, path(s) to json or yaml or dict.
+
+    Returns
+    -------
+    None
+    """
+    for s in args:
+        if isinstance(s, dict):
+            hv.renderer("bokeh").theme = Theme(json=s)
+        elif s.endswith(".json") is True or s.endswith(".yaml") is True:
+            hv.renderer("bokeh").theme = Theme(filename=s)
+        elif s in get_hv_styles():
+            hv.renderer("bokeh").theme = Theme(get_hv_styles()[s])
+        elif s in [
+            "light_minimal",
+            "dark_minimal",
+            "caliber",
+            "night_sky",
+            "contrast",
+        ]:  # bokeh build in themes
+            hv.renderer("bokeh").theme = s
+        else:
+            warnings.warn(f"Style {s} not found.")
+
+    # Add Ouranos defaults that can't be directly added to the bokeh theme yaml file
+    if "ouranos" in args:
+        defaults_curves()
 
 
 def defaults_curves() -> None:
@@ -129,6 +182,7 @@ def get_all_values(nested_dictionary) -> list:
 
 
 def curve_hover_hook(plot, element, att) -> None:
+    # ToDo: not working properly
     """Hook to pass to hover curve to show correct format."""
     # min - max data
     ymin = plot.handles["y_range"].start

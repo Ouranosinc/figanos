@@ -7,7 +7,6 @@ from typing import Any
 import holoviews as hv
 import hvplot.xarray  # noqa: F401
 import xarray as xr
-from utils import defaults_curves, get_all_values, get_glyph_param
 
 from figanos.matplotlib.utils import (
     check_timeindex,
@@ -20,10 +19,12 @@ from figanos.matplotlib.utils import (
     sort_lines,
 )
 
+from .utils import defaults_curves, get_all_values, get_glyph_param
+
 
 def _plot_ens_reals(
     name: str,
-    array_categ: dict(str, str),
+    array_categ: dict[str, str],
     arr: xr.DataArray,
     non_dict_data: bool,
     cplot_kw: dict[str, Any],
