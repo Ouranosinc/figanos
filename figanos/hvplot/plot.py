@@ -66,7 +66,7 @@ def _plot_ens_pct_stats(
     cplot_kw: dict[str, Any],
     copts_kw: dict[str, Any],
     legend: str,
-    sub_name: str | None,
+    sub_name: str | None = None,
 ) -> dict:
     """Plot ensembles with percentiles and statistics (min/moy/max)"""
     hv_fig = {}
