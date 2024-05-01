@@ -66,20 +66,29 @@ def _plot_ens_pct_stats(
     cplot_kw: dict[str, Any],
     copts_kw: dict[str, Any],
     legend: str,
+    sub_name: str | None,
 ) -> dict:
     """Plot ensembles with percentiles and statistics (min/moy/max)"""
     hv_fig = {}
 
     # create a dictionary labeling the middle, upper and lower line
     sorted_lines = sort_lines(array_data)
+
+    # which label to use
+    if sub_name:
+        lab = sub_name
+    else:
+        lab = name
+
     # plot
     hv_fig["line"] = (
         array_data[sorted_lines["middle"]]
-        .hvplot.line(label=name, **cplot_kw[name])
-        .opts(**copts_kw[name])
+        .hvplot.line(label=lab, **cplot_kw[name])
+        .opts(**copts_kw)
     )
     c = get_glyph_param(hv_fig["line"], "line_color")
     lab_area = fill_between_label(sorted_lines, name, array_categ, legend)
+    cplot_kw[name].setdefault("color", c)
     if "ENS_PCT_DIM" in array_categ[name]:
         arr = arr.to_dataset(dim="percentiles")
         arr = arr.rename({k: str(k) for k in arr.keys()})
@@ -87,11 +96,10 @@ def _plot_ens_pct_stats(
         y=sorted_lines["lower"],
         y2=sorted_lines["upper"],
         label=lab_area,
-        color=c,
-        linewidth=0.0,
+        line_color=None,
         alpha=0.2,
         **cplot_kw[name],
-    ).opts(**copts_kw[name])
+    ).opts(**copts_kw)
     return hv_fig
 
 
@@ -127,7 +135,14 @@ def _plot_timeseries(
                 array_data[str(pct)] = sub_arr.sel(percentiles=pct)
 
             hv_fig[sub_name] = _plot_ens_pct_stats(
-                name, arr, array_categ, array_data, cplot_kw, copts_kw, legend
+                name,
+                sub_arr,
+                array_categ,
+                array_data,
+                cplot_kw,
+                copts_kw,
+                legend,
+                sub_name,
             )
     elif array_categ[name] in [
         "ENS_PCT_VAR_DS",  # ensemble statistics (min, mean, max) stored as variables
