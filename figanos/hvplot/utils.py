@@ -5,10 +5,10 @@ import pathlib
 import warnings
 
 import holoviews as hv
+import xarray as xr
 from bokeh.models import (
     ColumnDataSource,
     GlyphRenderer,
-    HoverTool,
     LegendItem,
     Line,
     Range1d,
@@ -181,35 +181,80 @@ def get_all_values(nested_dictionary) -> list:
             yield value
 
 
-def curve_hover_hook(plot, element, att) -> None:
-    # ToDo: not working properly
-    """Hook to pass to hover curve to show correct format."""
-    # min - max data
-    ymin = plot.handles["y_range"].start
-    ymax = plot.handles["y_range"].end
+def curve_hover_hook(plot, element, att, form) -> None:
+    """Hook to pass to hover curve to show correct format"""
+    plot.handles["hover"].tooltips[-2:] = [
+        (att["xhover"], "$x{%F}"),
+        (att["yhover"], "$y{" + form + "}"),
+    ]
+    plot.handles["hover"].formatters = {
+        "$x": "datetime",
+    }
+
+
+def get_min_max(data) -> tuple:
+    """Get min and max values from data."""
+    minn = []
+    maxx = []
+    if isinstance(data, dict):
+        for v in data.values():
+            if isinstance(v, xr.Dataset):
+                for vv in v.values():
+                    minn.append(vv.min().values.item())
+                    maxx.append(vv.max().values.item())
+            else:
+                minn.append(v.min().values.item())
+                maxx.append(v.max().values.item())
+    elif isinstance(data, xr.Dataset):
+        for v in data.values():
+            minn.append(v.min().values.item())
+            maxx.append(v.max().values.item())
+    else:
+        minn.append(data.min().values.item())
+        maxx.append(data.max().values.item())
+    return min(minn), max(maxx)
+
+
+def formatters_data(data) -> str:
+    """Get the correct formatter for the data."""
+    ymin, ymax = get_min_max(data)
     diff = ymax - ymin
 
-    if ymin > 10000:
-        format = "0 a"
+    if abs(ymin) > 1000:
+        form = "0 a"
         if diff < 1000 and diff > 100:
-            format = "0.00 a"
+            form = "0.00 a"
         elif diff <= 100:
-            format = "0.000 a"
-    elif ymin > 10:
-        format = "0"
-        if diff < 10 and diff > 1:
-            format = "0.0"
-        elif diff <= 1:
-            format = "0.00"
-    elif ymin > 2:
-        format = "0.0"
-        if diff < 1:
-            format = "0.00"
+            form = "0.000 a"
+    elif diff > 50:
+        form = "0"
+    elif 10 < diff <= 50:
+        form = "0.0"
+    elif 1 < diff <= 10:
+        form = "0.00"
+    elif diff <= 1:
+        form = "0.000"
     else:
-        format = "0.00"
+        form = "0.00"
+    return form
 
-    hover = HoverTool(
-        tooltips=[("time", "$x{%F}"), (att, "$y")],
-        formatters={"$x": "datetime", "$y": format},
+
+def add_default_opts_curve(data, copts_kw, legend, att) -> dict:
+    """Add default .opts to curve plot."""
+    # add default tooltips hooks (x and y)
+    # should it be added to hook lists if already exists?
+    form = formatters_data(data)
+    copts_kw.setdefault(
+        "hooks",
+        [lambda plot, element: curve_hover_hook(plot, element, att, form)],
     )
-    return hover
+    if legend == "'edge":
+        warnings.warn(
+            "Legend 'edge' is not supported in hvplot. Using 'in_plot' instead."
+        )
+        legend = "in_plot"
+    elif legend == "in_plot":
+        copts_kw["hooks"].append(edge_legend)
+    if not legend:
+        copts_kw.setdefault("show_legend", False)
+    return copts_kw

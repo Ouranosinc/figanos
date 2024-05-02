@@ -20,7 +20,12 @@ from figanos.matplotlib.utils import (
     sort_lines,
 )
 
-from .utils import defaults_curves, get_all_values, get_glyph_param
+from .utils import (
+    add_default_opts_curve,
+    defaults_curves,
+    get_all_values,
+    get_glyph_param,
+)
 
 
 def _plot_ens_reals(
@@ -86,6 +91,7 @@ def _plot_ens_pct_stats(
         .hvplot.line(label=lab, **cplot_kw[name])
         .opts(**copts_kw)
     )
+
     c = get_glyph_param(hv_fig["line"], "line_color")
     lab_area = fill_between_label(sorted_lines, name, array_categ, legend)
     cplot_kw[name].setdefault("color", c)
@@ -213,8 +219,7 @@ def timeseries(
         Arguments to pass to the `hvplot.line()` or hvplot.area() function. Changes how the line looks.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
     legend : str (default 'lines') or dict
-        'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines),
-         'edge' (out of plot), 'none' (no legend).
+        'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines), 'none' (no legend).
     show_lat_lon : bool, tuple, str or int
         If True, show latitude and longitude at the bottom right of the figure.
         Can be a tuple of axis coordinates (from 0 to 1, as a fraction of the axis length) representing
@@ -272,6 +277,7 @@ def timeseries(
     data = check_timeindex(data)
 
     # add use attributes defaults ToDo: Adapt use_attrs to hvplot (already an option in hvplot with xarray)
+    # needs to incorporate xhover and yhover...
     use_attrs = {
         "title": "description",
         "ylabel": "long_name",
@@ -302,10 +308,16 @@ def timeseries(
             cplot_kw[name].setdefault("color", get_scen_color(name, cat_colors))
 
         figs[name] = _plot_timeseries(
-            name, arr, array_categ, cplot_kw, copts_kw, non_dict_data, legend
+            name,
+            arr,
+            array_categ,
+            cplot_kw,
+            {},  # pass empty dict for now since it doesn't seem to be used for opts. seems to be more use for all plots (overlay) to reduce lagtime
+            non_dict_data,
+            legend,
         )
 
-    if not legend:
-        return hv.Overlay(list(get_all_values(figs))).opts(show_legend=False)
-    else:
-        return hv.Overlay(list(get_all_values(figs)))
+    copts_kw = add_default_opts_curve(
+        data, copts_kw, legend, {"xhover": "temps", "yhover": "valeurs"}
+    )
+    return hv.Overlay(list(get_all_values(figs))).opts(**copts_kw)
