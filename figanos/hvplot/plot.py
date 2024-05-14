@@ -11,20 +11,20 @@ import xarray as xr
 
 from figanos.matplotlib.utils import (
     check_timeindex,
-    convert_scen_name,
-    empty_dict,
     fill_between_label,
     get_array_categ,
     get_scen_color,
-    process_keys,
     sort_lines,
 )
 
 from .utils import (
-    add_default_opts_curve,
+    add_default_opts_overlay,
+    create_dict_timeseries,
     defaults_curves,
+    formatters_data,
     get_all_values,
     get_glyph_param,
+    rm_curve_hover_hook,
 )
 
 
@@ -33,11 +33,15 @@ def _plot_ens_reals(
     array_categ: dict[str, str],
     arr: xr.DataArray,
     non_dict_data: bool,
-    cplot_kw: dict[str, Any],
-    copts_kw: dict[str, Any] | list,
+    plot_kw: dict[str, Any],
+    opts_kw: dict[str, Any] | list,
+    legend: str,
+    form: str,
+    use_attrs: dict[str, Any],
 ) -> dict:
     """Plot realizations ensembles"""
     hv_fig = {}
+
     if array_categ[name] == "ENS_REALS_DS":
         if len(arr.data_vars) >= 2:
             raise TypeError(
@@ -48,17 +52,19 @@ def _plot_ens_reals(
 
     if non_dict_data is True:
         if not (
-            "groupby" in cplot_kw[name].keys()
-            and cplot_kw[name]["groupby"] == "realization"
+            "groupby" in plot_kw[name].keys()
+            and plot_kw[name]["groupby"] == "realization"
         ):
-            cplot_kw[name] = {"by": "realization", "x": "time"} | cplot_kw[name]
-        cplot_kw[name] = {"by": "realization", "x": "time"} | cplot_kw[name]
-        return arr.hvplot.line(**cplot_kw[name]).opts(**copts_kw)
+            plot_kw[name] = {"by": "realization", "x": "time"} | plot_kw[name]
+        plot_kw[name] = {"by": "realization", "x": "time"} | plot_kw[name]
+        return arr.hvplot.line(**plot_kw[name]).opts(**opts_kw[name])
     else:
-        cplot_kw[name].setdefault("label", name)
+        plot_kw[name].setdefault("label", name)
         for r in arr.realization:
             hv_fig[f"realization_{r.values.item()}"] = (
-                arr.sel(realization=r).hvplot.line(**cplot_kw[name]).opts(**copts_kw)
+                arr.sel(realization=r)
+                .hvplot.line(**plot_kw[name])
+                .opts(**opts_kw[name])
             )
         return hv_fig
 
@@ -68,9 +74,11 @@ def _plot_ens_pct_stats(
     arr: xr.DataArray,
     array_categ: dict[str, str],
     array_data: dict[str, xr.DataArray],
-    cplot_kw: dict[str, Any],
-    copts_kw: dict[str, Any],
+    plot_kw: dict[str, Any],
+    opts_kw: dict[str, Any],
     legend: str,
+    form: str,
+    use_attrs: dict[str, Any],
     sub_name: str | None = None,
 ) -> dict:
     """Plot ensembles with percentiles and statistics (min/moy/max)"""
@@ -85,16 +93,27 @@ def _plot_ens_pct_stats(
     else:
         lab = name
 
+    opts_kw_line = opts_kw[name]
+    if "hooks" in opts_kw[name]:
+        opts_kw_line["hooks"] = opts_kw_line["hooks"].append(rm_curve_hover_hook)
+    else:
+        opts_kw_line = opts_kw_line.setdefault("hooks", [rm_curve_hover_hook])
+
     # plot
     hv_fig["line"] = (
         array_data[sorted_lines["middle"]]
-        .hvplot.line(label=lab, **cplot_kw[name])
-        .opts(**copts_kw)
+        .hvplot.line(label=lab, **plot_kw[name])
+        .opts(**opts_kw_line)
     )
 
     c = get_glyph_param(hv_fig["line"], "line_color")
     lab_area = fill_between_label(sorted_lines, name, array_categ, legend)
-    cplot_kw[name].setdefault("color", c)
+    opts_kw_area = opts_kw[name]
+    if "hooks" in opts_kw[name]:
+        opts_kw_area["hooks"] = opts_kw_area["hooks"].append(rm_curve_hover_hook)
+    else:
+        opts_kw_area = opts_kw_area.setdefault("hooks", [rm_curve_hover_hook])
+    plot_kw[name].setdefault("color", c)
     if "ENS_PCT_DIM" in array_categ[name]:
         arr = arr.to_dataset(dim="percentiles")
         arr = arr.rename({k: str(k) for k in arr.keys()})
@@ -104,8 +123,8 @@ def _plot_ens_pct_stats(
         label=lab_area,
         line_color=None,
         alpha=0.2,
-        **cplot_kw[name],
-    ).opts(**copts_kw)
+        **plot_kw[name],
+    ).opts(**opts_kw_area)
     return hv_fig
 
 
@@ -113,10 +132,12 @@ def _plot_timeseries(
     name: str,
     arr: xr.DataArray | xr.Dataset,
     array_categ: dict[str, str],
-    cplot_kw: dict[str, Any],
-    copts_kw: dict[str, Any],
+    plot_kw: dict[str, Any],
+    opts_kw: dict[str, Any],
     non_dict_data: bool,
     legend: str,
+    form: str,
+    use_attrs: dict[str, Any],
 ) -> dict | hv.element.chart.Curve | hv.core.overlay.Overlay:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots."""
     hv_fig = {}
@@ -125,7 +146,15 @@ def _plot_timeseries(
         array_categ[name] == "ENS_REALS_DA" or array_categ[name] == "ENS_REALS_DS"
     ):  # ensemble with 'realization' dim, as DataArray or Dataset
         return _plot_ens_reals(
-            name, array_categ, arr, non_dict_data, cplot_kw, copts_kw
+            name,
+            array_categ,
+            arr,
+            non_dict_data,
+            plot_kw,
+            opts_kw,
+            legend,
+            form,
+            use_attrs,
         )
     elif (
         array_categ[name] == "ENS_PCT_DIM_DS"
@@ -145,9 +174,11 @@ def _plot_timeseries(
                 sub_arr,
                 array_categ,
                 array_data,
-                cplot_kw,
-                copts_kw,
+                plot_kw,
+                opts_kw,
                 legend,
+                form,
+                use_attrs,
                 sub_name,
             )
     elif array_categ[name] in [
@@ -165,7 +196,15 @@ def _plot_timeseries(
                 array_data[k] = v
 
         return _plot_ens_pct_stats(
-            name, arr, array_categ, array_data, cplot_kw, copts_kw, legend
+            name,
+            arr,
+            array_categ,
+            array_data,
+            plot_kw,
+            opts_kw,
+            legend,
+            form,
+            use_attrs,
         )
         #  non-ensemble Datasets
     elif array_categ[name] == "DS":
@@ -175,19 +214,18 @@ def _plot_timeseries(
                 sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
             )
             #  if kwargs are specified by user, all lines are the same and we want one legend entry
-            if cplot_kw[name]:
+            if plot_kw[name]:
                 label = name if not ignore_label else ""
                 ignore_label = True
             else:
                 label = sub_name
-
             hv_fig[sub_name] = sub_arr.hvplot.line(
-                x="time", label=label, **cplot_kw[name]
-            ).opts(**copts_kw[name])
+                x="time", label=label, **plot_kw[name]
+            ).opts(**opts_kw[name])
 
         #  non-ensemble DataArrays
     elif array_categ[name] in ["DA"]:
-        return arr.hvplot.line(label=name, **cplot_kw[name]).opts(**copts_kw[name])
+        return arr.hvplot.line(label=name, **plot_kw[name]).opts(**opts_kw[name])
     else:
         raise ValueError(
             "Data structure not supported"
@@ -218,6 +256,10 @@ def timeseries(
     plot_kw : dict, optional
         Arguments to pass to the `hvplot.line()` or hvplot.area() function. Changes how the line looks.
         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
+    opts_kw: dict, optional
+        Arguments to pass to the `holoviews/hvplot.opts()` function. Changes figure options and access to hooks.
+        If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data' to pass nested to each
+        individual figure or key 'overlay' to pass to overlayed figures.
     legend : str (default 'lines') or dict
         'full' (lines and shading), 'lines' (lines only), 'in_plot' (end of lines), 'none' (no legend).
     show_lat_lon : bool, tuple, str or int
@@ -231,36 +273,28 @@ def timeseries(
         hvplot.Overlay
 
     """
-    # create empty dicts if None
-    use_attrs = empty_dict(use_attrs)
-    copts_kw = empty_dict(opts_kw)
-    cplot_kw = empty_dict(plot_kw)
-
-    # convert SSP, RCP, CMIP formats in keys
-    if isinstance(data, dict):
-        data = process_keys(data, convert_scen_name)
-    if isinstance(plot_kw, dict):
-        cplot_kw = process_keys(cplot_kw, convert_scen_name)
+    # timeseries dict/data
+    use_attrs, data, plot_kw, opts_kw, non_dict_data = create_dict_timeseries(
+        use_attrs, data, plot_kw, opts_kw
+    )
 
     # add ouranos default cycler colors
     defaults_curves()
 
-    # if only one data input, insert in dict.
-    non_dict_data = False
-    if not isinstance(data, dict):
-        non_dict_data = True
-        data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
-        cplot_kw = {"_no_label": cplot_kw}
-
     # assign keys to plot_kw if not there
     if non_dict_data is False:
         for name in data:
-            if name not in cplot_kw:
-                cplot_kw[name] = {}
+            if name not in plot_kw:
+                plot_kw[name] = {}
                 warnings.warn(
                     f"Key {name} not found in plot_kw. Using empty dict instead."
                 )
-        for key in cplot_kw:
+            if name not in opts_kw:
+                opts_kw[name] = {}
+                warnings.warn(
+                    f"Key {name} not found in opts_kw. Using empty dict instead."
+                )
+        for key in plot_kw:
             if key not in data:
                 raise KeyError(
                     'plot_kw must be a nested dictionary with keys corresponding to the keys in "data"'
@@ -287,17 +321,20 @@ def timeseries(
     # dict of array 'categories'
     array_categ = {name: get_array_categ(array) for name, array in data.items()}
 
+    # formatters for data
+    form = formatters_data(data)
+
     # dictionary of hvplots plots
     figs = {}
 
     # get data and plot
     for name, arr in data.items():
-        # ToDo: Add user_attrs here and grey backgrounds lines
+        # ToDo: Add use_attrs here and grey backgrounds lines
         # ToDo: if legend = 'edge' add hook in opts_kw
 
         #  remove 'label' to avoid error due to double 'label' args
-        if "label" in cplot_kw[name]:
-            del cplot_kw[name]["label"]
+        if "label" in plot_kw[name]:
+            del plot_kw[name]["label"]
             warnings.warn(f'"label" entry in plot_kw[{name}] will be ignored.')
 
         # SSP, RCP, CMIP model colors
@@ -305,19 +342,20 @@ def timeseries(
             Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
         )
         if get_scen_color(name, cat_colors):
-            cplot_kw[name].setdefault("color", get_scen_color(name, cat_colors))
+            plot_kw[name].setdefault("color", get_scen_color(name, cat_colors))
 
         figs[name] = _plot_timeseries(
             name,
             arr,
             array_categ,
-            cplot_kw,
-            {},  # pass empty dict for now since it doesn't seem to be used for opts. seems to be more use for all plots (overlay) to reduce lagtime
+            plot_kw,
+            opts_kw,
             non_dict_data,
             legend,
+            form,
+            use_attrs,
         )
 
-    copts_kw = add_default_opts_curve(
-        data, copts_kw, legend, {"xhover": "temps", "yhover": "valeurs"}
-    )
-    return hv.Overlay(list(get_all_values(figs))).opts(**copts_kw)
+    x = "time"  # ToDo: remove once added function
+    opts_kw = add_default_opts_overlay(opts_kw, form, legend, use_attrs, x, array_categ)
+    return hv.Overlay(list(get_all_values(figs))).opts(**opts_kw["overlay"])

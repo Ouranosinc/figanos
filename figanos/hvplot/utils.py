@@ -3,6 +3,7 @@
 import collections.abc
 import pathlib
 import warnings
+from functools import partial
 
 import holoviews as hv
 import xarray as xr
@@ -15,6 +16,8 @@ from bokeh.models import (
     Text,
 )
 from bokeh.themes import Theme
+
+from figanos.matplotlib.utils import convert_scen_name, empty_dict, process_keys
 
 
 def get_hv_styles() -> dict[str, str]:
@@ -181,15 +184,31 @@ def get_all_values(nested_dictionary) -> list:
             yield value
 
 
-def curve_hover_hook(plot, element, att, form) -> None:
+def curve_hover_hook(plot, element, att, form, x) -> None:
     """Hook to pass to hover curve to show correct format"""
-    plot.handles["hover"].tooltips[-2:] = [
-        (att["xhover"], "$x{%F}"),
-        (att["yhover"], "$y{" + form + "}"),
-    ]
+    # ToDo: remove this part after use_attrs is fixed
+    att = {}
+    att["xhover"] = "temps"
+    att["yhover"] = "valeur"
+
+    if plot.handles["hover"].tooltips[0][0] != x:
+        plot.handles["hover"].tooltips[-2:] = [
+            (att["xhover"], "$x{%F}"),
+            (att["yhover"], "$y{" + form + "}"),
+        ]
+    else:
+        plot.handles["hover"].tooltips = [
+            (att["xhover"], "$x{%F}"),
+            (att["yhover"], "$y{" + form + "}"),
+        ]
     plot.handles["hover"].formatters = {
         "$x": "datetime",
     }
+
+
+def rm_curve_hover_hook(plot, element) -> None:
+    """Hook to remove hover curve."""
+    plot.handles["hover"].tooltips = None
 
 
 def get_min_max(data) -> tuple:
@@ -239,22 +258,86 @@ def formatters_data(data) -> str:
     return form
 
 
-def add_default_opts_curve(data, copts_kw, legend, att) -> dict:
-    """Add default .opts to curve plot."""
-    # add default tooltips hooks (x and y)
-    # should it be added to hook lists if already exists?
-    form = formatters_data(data)
-    copts_kw.setdefault(
-        "hooks",
-        [lambda plot, element: curve_hover_hook(plot, element, att, form)],
-    )
+def add_default_opts_overlay(opts_kw, form, legend, att, x, array_categ) -> dict:
+    """Add default opts to curve plot.
+
+    Parameters
+    ----------
+    opts_kw : dict
+        Custom options to be passed to opts().
+    form : str
+        Bokeh format.
+    legend : str
+        Type of legend.
+    att : dict
+        user_attrs.
+    x : str
+        Xarray coordinate to be used for plotting xaxis (ex: time).
+    array_categ : dict
+        Type of data array (ex: ENS_STATS_VAR_DS).
+
+    Returns
+    -------
+        dict
+
+    """
+    if not any(
+        map(
+            lambda v: v
+            in [
+                "ENS_STATS_VAR_DS",
+                "ENS_PCT_VAR_DS",
+                "ENS_PCT_DIM_DS",
+                "ENS_PCT_DIM_DA",
+            ],
+            list(array_categ.values()),
+        )
+    ):
+        # add default tooltips hooks (x and y)
+        # should it be added to hook lists if already exists?
+        opts_kw["overlay"].setdefault(
+            "hooks", [partial(curve_hover_hook, att=att, form=form, x=x)]
+        )
+
     if legend == "'edge":
         warnings.warn(
             "Legend 'edge' is not supported in hvplot. Using 'in_plot' instead."
         )
         legend = "in_plot"
     elif legend == "in_plot":
-        copts_kw["hooks"].append(edge_legend)
+        opts_kw["overlay"]["hooks"].append(
+            edge_legend
+        )  # test if should be overlay or to each nested dicts
     if not legend:
-        copts_kw.setdefault("show_legend", False)
-    return copts_kw
+        opts_kw["overlay"].setdefault("show_legend", False)
+    return opts_kw
+
+
+def create_dict_timeseries(
+    use_attrs, data, plot_kw, opts_kw
+) -> [dict, dict, dict, dict, dict]:
+    """Create default dicts for timeseries plot."""
+    # convert SSP, RCP, CMIP formats in keys
+    if isinstance(data, dict):
+        data = process_keys(data, convert_scen_name)
+    if isinstance(plot_kw, dict):
+        plot_kw = process_keys(plot_kw, convert_scen_name)
+    if isinstance(opts_kw, dict):
+        opts_kw = process_keys(opts_kw, convert_scen_name)
+
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    opts_kw = empty_dict(opts_kw)
+    plot_kw = empty_dict(plot_kw)
+
+    # if only one data input, insert in dict.
+    non_dict_data = False
+    if not isinstance(data, dict):
+        non_dict_data = True
+        data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
+        plot_kw = {"_no_label": plot_kw}
+        opts_kw = {"_no_label": opts_kw}
+
+    # add overlay option if absent in opts_ke
+    opts_kw.setdefault("overlay", {})
+    return use_attrs, data, plot_kw, opts_kw, non_dict_data
