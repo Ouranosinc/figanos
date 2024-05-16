@@ -3,10 +3,10 @@ channels:
   - conda-forge
   - default
 dependencies:
-  - python>=3.11,<3.12
+  - python>=3.12,<3.13
   - flit
   # Main
-  - cartopy
+  - cartopy >=0.23.0
   - cairosvg
   - matplotlib-base
   - seaborn
@@ -27,7 +27,7 @@ dependencies:
   - geoviews
   - holoviews
   # Development
-  - black ==24.1.1
+  - black ==24.4.2
   - blackdoc ==0.3.9
   - bump-my-version >=0.18.3
   - coverage >=6.2,<7.0
@@ -35,8 +35,8 @@ dependencies:
   - flake8 >=6.1.0
   - flake8-rst-docstrings >=0.3.0
   - isort ==5.13.2
-  - pip
-  - pre-commit
+  - pip >=23.3.0
+  - pre-commit >=3.3.2
   - pytest >=7.3.1
   - pytest-cov >=4.0.0
   - tox

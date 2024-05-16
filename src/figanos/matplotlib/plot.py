@@ -26,7 +26,7 @@ from matplotlib.lines import Line2D
 from matplotlib.projections import PolarAxes
 from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCurveLinear
 
-from figanos.matplotlib.utils import (  # masknan_sizes_key,
+from src.figanos.matplotlib.utils import (  # masknan_sizes_key,
     add_cartopy_features,
     add_features_map,
     check_timeindex,
