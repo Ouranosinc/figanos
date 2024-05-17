@@ -4,6 +4,7 @@ import collections.abc
 import pathlib
 import warnings
 from functools import partial
+from typing import Any
 
 import holoviews as hv
 import xarray as xr
@@ -17,7 +18,13 @@ from bokeh.models import (
 )
 from bokeh.themes import Theme
 
-from figanos.matplotlib.utils import convert_scen_name, empty_dict, process_keys
+from figanos.matplotlib.utils import (
+    convert_scen_name,
+    empty_dict,
+    get_attributes,
+    process_keys,
+    wrap_text,
+)
 
 
 def get_hv_styles() -> dict[str, str]:
@@ -186,11 +193,6 @@ def get_all_values(nested_dictionary) -> list:
 
 def curve_hover_hook(plot, element, att, form, x) -> None:
     """Hook to pass to hover curve to show correct format"""
-    # ToDo: remove this part after use_attrs is fixed
-    att = {}
-    att["xhover"] = "temps"
-    att["yhover"] = "valeur"
-
     if plot.handles["hover"].tooltips[0][0] != x:
         plot.handles["hover"].tooltips[-2:] = [
             (att["xhover"], "$x{%F}"),
@@ -341,3 +343,134 @@ def create_dict_timeseries(
     # add overlay option if absent in opts_ke
     opts_kw.setdefault("overlay", {})
     return use_attrs, data, plot_kw, opts_kw, non_dict_data
+
+
+def x_timeseries(data, plot_kw) -> None:
+    """Get x coordinate for timeseries plot."""
+    if "x" not in plot_kw.keys():
+        if "time" in data.coords:
+            plot_kw["x"] = "time"
+        elif "month" in data.coords:
+            plot_kw["x"] = "month"
+        elif "season" in data.coords:
+            plot_kw["x"] = "season"
+        elif "year" in data.coords:
+            plot_kw["x"] = "year"
+        elif "dayofyear" in data.coords:
+            plot_kw["x"] = "dayofyear"
+        elif "annual_cycle" in data.coords:
+            plot_kw["x"] = "annual_cycle"
+        elif "x" in data.coords:
+            plot_kw["x"] = "x"
+        else:
+            raise ValueError(
+                "None if these coordinates; time, month, year,"
+                " season, dayofyear, annual_cycle and x were found in data."
+                "Please specify x coordinate in plot_kw."
+            )
+
+
+def set_plot_attrs_hv(
+    use_attrs: dict[str, Any],
+    xr_obj: xr.DataArray | xr.Dataset,
+    plot_kw: dict[str, Any],
+    wrap_kw: dict[str, Any] | None = None,
+) -> [dict, dict]:
+    """Set plot attributes with the last plot_kw entry based on use_attr."""
+    # set default use_attrs values
+    use_attrs = {
+        "title": "description",
+        "ylabel": "long_name",
+        "yunits": "units",
+        "yhover": "standart_name",
+    } | use_attrs
+
+    wrap_kw = empty_dict(wrap_kw)
+
+    # last plot_kw entry
+    name = list(plot_kw.keys())[0]
+
+    for key in use_attrs.keys():
+        if key not in [
+            "title",
+            "ylabel",
+            "yunits",
+            "xunits",
+            "xhover",
+            "yhover",
+            # "xlabel",
+            # "cbar_label",
+            # "cbar_units",
+            # "suptitle",
+        ]:
+            warnings.warn(f'Use_attrs element "{key}" not supported')
+
+    if "title" in use_attrs:
+        title = get_attributes(use_attrs["title"], xr_obj)
+        plot_kw[name].setdefault("title", wrap_text(title, **wrap_kw))
+
+    if "ylabel" in use_attrs:
+        if (
+            "yunits" in use_attrs
+            and len(get_attributes(use_attrs["yunits"], xr_obj)) >= 1
+        ):  # second condition avoids '[]' as label
+            ylabel = wrap_text(
+                get_attributes(use_attrs["ylabel"], xr_obj)
+                + " ("
+                + get_attributes(use_attrs["yunits"], xr_obj)
+                + ")"
+            )
+        else:
+            ylabel = wrap_text(get_attributes(use_attrs["ylabel"], xr_obj))
+
+        plot_kw[name].setdefault("ylabel", ylabel)
+
+    if "xlabel" in use_attrs:
+        if (
+            "xunits" in use_attrs
+            and len(get_attributes(use_attrs["xunits"], xr_obj)) >= 1
+        ):  # second condition avoids '[]' as label
+            xlabel = wrap_text(
+                get_attributes(use_attrs["xlabel"], xr_obj)
+                + " ("
+                + get_attributes(use_attrs["xunits"], xr_obj)
+                + ")"
+            )
+        else:
+            xlabel = wrap_text(get_attributes(use_attrs["xlabel"], xr_obj))
+    else:
+        xlabel = plot_kw[name]["x"]
+    plot_kw[name].setdefault("xlabel", xlabel)
+
+    if "yhover" in use_attrs:
+        if (
+            "yunits" in use_attrs
+            and len(get_attributes(use_attrs["yhover"], xr_obj)) >= 1
+        ):  # second condition avoids '[]' as label
+            yhover = wrap_text(
+                get_attributes(use_attrs["yhover"], xr_obj)
+                + " ("
+                + get_attributes(use_attrs["yunits"], xr_obj)
+                + ")"
+            )
+        else:
+            yhover = get_attributes(use_attrs["yhover"], xr_obj)
+        use_attrs["yhover"] = yhover
+
+    if "xhover" in use_attrs:
+        if (
+            "xunits" in use_attrs
+            and len(get_attributes(use_attrs["xunits"], xr_obj)) >= 1
+        ):  # second condition avoids '[]' as label
+            xhover = wrap_text(
+                get_attributes(use_attrs["xhover"], xr_obj)
+                + " ("
+                + get_attributes(use_attrs["xunits"], xr_obj)
+                + ")"
+            )
+        else:
+            xhover = wrap_text(get_attributes(use_attrs["xhover"], xr_obj))
+    else:
+        xhover = plot_kw[name]["x"]
+    use_attrs["xhover"] = xhover
+    return use_attrs, plot_kw

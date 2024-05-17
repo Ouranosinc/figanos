@@ -25,6 +25,8 @@ from .utils import (
     get_all_values,
     get_glyph_param,
     rm_curve_hover_hook,
+    set_plot_attrs_hv,
+    x_timeseries,
 )
 
 
@@ -97,8 +99,8 @@ def _plot_ens_pct_stats(
     if "hooks" in opts_kw[name]:
         opts_kw_line["hooks"] = opts_kw_line["hooks"].append(rm_curve_hover_hook)
     else:
-        opts_kw_line = opts_kw_line.setdefault("hooks", [rm_curve_hover_hook])
-
+        opts_kw_line.setdefault("hooks", [rm_curve_hover_hook])
+    print(opts_kw_line)
     # plot
     hv_fig["line"] = (
         array_data[sorted_lines["middle"]]
@@ -295,10 +297,14 @@ def timeseries(
                     f"Key {name} not found in opts_kw. Using empty dict instead."
                 )
         for key in plot_kw:
+            # add "x" to plot_kw if not there
+            x_timeseries(data[key], plot_kw[key])
             if key not in data:
                 raise KeyError(
                     'plot_kw must be a nested dictionary with keys corresponding to the keys in "data"'
                 )
+    else:
+        x_timeseries(data["_no_label"], plot_kw["_no_label"])
 
     # check: type
     for name, arr in data.items():
@@ -310,13 +316,8 @@ def timeseries(
     # check: 'time' dimension and calendar format
     data = check_timeindex(data)
 
-    # add use attributes defaults ToDo: Adapt use_attrs to hvplot (already an option in hvplot with xarray)
-    # needs to incorporate xhover and yhover...
-    use_attrs = {
-        "title": "description",
-        "ylabel": "long_name",
-        "yunits": "units",
-    } | use_attrs
+    # add use attributes defaults
+    use_attrs, plot_kw = set_plot_attrs_hv(use_attrs, list(data.values())[-1], plot_kw)
 
     # dict of array 'categories'
     array_categ = {name: get_array_categ(array) for name, array in data.items()}
@@ -329,7 +330,6 @@ def timeseries(
 
     # get data and plot
     for name, arr in data.items():
-        # ToDo: Add use_attrs here and grey backgrounds lines
         # ToDo: if legend = 'edge' add hook in opts_kw
 
         #  remove 'label' to avoid error due to double 'label' args
@@ -356,6 +356,8 @@ def timeseries(
             use_attrs,
         )
 
-    x = "time"  # ToDo: remove once added function
-    opts_kw = add_default_opts_overlay(opts_kw, form, legend, use_attrs, x, array_categ)
+    opts_kw = add_default_opts_overlay(
+        opts_kw, form, legend, use_attrs, list(plot_kw.values())[-1]["x"], array_categ
+    )
+    print(opts_kw)
     return hv.Overlay(list(get_all_values(figs))).opts(**opts_kw["overlay"])
