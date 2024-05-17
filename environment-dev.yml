@@ -30,7 +30,7 @@ dependencies:
   - black ==24.4.2
   - blackdoc ==0.3.9
   - bump-my-version >=0.18.3
-  - coverage >=6.2,<7.0
+  - coverage >=7.3.1
   - coveralls >=3.3.1
   - flake8 >=6.1.0
   - flake8-rst-docstrings >=0.3.0
