@@ -52,4 +52,5 @@ dependencies:
   - sphinx-book-theme >=1.0.0
   - sphinx-codeautolink
   - sphinx-copybutton
+  - sphinx-intl
   - sphinxcontrib-napoleon
