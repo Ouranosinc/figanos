@@ -4,7 +4,7 @@ channels:
   - default
 dependencies:
   - python>=3.12,<3.13
-  - flit
+  - flit >=3.9.0
   # Main
   - cartopy >=0.23.0
   - cairosvg
@@ -12,7 +12,7 @@ dependencies:
   - seaborn
   - geopandas
   - numpy
-  - pandas
+  - pandas >=2.2.0
   - platformdirs
   - pyyaml
   - scikit-image
@@ -35,13 +35,12 @@ dependencies:
   - flake8 >=6.1.0
   - flake8-rst-docstrings >=0.3.0
   - isort ==5.13.2
+  - mypy
   - pip >=23.3.0
   - pre-commit >=3.3.2
   - pytest >=7.3.1
   - pytest-cov >=4.0.0
-  - tox
-  - twine
-  - wheel
+  - tox >=4.5.1
   # Docs
   - ipykernel
   - jupyter_client
