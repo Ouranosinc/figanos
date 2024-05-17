@@ -54,16 +54,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - tox-env: "py38-coveralls"
-            python-version: "3.8"
           - tox-env: "py39-coveralls"
             python-version: "3.9"
           - tox-env: "py310-coveralls"
             python-version: "3.10"
           - tox-env: "py311-coveralls"
             python-version: "3.11"
-#          - tox-env: "py312"
-#            python-version: "3.12"
+          - tox-env: "py312"
+            python-version: "3.12"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
@@ -93,6 +91,10 @@ jobs:
     name: Test with Python${{ matrix.python-version }} (Anaconda)
     needs: lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.12"
     defaults:
       run:
         shell: bash -l {0}
@@ -109,11 +111,10 @@ jobs:
           cache-downloads: true
           environment-file: environment-dev.yml
           create-args: >-
-            mamba
-            python=3.11
-      - name: Conda and Mamba versions
+            python=${{ matrix.python-version }}
+      - name: Conda and Micromamba versions
         run: |
-          mamba --version
+          conda --version
           echo "micromamba $(micromamba --version)"
       - name: Install figanos
         run: |
@@ -130,7 +131,7 @@ jobs:
           python -m coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: run-py311-conda
+          COVERALLS_FLAG_NAME: run-conda-python${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
           COVERALLS_SERVICE_NAME: github
 
