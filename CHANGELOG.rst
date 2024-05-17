@@ -8,9 +8,17 @@ Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Bra
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* `figanos` now supports Python 3.12. (:pull:`210`).
 * Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
-* Fix NaN issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
+* Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
+
+Breaking changes
+^^^^^^^^^^^^^^^^
+* `figanos` no longer supports Python 3.8. (:pull:`210`).
+* `figanos` now uses a `'src' layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout>`_ for the package. (:pull:`210`).
+* `cartopy` has been pinned above v0.23.0 due to a licensing issue. (:pull:`210`).
+* `twine` and `wheel` have been removed from the `dev` requirements. (:pull:`210`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
@@ -18,6 +26,13 @@ Internal changes
     * Addresses a handful of misconfigurations in the GitHub Workflows.
     * Updated `ruff` to v0.2.0 and `black` to v24.2.0.
 * Removed several unnecessary `noqa` comments from the codebase. (:pull:`168`).
+* Updated the `cookiecutter` template to the latest version. (:pull:`210`):
+    * GitHub Workflows have been updated to point to commits rather than tags.
+    * The `dependabot` configuration has been updated to run updates on a monthly schedule.
+    * Updated `ruff` to v0.3.0 and `black` to v24.4.2.
+    * `CHANGES.rst` has been renamed to `CHANGELOG.rst`.
+    * Maintainer-specific documentation has been added to new documentation page `releasing.rst`.
+* `figanos` now has a `CODE_OF_CONDUCT.rst` file adapting the Contributor Covenant v2.1 conventions. (:pull:`210`).
 
 0.3.0 (2024-02-16)
 ------------------
