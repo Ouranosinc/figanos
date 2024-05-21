@@ -1,6 +1,5 @@
 """Figanos plotting module."""
 
-from ._style import get_mpl_styles
 from .plot import (
     gdfmap,
     gridmap,
