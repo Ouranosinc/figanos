@@ -27,9 +27,9 @@ on:
       - environment-docs.yml
       - environment-dev.yml
       - pyproject.toml
+      - src/figanos/__init__.py
       - tests/**.py
       - tox.ini
-      - figanos/__init__.py
   workflow_dispatch:
 
 permissions:
