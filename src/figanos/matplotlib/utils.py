@@ -1084,13 +1084,10 @@ def categorical_colors() -> dict[str, str]:
         return cat
 
 
-def get_mpl_styles() -> dict[str, str]:
-    """Get the available matplotlib styles and their paths, as a dictionary."""
-    folder = pathlib.Path(__file__).parent / "style/"
-    paths = sorted(folder.glob("*.mplstyle"))
-    names = [str(p).split("/")[-1].removesuffix(".mplstyle") for p in paths]
-    styles = {str(name): path for name, path in zip(names, paths)}
-
+def get_mpl_styles() -> dict[str, pathlib.Path]:
+    """Get the available matplotlib styles and their paths as a dictionary."""
+    files = sorted(pathlib.Path(__file__).parent.joinpath("style").glob("*.mplstyle"))
+    styles = {style.stem: style for style in files}
     return styles
 
 

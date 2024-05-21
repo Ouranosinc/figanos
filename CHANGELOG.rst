@@ -12,6 +12,7 @@ New features and enhancements
 * Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
 * Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
+* New functions ``fg.data`` and ``fg.matplotlib.get_mpl_styles`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
