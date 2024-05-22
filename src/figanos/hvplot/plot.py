@@ -359,5 +359,5 @@ def timeseries(
     opts_kw = add_default_opts_overlay(
         opts_kw, form, legend, use_attrs, list(plot_kw.values())[-1]["x"], array_categ
     )
-    print(opts_kw)
+
     return hv.Overlay(list(get_all_values(figs))).opts(**opts_kw["overlay"])

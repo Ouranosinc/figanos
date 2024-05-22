@@ -193,19 +193,21 @@ def get_all_values(nested_dictionary) -> list:
 
 def curve_hover_hook(plot, element, att, form, x) -> None:
     """Hook to pass to hover curve to show correct format"""
-    if plot.handles["hover"].tooltips[0][0] != x:
-        plot.handles["hover"].tooltips[-2:] = [
-            (att["xhover"], "$x{%F}"),
-            (att["yhover"], "$y{" + form + "}"),
-        ]
-    else:
-        plot.handles["hover"].tooltips = [
-            (att["xhover"], "$x{%F}"),
-            (att["yhover"], "$y{" + form + "}"),
-        ]
-    plot.handles["hover"].formatters = {
-        "$x": "datetime",
-    }
+    for hov_id, hover in plot.handles["hover_tools"].items():
+        # print(hov_id)
+        if hover.tooltips[0][0] != x:
+            hover.tooltips[-2:] = [
+                (att["xhover"], "$x{%F}"),
+                (att["yhover"], "$y{" + form + "}"),
+            ]
+        else:
+            hover.tooltips = [
+                (att["xhover"], "$x{%F}"),
+                (att["yhover"], "$y{" + form + "}"),
+            ]
+        hover.formatters = {
+            "$x": "datetime",
+        }
 
 
 def rm_curve_hover_hook(plot, element) -> None:
