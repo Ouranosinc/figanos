@@ -1827,6 +1827,7 @@ def taylordiagram(
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
+    corr_range: tuple = (0, np.pi / 2),
 ):
     """Build a Taylor diagram.
 
@@ -1962,7 +1963,7 @@ def taylordiagram(
     # Set up the axes range in the parameter "extremes"
     ghelper = GridHelperCurveLinear(
         transform,
-        extremes=(0, np.pi / 2, radius_min, radius_max),
+        extremes=(corr_range[0], corr_range[1], radius_min, radius_max),
         grid_locator1=gl1,
         tick_formatter1=tf1,
     )
@@ -2013,7 +2014,8 @@ def taylordiagram(
     # rmse contours from reference standard deviation
     if contours:
         radii, angles = np.meshgrid(
-            np.linspace(radius_min, radius_max), np.linspace(0, np.pi / 2)
+            np.linspace(radius_min, radius_max),
+            np.linspace(corr_range[0], corr_range[1]),
         )
         # Compute centered RMS difference
         rms = np.sqrt(ref_std**2 + radii**2 - 2 * ref_std * radii * np.cos(angles))
@@ -2072,6 +2074,8 @@ def normalized_taylordiagram(
     plot_kw: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     std_range: tuple = (0, 1.5),
+    contours: int | None = 4,
+    contours_kw: dict | None = None,
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
@@ -2092,6 +2096,10 @@ def normalized_taylordiagram(
         Arguments to pass to `plt.figure()`.
     std_range : tuple
         Range of the x and y axes, in units of the highest standard deviation in the data.
+    contours : int, optional
+        Number of rsme contours to plot.
+    contours_kw : dict, optional
+        Arguments to pass to `plt.contour()` for the rmse contours.
     legend_kw : dict, optional
         Arguments to pass to `plt.legend()`.
     std_label : str, optional
@@ -2119,9 +2127,11 @@ def normalized_taylordiagram(
 
     if not std_label:
         try:
-            std_label = get_localized_term("Normalized standard deviation")
+            std_label = get_localized_term("standard deviation (normalized)")
         except AttributeError:
-            std_label = get_localized_term("Normalized standard deviation").capitalize()
+            std_label = get_localized_term(
+                "standard deviation (normalized)"
+            ).capitalize()
 
     # convert SSP, RCP, CMIP formats in keys
     if isinstance(data, dict):
@@ -2196,7 +2206,6 @@ def normalized_taylordiagram(
             data[k][{"taylor_param": 0}] / data[k][{"taylor_param": 0}]
         )
 
-    contours, contours_kw = 0, {}
     fig, floating_ax, legend = taylordiagram(
         data,
         plot_kw,
@@ -2219,6 +2228,12 @@ def normalized_taylordiagram(
 
     # plot new legend if markers/colors represent a certain dimension
     if colors_dim is not None or markers_dim is not None:
+        old_handles = []
+        handles_labels = floating_ax.get_legend_handles_labels()
+        for il, label in enumerate(handles_labels[1]):
+            if "rmse" in label or get_localized_term("reference") in label:
+                old_handles.append(handles_labels[0][il])
+
         chandles = []
         if colors_dim:
             for k, c in colorsd.items():
@@ -2227,15 +2242,8 @@ def normalized_taylordiagram(
         if markers_dim:
             for k, m in markersd.items():
                 mhandles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
-        new_handles = mhandles + chandles
-    else:
-        new_handles = []
-        handles_labels = floating_ax.get_legend_handles_labels()
-        for il, label in enumerate(handles_labels[1]):
-            if get_localized_term("reference") not in label:
-                new_handles.append(handles_labels[0][il])
-    legend.remove()
-    legend = fig.legend(handles=new_handles, **legend_kw)
+        legend.remove()
+        legend = fig.legend(handles=old_handles + mhandles + chandles, **legend_kw)
 
     return fig, floating_ax, legend
 
