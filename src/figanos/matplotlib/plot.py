@@ -2138,43 +2138,51 @@ def normalized_taylordiagram(
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
 
+    # only one multi-dimensional DataArray or a dict of one-dimensional DataArrays are accepted
     data_keys = list(data.keys())
     if len(data_keys) > 1 and len(data[data_keys[0]].dims) > 1:
         raise ValueError(
-            "Either give a dict of one-dimensional DataArrays or a single DataArray (with a maximum of 3 dimensions)"
+            "Either give a dict of one-dimensional DataArrays or a single DataArray (with a maximum of 3 dimensions including `taylor_param`)."
         )
     # markers/colors are attributed to given dimensions, if specified
     if len(data[data_keys[0]].dims) > 1:
         da = data[data_keys[0]]
-        plot_kw = plot_kw[data_keys[0]]
-        if markers_dim is not None or colors_dim is not None:
-            if markers_dim:
-                if isinstance(markers_dim, str):
-                    # do not use "s" for markers, it's used for reference
-                    default_markers = "oDv^<>p*hH+x|_"
-                    markers = [
-                        default_markers[i % len(default_markers)]
-                        for i in range(da[markers_dim].size)
-                    ]
-                else:
-                    markers = list(markers_dim.values())[0]
-                    markers_dim = list(markers_dim.keys())[0]
-                markersd = {k: m for k, m in zip(da[markers_dim].values, markers)}
-            if colors_dim:
-                if isinstance(colors_dim, str):
-                    colors = [f"C{i}" for i in range(da[colors_dim].size)]
-                else:
-                    colors = list(colors_dim.values())[0]
-                    colors_dim = list(colors_dim.keys())[0]
-                colorsd = {k: c for k, c in zip(da[colors_dim].values, colors)}
+
+        if markers_dim is not None:
+            if isinstance(markers_dim, str):
+                # do not use "s" for markers, it's used for reference
+                default_markers = "oDv^<>p*hH+x|_"
+                markers = [
+                    default_markers[i % len(default_markers)]
+                    for i in range(da[markers_dim].size)
+                ]
+            else:
+                markers = list(markers_dim.values())[0]
+                markers_dim = list(markers_dim.keys())[0]
+            markersd = {k: m for k, m in zip(da[markers_dim].values, markers)}
+        if colors_dim is not None:
+            if isinstance(colors_dim, str):
+                colors = [f"C{i}" for i in range(da[colors_dim].size)]
+            else:
+                colors = list(colors_dim.values())[0]
+                colors_dim = list(colors_dim.keys())[0]
+            colorsd = {k: c for k, c in zip(da[colors_dim].values, colors)}
+
         dims = list(set(da.dims) - {"taylor_param"})
         da = da.stack(pl_dims=dims)
         for i, key in enumerate(da.pl_dims.values):
+            da0 = da.isel(pl_dims=i)
             if isinstance(key, list) or isinstance(key, tuple):
                 key = "_".join([str(k) for k in key])
-            data[key] = da.isel(pl_dims=i)
+            data[key] = da0
+            plot_kw[key] = empty_dict(plot_kw[data_keys[0]])
+            if markers_dim:
+                plot_kw[key]["marker"] = markersd[da0[markers_dim].values.item()]
+            if colors_dim:
+                plot_kw[key]["color"] = colorsd[da0[colors_dim].values.item()]
+
         data.pop(data_keys[0])
-        plot_kw = {k: empty_dict(plot_kw) for k in data.keys()}
+        plot_kw.pop(data_keys[0])
 
     # normalize data (such that ref_std == 1, unitless)
     for k in data.keys():
@@ -2184,12 +2192,6 @@ def normalized_taylordiagram(
         data[k][{"taylor_param": 0}] = (
             data[k][{"taylor_param": 0}] / data[k][{"taylor_param": 0}]
         )
-
-    for (key, da), i in zip(data.items(), range(len(data))):
-        if markers_dim:
-            plot_kw[key]["marker"] = markersd[da[markers_dim].values.item()]
-        if colors_dim:
-            plot_kw[key]["color"] = colorsd[da[colors_dim].values.item()]
 
     fig, floating_ax, legend = taylordiagram(
         data,
@@ -2203,9 +2205,9 @@ def normalized_taylordiagram(
         corr_label,
     )
 
-    legend_kw.setdefault("loc", "upper right")
-
-    if colors_dim or markers_dim:
+    # plot new legend if markers/colors represent a certain dimension
+    if colors_dim is not None or markers_dim is not None:
+        # leave reference / rmse in legend if applicable
         old_handles = []
         handles_labels = floating_ax.get_legend_handles_labels()
         for il, label in enumerate(handles_labels[1]):
@@ -2219,8 +2221,9 @@ def normalized_taylordiagram(
         if markers_dim:
             for k, m in markersd.items():
                 mhandles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
+
         legend.remove()
-        legend = fig.legend(handles=old_handles + mhandles + chandles)
+        legend = fig.legend(handles=old_handles + mhandles + chandles, **legend_kw)
 
     return fig, floating_ax, legend
 
