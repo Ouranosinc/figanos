@@ -2072,8 +2072,6 @@ def normalized_taylordiagram(
     plot_kw: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     std_range: tuple = (0, 1.5),
-    contours: int | None = 4,
-    contours_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
@@ -2094,10 +2092,6 @@ def normalized_taylordiagram(
         Arguments to pass to `plt.figure()`.
     std_range : tuple
         Range of the x and y axes, in units of the highest standard deviation in the data.
-    contours : int, optional
-        Number of rsme contours to plot.
-    contours_kw : dict, optional
-        Arguments to pass to `plt.contour()` for the rmse contours.
     legend_kw : dict, optional
         Arguments to pass to `plt.legend()`.
     std_label : str, optional
@@ -2117,7 +2111,6 @@ def normalized_taylordiagram(
     """
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
-    contours_kw = empty_dict(contours_kw)
     legend_kw = empty_dict(legend_kw)
 
     if not std_label:
@@ -2193,6 +2186,7 @@ def normalized_taylordiagram(
             data[k][{"taylor_param": 0}] / data[k][{"taylor_param": 0}]
         )
 
+    contours, contours_kw = 0, {}
     fig, floating_ax, legend = taylordiagram(
         data,
         plot_kw,
@@ -2205,14 +2199,16 @@ def normalized_taylordiagram(
         corr_label,
     )
 
+    # add a line along std = 1
+    transform = PolarAxes.PolarTransform()
+    ax = floating_ax.get_aux_axes(transform)  # return the axes that can be plotted on
+    radius_value = 1.0
+    angles_for_line = np.linspace(0, np.pi / 2, 100)
+    radii_for_line = np.full_like(angles_for_line, radius_value)
+    ax.plot(angles_for_line, radii_for_line, color="k", linewidth=0.5, linestyle="-")
+
     # plot new legend if markers/colors represent a certain dimension
     if colors_dim is not None or markers_dim is not None:
-        # leave reference / rmse in legend if applicable
-        old_handles = []
-        handles_labels = floating_ax.get_legend_handles_labels()
-        for il, label in enumerate(handles_labels[1]):
-            if "rmse" in label or get_localized_term("reference") in label:
-                old_handles.append(handles_labels[0][il])
         chandles = []
         if colors_dim:
             for k, c in colorsd.items():
@@ -2221,9 +2217,15 @@ def normalized_taylordiagram(
         if markers_dim:
             for k, m in markersd.items():
                 mhandles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
-
-        legend.remove()
-        legend = fig.legend(handles=old_handles + mhandles + chandles, **legend_kw)
+        new_handles = mhandles + chandles
+    else:
+        new_handles = []
+        handles_labels = floating_ax.get_legend_handles_labels()
+        for il, label in enumerate(handles_labels[1]):
+            if get_localized_term("reference") not in label:
+                new_handles.append(handles_labels[0][il])
+    legend.remove()
+    legend = fig.legend(handles=new_handles, **legend_kw)
 
     return fig, floating_ax, legend
 
