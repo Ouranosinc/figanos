@@ -1827,7 +1827,6 @@ def taylordiagram(
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
-    floating_ax: FloatingSubplot | None = None,
 ):
     """Build a Taylor diagram.
 
@@ -2148,23 +2147,8 @@ def normalized_taylordiagram(
         dims = []
         if markers_dim:
             if isinstance(markers_dim, str):
-                # do not use "s", it's used for reference
-                default_markers = [
-                    "o",
-                    "D",
-                    "v",
-                    "^",
-                    "<",
-                    ">",
-                    "p",
-                    "*",
-                    "h",
-                    "H",
-                    "+",
-                    "x",
-                    "|",
-                    "_",
-                ]
+                # do not use "s" for markers, it's used for reference
+                default_markers = "oDv^<>p*hH+x|_"
                 markers = [
                     default_markers[i % len(default_markers)]
                     for i in range(da[markers_dim].size)
