@@ -2108,6 +2108,10 @@ def normalized_taylordiagram(
     Returns
     -------
     (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
+
+    Notes
+    -----
+    Inputing `markers_dim` and/or `colors_dim` only works for DataArrays with at most three dimensions, including `taylor_param`.
     """
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
@@ -2139,6 +2143,12 @@ def normalized_taylordiagram(
         )
     # markers/colors are attributed to given dimensions, if specified
     if len(data[data_keys[0]].dims) > 1:
+        if (markers_dim is not None or colors_dim is not None) and len(
+            data[data_keys[0]].dims
+        ) > 3:
+            raise ValueError(
+                "DataArray must have at most 3 dimensions including `taylor_param` when specifying `markers_dim` or `colors_dim`."
+            )
         da = data[data_keys[0]]
 
         if markers_dim is not None:
