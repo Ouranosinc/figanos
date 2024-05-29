@@ -4,7 +4,7 @@ Changelog
 
 0.4.0 (unreleased)
 ------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -13,6 +13,7 @@ New features and enhancements
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
 * Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
+* New function ``fg.normalized_taylordiagram`` for plotting Taylor diagram where standard deviations are normalized such that reference's standard deviation is 1. (:pull:`214`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
@@ -20,6 +21,7 @@ Breaking changes
 * `figanos` now uses a `'src' layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout>`_ for the package. (:pull:`210`).
 * `cartopy` has been pinned above v0.23.0 due to a licensing issue. (:pull:`210`).
 * `twine` and `wheel` have been removed from the `dev` requirements. (:pull:`210`).
+* ``fg.taylordiagram`` returns a tuple of `(fig, floating_ax, legend)` instead of only `floating_ax`. (:pull:`214`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
