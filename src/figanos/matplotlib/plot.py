@@ -1857,7 +1857,7 @@ def taylordiagram(
 
     Returns
     -------
-    matplotlib.axes.Axes
+    (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
     """
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
@@ -2080,9 +2080,7 @@ def normalized_taylordiagram(
     markers_dim: str | dict | None = None,
     colors_dim: str | dict | None = None,
 ):
-    """Build a Taylor diagram.
-
-    Based on the following code: https://gist.github.com/ycopin/3342888.
+    """Build a Taylor diagram with normalized standard deviation.
 
     Parameters
     ----------
@@ -2106,10 +2104,16 @@ def normalized_taylordiagram(
         Label for the standard deviation (x and y) axes.
     corr_label : str, optional
         Label for the correlation axis.
+    markers_dim : str or dict, optional
+        Dimension of `data` that should be represented with markers. A dict with the dimension as key and a list of markers
+        as value can be passed.
+    colors_dim : str or dict, optional
+        Dimension of `data` that should be represented with colors. A dict with the dimension as key and a list of markers
+        as value can be passed.
 
     Returns
     -------
-    matplotlib.axes.Axes
+    (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
     """
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
@@ -2134,44 +2138,42 @@ def normalized_taylordiagram(
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
 
+    data_keys = list(data.keys())
+    if len(data_keys) > 1 and len(data[data_keys[0]].dims) > 1:
+        raise ValueError(
+            "Either give a dict of one-dimensional DataArrays or a single DataArray (with a maximum of 3 dimensions)"
+        )
     # markers/colors are attributed to given dimensions, if specified
-    if markers_dim is not None or colors_dim is not None:
-        keys = list(data.keys())
-        if len(keys) > 1:
-            raise ValueError(
-                "Can only plot one dimension if many DataArrays are given as input"
-            )
-
-        da = data[keys[0]]
-        plot_kw = plot_kw[keys[0]]
-        dims = []
-        if markers_dim:
-            if isinstance(markers_dim, str):
-                # do not use "s" for markers, it's used for reference
-                default_markers = "oDv^<>p*hH+x|_"
-                markers = [
-                    default_markers[i % len(default_markers)]
-                    for i in range(da[markers_dim].size)
-                ]
-            else:
-                markers = list(markers_dim.values())[0]
-                markers_dim = list(markers_dim.keys())[0]
-            markersd = {k: m for k, m in zip(da[markers_dim].values, markers)}
-            dims.append(markers_dim)
-        if colors_dim:
-            if isinstance(colors_dim, str):
-                colors = [f"C{i}" for i in range(da[colors_dim].size)]
-            else:
-                colors = list(colors_dim.values())[0]
-                colors_dim = list(colors_dim.keys())[0]
-            colorsd = {k: c for k, c in zip(da[colors_dim].values, colors)}
-            dims.append(colors_dim)
+    if len(data[data_keys[0]].dims) > 1:
+        da = data[data_keys[0]]
+        plot_kw = plot_kw[data_keys[0]]
+        if markers_dim is not None or colors_dim is not None:
+            if markers_dim:
+                if isinstance(markers_dim, str):
+                    # do not use "s" for markers, it's used for reference
+                    default_markers = "oDv^<>p*hH+x|_"
+                    markers = [
+                        default_markers[i % len(default_markers)]
+                        for i in range(da[markers_dim].size)
+                    ]
+                else:
+                    markers = list(markers_dim.values())[0]
+                    markers_dim = list(markers_dim.keys())[0]
+                markersd = {k: m for k, m in zip(da[markers_dim].values, markers)}
+            if colors_dim:
+                if isinstance(colors_dim, str):
+                    colors = [f"C{i}" for i in range(da[colors_dim].size)]
+                else:
+                    colors = list(colors_dim.values())[0]
+                    colors_dim = list(colors_dim.keys())[0]
+                colorsd = {k: c for k, c in zip(da[colors_dim].values, colors)}
+        dims = list(set(da.dims) - {"taylor_param"})
         da = da.stack(pl_dims=dims)
         for i, key in enumerate(da.pl_dims.values):
             if isinstance(key, list) or isinstance(key, tuple):
                 key = "_".join([str(k) for k in key])
             data[key] = da.isel(pl_dims=i)
-        data.pop("_no_label")
+        data.pop(data_keys[0])
         plot_kw = {k: empty_dict(plot_kw) for k in data.keys()}
 
     # normalize data (such that ref_std == 1, unitless)
