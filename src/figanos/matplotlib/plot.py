@@ -1828,6 +1828,8 @@ def taylordiagram(
     std_label: str | None = None,
     corr_label: str | None = None,
     corr_range: tuple = (0, np.pi / 2),
+    colors_key: str | None = None,
+    markers_key: str | None = None,
 ):
     """Build a Taylor diagram.
 
@@ -1855,6 +1857,12 @@ def taylordiagram(
         Label for the standard deviation (x and y) axes.
     corr_label : str, optional
         Label for the correlation axis.
+    colors_key : str, optional
+        Attribute or dimension of DataArrays used to separate DataArrays into groups with different colors. If present,
+        it overrides the "color" key in `plot_kw`.
+    markers_key : str, optional
+        Attribute or dimension of DataArrays used to separate DataArrays into groups with different markers. If present,
+        it overrides the "marker" key in `plot_kw`.
 
     Returns
     -------
@@ -1886,6 +1894,47 @@ def taylordiagram(
             raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
         if key == "reference":
             raise ValueError("'reference' is not allowed as a key in data.")
+
+    # If there are other dimensions than 'taylor_param', create a bigger dict with them
+    # It's possible that some dimensions are used a discriminating attributes for colors and markers
+    keys = list(data.keys())
+    for key in keys:
+        da = data[key]
+        dims = list(set(da.dims) - {"taylor_param"})
+        if dims != []:
+            da = da.stack(pl_dims=dims)
+            for i, key2 in enumerate(da.pl_dims.values):
+                da0 = da.isel(pl_dims=i)
+                if markers_key in dims:
+                    da0.attrs[markers_key] = da0[markers_key].values.item()
+                if colors_key in dims:
+                    da0.attrs[colors_key] = da0[colors_key].values.item()
+                if isinstance(key2, list) or isinstance(key2, tuple):
+                    key2 = "-".join([str(k) for k in key2])
+                new_key = f"{key}-{key2}" if key != "_no_label" else key2
+                data[new_key] = da0
+                plot_kw[new_key] = empty_dict(plot_kw[f"{key}"])
+            data.pop(key)
+            plot_kw.pop(key)
+
+    # set colors and markers based on discrimnating attributes
+    if colors_key or markers_key:
+        if colors_key:
+            colorkeys = {da.attrs[colors_key] for da in data.values()}
+            colorsd = {key: f"C{i}" for i, key in enumerate(colorkeys)}
+        if markers_key:
+            default_markers = "oDv^<>p*hH+x|_"
+            markerkeys = {da.attrs[markers_key] for da in data.values()}
+            markersd = {
+                key: default_markers[i % len(markerkeys)]
+                for i, key in enumerate(markerkeys)
+            }
+
+        for key, da in data.items():
+            if colors_key:
+                plot_kw[key]["color"] = colorsd[da.attrs[colors_key]]
+            if markers_key:
+                plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # remove negative correlations
     initial_len = len(data)
@@ -1930,10 +1979,9 @@ def taylordiagram(
     # make labels
     if not std_label:
         try:
-            std_label = (
-                get_localized_term("standard deviation")
-                + f" ({list(data.values())[0].units})"
-            )
+            units = list(data.values())[0].units
+            std_label = get_localized_term("standard deviation")
+            std_label = std_label if units == "" else f"{std_label} ({units})"
         except AttributeError:
             std_label = get_localized_term("standard deviation").capitalize()
 
@@ -2056,7 +2104,9 @@ def taylordiagram(
         # set defaults
         plot_kw[key] = {"label": key} | plot_kw[key]
 
-        # plot
+        # legend will be handled later in this case
+        if markers_key or colors_key:
+            plot_kw[key]["label"] = ""
         pt = ax.scatter(
             plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
         )
@@ -2066,186 +2116,198 @@ def taylordiagram(
     legend_kw.setdefault("loc", "upper right")
     legend = fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
 
-    return fig, floating_ax, legend
-
-
-def normalized_taylordiagram(
-    data: xr.DataArray | dict[str, xr.DataArray],
-    plot_kw: dict[str, Any] | None = None,
-    fig_kw: dict[str, Any] | None = None,
-    std_range: tuple = (0, 1.5),
-    contours: int | None = 4,
-    contours_kw: dict | None = None,
-    legend_kw: dict[str, Any] | None = None,
-    std_label: str | None = None,
-    corr_label: str | None = None,
-    markers_dim: str | dict | None = None,
-    colors_dim: str | dict | None = None,
-):
-    """Build a Taylor diagram with normalized standard deviation.
-
-    Parameters
-    ----------
-    data : xr.DataArray or dict
-        DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
-        to a point on the diagram. The dictionary keys will become their labels.
-    plot_kw : dict, optional
-        Arguments to pass to the `plot()` function. Changes how the markers look.
-        If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
-    fig_kw : dict, optional
-        Arguments to pass to `plt.figure()`.
-    std_range : tuple
-        Range of the x and y axes, in units of the highest standard deviation in the data.
-    contours : int, optional
-        Number of rsme contours to plot.
-    contours_kw : dict, optional
-        Arguments to pass to `plt.contour()` for the rmse contours.
-    legend_kw : dict, optional
-        Arguments to pass to `plt.legend()`.
-    std_label : str, optional
-        Label for the standard deviation (x and y) axes.
-    corr_label : str, optional
-        Label for the correlation axis.
-    markers_dim : str or dict, optional
-        Dimension of `data` that should be represented with markers. A dict with the dimension as key and a list of markers
-        as value can be passed.
-    colors_dim : str or dict, optional
-        Dimension of `data` that should be represented with colors. A dict with the dimension as key and a list of markers
-        as value can be passed.
-
-    Returns
-    -------
-    (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
-
-    Notes
-    -----
-    Inputing `markers_dim` and/or `colors_dim` only works for DataArrays with at most three dimensions, including `taylor_param`.
-    """
-    plot_kw = empty_dict(plot_kw)
-    fig_kw = empty_dict(fig_kw)
-    legend_kw = empty_dict(legend_kw)
-
-    if not std_label:
-        try:
-            std_label = get_localized_term("standard deviation (normalized)")
-        except AttributeError:
-            std_label = get_localized_term(
-                "standard deviation (normalized)"
-            ).capitalize()
-
-    # convert SSP, RCP, CMIP formats in keys
-    if isinstance(data, dict):
-        data = process_keys(data, convert_scen_name)
-    if isinstance(plot_kw, dict):
-        plot_kw = process_keys(plot_kw, convert_scen_name)
-    if not plot_kw:
-        plot_kw = {}
-    # if only one data input, insert in dict.
-    if not isinstance(data, dict):
-        data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
-        plot_kw = {"_no_label": empty_dict(plot_kw)}
-
-    # only one multi-dimensional DataArray or a dict of one-dimensional DataArrays are accepted
-    data_keys = list(data.keys())
-    if len(data_keys) > 1 and len(data[data_keys[0]].dims) > 1:
-        raise ValueError(
-            "Either give a dict of one-dimensional DataArrays or a single DataArray (with a maximum of 3 dimensions including `taylor_param`)."
-        )
-    # markers/colors are attributed to given dimensions, if specified
-    if len(data[data_keys[0]].dims) > 1:
-        if (markers_dim is not None or colors_dim is not None) and len(
-            data[data_keys[0]].dims
-        ) > 3:
-            raise ValueError(
-                "DataArray must have at most 3 dimensions including `taylor_param` when specifying `markers_dim` or `colors_dim`."
-            )
-        da = data[data_keys[0]]
-
-        if markers_dim is not None:
-            if isinstance(markers_dim, str):
-                # do not use "s" for markers, it's used for reference
-                default_markers = "oDv^<>p*hH+x|_"
-                markers = [
-                    default_markers[i % len(default_markers)]
-                    for i in range(da[markers_dim].size)
-                ]
-            else:
-                markers = list(markers_dim.values())[0]
-                markers_dim = list(markers_dim.keys())[0]
-            markersd = {k: m for k, m in zip(da[markers_dim].values, markers)}
-        if colors_dim is not None:
-            if isinstance(colors_dim, str):
-                colors = [f"C{i}" for i in range(da[colors_dim].size)]
-            else:
-                colors = list(colors_dim.values())[0]
-                colors_dim = list(colors_dim.keys())[0]
-            colorsd = {k: c for k, c in zip(da[colors_dim].values, colors)}
-
-        dims = list(set(da.dims) - {"taylor_param"})
-        da = da.stack(pl_dims=dims)
-        for i, key in enumerate(da.pl_dims.values):
-            da0 = da.isel(pl_dims=i)
-            if isinstance(key, list) or isinstance(key, tuple):
-                key = "_".join([str(k) for k in key])
-            data[key] = da0
-            plot_kw[key] = empty_dict(plot_kw[data_keys[0]])
-            if markers_dim:
-                plot_kw[key]["marker"] = markersd[da0[markers_dim].values.item()]
-            if colors_dim:
-                plot_kw[key]["color"] = colorsd[da0[colors_dim].values.item()]
-
-        data.pop(data_keys[0])
-        plot_kw.pop(data_keys[0])
-
-    # normalize data (such that ref_std == 1, unitless)
-    for k in data.keys():
-        data[k][{"taylor_param": 1}] = (
-            data[k][{"taylor_param": 1}] / data[k][{"taylor_param": 0}]
-        )
-        data[k][{"taylor_param": 0}] = (
-            data[k][{"taylor_param": 0}] / data[k][{"taylor_param": 0}]
-        )
-
-    fig, floating_ax, legend = taylordiagram(
-        data,
-        plot_kw,
-        fig_kw,
-        std_range,
-        contours,
-        contours_kw,
-        legend_kw,
-        std_label,
-        corr_label,
-    )
-
-    # add a line along std = 1
-    transform = PolarAxes.PolarTransform()
-    ax = floating_ax.get_aux_axes(transform)  # return the axes that can be plotted on
-    radius_value = 1.0
-    angles_for_line = np.linspace(0, np.pi / 2, 100)
-    radii_for_line = np.full_like(angles_for_line, radius_value)
-    ax.plot(angles_for_line, radii_for_line, color="k", linewidth=0.5, linestyle="-")
-
     # plot new legend if markers/colors represent a certain dimension
-    if colors_dim is not None or markers_dim is not None:
-        old_handles = []
-        handles_labels = floating_ax.get_legend_handles_labels()
-        for il, label in enumerate(handles_labels[1]):
-            if "rmse" in label or get_localized_term("reference") in label:
-                old_handles.append(handles_labels[0][il])
-
-        chandles = []
-        if colors_dim:
-            for k, c in colorsd.items():
-                chandles.append(Line2D([0], [0], color=c, label=k, ls="-"))
-        mhandles = []
-        if markers_dim:
+    if colors_key or markers_key:
+        handles = list(floating_ax.get_legend_handles_labels()[0])
+        if markers_key:
             for k, m in markersd.items():
-                mhandles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
+                handles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
+        if colors_key:
+            for k, c in colorsd.items():
+                handles.append(Line2D([0], [0], color=c, label=k, ls="-"))
         legend.remove()
-        legend = fig.legend(handles=old_handles + mhandles + chandles, **legend_kw)
+        legend = fig.legend(handles=handles, **legend_kw)
 
     return fig, floating_ax, legend
+
+
+# def normalized_taylordiagram(
+#     data: xr.DataArray | dict[str, xr.DataArray],
+#     plot_kw: dict[str, Any] | None = None,
+#     fig_kw: dict[str, Any] | None = None,
+#     std_range: tuple = (0, 1.5),
+#     contours: int | None = 4,
+#     contours_kw: dict | None = None,
+#     legend_kw: dict[str, Any] | None = None,
+#     std_label: str | None = None,
+#     corr_label: str | None = None,
+#     markers_dim: str | dict | None = None,
+#     colors_dim: str | dict | None = None,
+# ):
+#     """Build a Taylor diagram with normalized standard deviation.
+
+#     Parameters
+#     ----------
+#     data : xr.DataArray or dict
+#         DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
+#         to a point on the diagram. The dictionary keys will become their labels.
+#     plot_kw : dict, optional
+#         Arguments to pass to the `plot()` function. Changes how the markers look.
+#         If 'data' is a dictionary, must be a nested dictionary with the same keys as 'data'.
+#     fig_kw : dict, optional
+#         Arguments to pass to `plt.figure()`.
+#     std_range : tuple
+#         Range of the x and y axes, in units of the highest standard deviation in the data.
+#     contours : int, optional
+#         Number of rsme contours to plot.
+#     contours_kw : dict, optional
+#         Arguments to pass to `plt.contour()` for the rmse contours.
+#     legend_kw : dict, optional
+#         Arguments to pass to `plt.legend()`.
+#     std_label : str, optional
+#         Label for the standard deviation (x and y) axes.
+#     corr_label : str, optional
+#         Label for the correlation axis.
+#     markers_dim : str or dict, optional
+#         Dimension of `data` that should be represented with markers. A dict with the dimension as key and a list of markers
+#         as value can be passed.
+#     colors_dim : str or dict, optional
+#         Dimension of `data` that should be represented with colors. A dict with the dimension as key and a list of markers
+#         as value can be passed.
+
+#     Returns
+#     -------
+#     (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
+
+#     Notes
+#     -----
+#     Inputing `markers_dim` and/or `colors_dim` only works for DataArrays with at most three dimensions, including `taylor_param`.
+#     """
+#     plot_kw = empty_dict(plot_kw)
+#     fig_kw = empty_dict(fig_kw)
+#     legend_kw = empty_dict(legend_kw)
+
+#     if not std_label:
+#         try:
+#             std_label = get_localized_term("standard deviation (normalized)")
+#         except AttributeError:
+#             std_label = get_localized_term(
+#                 "standard deviation (normalized)"
+#             ).capitalize()
+
+#     # convert SSP, RCP, CMIP formats in keys
+#     if isinstance(data, dict):
+#         data = process_keys(data, convert_scen_name)
+#     if isinstance(plot_kw, dict):
+#         plot_kw = process_keys(plot_kw, convert_scen_name)
+#     if not plot_kw:
+#         plot_kw = {}
+#     # if only one data input, insert in dict.
+#     if not isinstance(data, dict):
+#         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
+#         plot_kw = {"_no_label": empty_dict(plot_kw)}
+
+#     # only one multi-dimensional DataArray or a dict of one-dimensional DataArrays are accepted
+#     data_keys = list(data.keys())
+#     if len(data_keys) > 1 and len(data[data_keys[0]].dims) > 1:
+#         raise ValueError(
+#             "Either give a dict of one-dimensional DataArrays or a single DataArray (with a maximum of 3 dimensions including `taylor_param`)."
+#         )
+#     # markers/colors are attributed to given dimensions, if specified
+#     if len(data[data_keys[0]].dims) > 1:
+#         if (markers_dim is not None or colors_dim is not None) and len(
+#             data[data_keys[0]].dims
+#         ) > 3:
+#             raise ValueError(
+#                 "DataArray must have at most 3 dimensions including `taylor_param` when specifying `markers_dim` or `colors_dim`."
+#             )
+#         da = data[data_keys[0]]
+
+#         if markers_dim is not None:
+#             if isinstance(markers_dim, str):
+#                 # do not use "s" for markers, it's used for reference
+#                 default_markers = "oDv^<>p*hH+x|_"
+#                 markers = [
+#                     default_markers[i % len(default_markers)]
+#                     for i in range(da[markers_dim].size)
+#                 ]
+#             else:
+#                 markers = list(markers_dim.values())[0]
+#                 markers_dim = list(markers_dim.keys())[0]
+#             markersd = {k: m for k, m in zip(da[markers_dim].values, markers)}
+#         if colors_dim is not None:
+#             if isinstance(colors_dim, str):
+#                 colors = [f"C{i}" for i in range(da[colors_dim].size)]
+#             else:
+#                 colors = list(colors_dim.values())[0]
+#                 colors_dim = list(colors_dim.keys())[0]
+#             colorsd = {k: c for k, c in zip(da[colors_dim].values, colors)}
+
+#         dims = list(set(da.dims) - {"taylor_param"})
+#         da = da.stack(pl_dims=dims)
+#         for i, key in enumerate(da.pl_dims.values):
+#             da0 = da.isel(pl_dims=i)
+#             if isinstance(key, list) or isinstance(key, tuple):
+#                 key = "_".join([str(k) for k in key])
+#             data[key] = da0
+#             plot_kw[key] = empty_dict(plot_kw[data_keys[0]])
+#             if markers_dim:
+#                 plot_kw[key]["marker"] = markersd[da0[markers_dim].values.item()]
+#             if colors_dim:
+#                 plot_kw[key]["color"] = colorsd[da0[colors_dim].values.item()]
+
+#         data.pop(data_keys[0])
+#         plot_kw.pop(data_keys[0])
+
+#     # normalize data (such that ref_std == 1, unitless)
+#     for k in data.keys():
+#         data[k][{"taylor_param": 1}] = (
+#             data[k][{"taylor_param": 1}] / data[k][{"taylor_param": 0}]
+#         )
+#         data[k][{"taylor_param": 0}] = (
+#             data[k][{"taylor_param": 0}] / data[k][{"taylor_param": 0}]
+#         )
+
+#     fig, floating_ax, legend = taylordiagram(
+#         data,
+#         plot_kw,
+#         fig_kw,
+#         std_range,
+#         contours,
+#         contours_kw,
+#         legend_kw,
+#         std_label,
+#         corr_label,
+#     )
+
+#     # add a line along std = 1
+#     transform = PolarAxes.PolarTransform()
+#     ax = floating_ax.get_aux_axes(transform)  # return the axes that can be plotted on
+#     radius_value = 1.0
+#     angles_for_line = np.linspace(0, np.pi / 2, 100)
+#     radii_for_line = np.full_like(angles_for_line, radius_value)
+#     ax.plot(angles_for_line, radii_for_line, color="k", linewidth=0.5, linestyle="-")
+
+#     # plot new legend if markers/colors represent a certain dimension
+#     if colors_dim is not None or markers_dim is not None:
+#         old_handles = []
+#         handles_labels = floating_ax.get_legend_handles_labels()
+#         for il, label in enumerate(handles_labels[1]):
+#             if "rmse" in label or get_localized_term("reference") in label:
+#                 old_handles.append(handles_labels[0][il])
+
+#         chandles = []
+#         if colors_dim:
+#             for k, c in colorsd.items():
+#                 chandles.append(Line2D([0], [0], color=c, label=k, ls="-"))
+#         mhandles = []
+#         if markers_dim:
+#             for k, m in markersd.items():
+#                 mhandles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
+#         legend.remove()
+#         legend = fig.legend(handles=old_handles + mhandles + chandles, **legend_kw)
+
+#     return fig, floating_ax, legend
 
 
 def hatchmap(
