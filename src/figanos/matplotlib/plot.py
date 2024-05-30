@@ -1883,8 +1883,7 @@ def taylordiagram(
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
     elif not plot_kw:
-        plot_kw = {}
-
+        plot_kw = {k: {} for k in data.keys()}
     # check type
     for key, v in data.items():
         if not isinstance(v, xr.DataArray):
@@ -1915,7 +1914,6 @@ def taylordiagram(
                 plot_kw[new_key] = empty_dict(plot_kw[f"{key}"])
             data.pop(key)
             plot_kw.pop(key)
-
     # set colors and markers based on discrimnating attributes
     if colors_key or markers_key:
         if colors_key:
