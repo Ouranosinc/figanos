@@ -5,7 +5,6 @@ from .plot import (
     gridmap,
     hatchmap,
     heatmap,
-    normalized_taylordiagram,
     partition,
     scattermap,
     stripes,

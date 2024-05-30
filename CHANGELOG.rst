@@ -13,7 +13,8 @@ New features and enhancements
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
 * Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
-* New function ``fg.normalized_taylordiagram`` for plotting Taylor diagram where standard deviations are normalized such that reference's standard deviation is 1. (:pull:`214`).
+* ``fg.taylordiagram`` can now accept datasets with many dimensions (not only `taylor_params`), provided that they all share the same `ref_std` (e.g. normalized taylor diagrams)  (:pull:`214`).
+* A new way to organize points in a `fg.taylordiagram` with  `colors_key`, `markers_key`  : DataArrays with a common dimension value or a common attrtibute are grouped with the same color/marker (:pull:`214`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
