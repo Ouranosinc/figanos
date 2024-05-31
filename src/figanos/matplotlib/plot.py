@@ -1894,44 +1894,28 @@ def taylordiagram(
             raise ValueError("'reference' is not allowed as a key in data.")
 
     # If there are other dimensions than 'taylor_param', create a bigger dict with them
-    # It's possible that some dimensions are used a discriminating attributes for colors and markers
-    keys = list(data.keys())
-    for key in keys:
-        da = data[key]
+    data_keys = list(data.keys())
+    for data_key in data_keys:
+        da = data[data_key]
         dims = list(set(da.dims) - {"taylor_param"})
         if dims != []:
             da = da.stack(pl_dims=dims)
-            for i, key2 in enumerate(da.pl_dims.values):
+            for i, dim_key in enumerate(da.pl_dims.values):
+                if isinstance(dim_key, list) or isinstance(dim_key, tuple):
+                    dim_key = "-".join([str(k) for k in dim_key])
                 da0 = da.isel(pl_dims=i)
+                # if colors_key/markers_key is a dimension, add it as an attribute for later use
                 if markers_key in dims:
                     da0.attrs[markers_key] = da0[markers_key].values.item()
                 if colors_key in dims:
                     da0.attrs[colors_key] = da0[colors_key].values.item()
-                if isinstance(key2, list) or isinstance(key2, tuple):
-                    key2 = "-".join([str(k) for k in key2])
-                new_key = f"{key}-{key2}" if key != "_no_label" else key2
-                data[new_key] = da0
-                plot_kw[new_key] = empty_dict(plot_kw[f"{key}"])
-            data.pop(key)
-            plot_kw.pop(key)
-    # set colors and markers based on discrimnating attributes
-    if colors_key or markers_key:
-        if colors_key:
-            colorkeys = {da.attrs[colors_key] for da in data.values()}
-            colorsd = {key: f"C{i}" for i, key in enumerate(colorkeys)}
-        if markers_key:
-            default_markers = "oDv^<>p*hH+x|_"
-            markerkeys = {da.attrs[markers_key] for da in data.values()}
-            markersd = {
-                key: default_markers[i % len(markerkeys)]
-                for i, key in enumerate(markerkeys)
-            }
-
-        for key, da in data.items():
-            if colors_key:
-                plot_kw[key]["color"] = colorsd[da.attrs[colors_key]]
-            if markers_key:
-                plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
+                new_data_key = (
+                    f"{data_key}-{dim_key}" if data_key != "_no_label" else dim_key
+                )
+                data[new_data_key] = da0
+                plot_kw[new_data_key] = empty_dict(plot_kw[f"{data_key}"])
+            data.pop(data_key)
+            plot_kw.pop(data_key)
 
     # remove negative correlations
     initial_len = len(data)
@@ -2086,15 +2070,38 @@ def taylordiagram(
     if len(data) > len(style_colors):
         style_colors = style_colors * math.ceil(len(data) / len(style_colors))
     cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+    # get marker options (only used if `markers_key` is set)
+    style_markers = "oDv^<>p*hH+x|_"
+    if len(data) > len(style_markers):
+        style_markers = style_markers * math.ceil(len(data) / len(style_markers))
+
+    # set colors and markers styles based on discrimnating attributes (if specified)
+    if colors_key or markers_key:
+        if colors_key:
+            # get_scen_color : look for SSP, RCP, CMIP model color
+            colorsd = {
+                k: get_scen_color(k, cat_colors) or style_colors[i]
+                for i, k in enumerate({da.attrs[colors_key] for da in data.values()})
+            }
+        if markers_key:
+            markersd = {
+                k: style_markers[i]
+                for i, k in enumerate({da.attrs[markers_key] for da in data.values()})
+            }
+
+        for key, da in data.items():
+            if colors_key:
+                plot_kw[key]["color"] = colorsd[da.attrs[colors_key]]
+            if markers_key:
+                plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # plot scatter
     for (key, da), i in zip(data.items(), range(len(data))):
         # look for SSP, RCP, CMIP model color
-        if get_scen_color(key, cat_colors):
-            plot_kw[key].setdefault("color", get_scen_color(key, cat_colors))
-        else:
-            plot_kw[key].setdefault("color", style_colors[i])
-
+        if colors_key is None:
+            plot_kw[key].setdefault(
+                "color", get_scen_color(key, cat_colors) or style_colors[i]
+            )
         # convert corr to polar coordinates
         plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
 
