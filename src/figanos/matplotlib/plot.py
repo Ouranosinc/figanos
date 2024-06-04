@@ -1979,12 +1979,11 @@ def taylordiagram(
     transform = PolarAxes.PolarTransform()
 
     # Setup the axis, here we map angles in degrees to angles in radius
-    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.8, 1])
-    rlocs_deg = rlocs * 90
-    tlocs = rlocs_deg * np.pi / 180  # convert degrees to radians
+    # Correlation labels
+    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1])
+    tlocs = np.arccos(rlocs)  # Conversion to polar angles
     gl1 = gf.FixedLocator(tlocs)  # Positions
-    tf1 = gf.DictFormatter(dict(zip(tlocs, np.flip(rlocs).astype(str))))
-
+    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs))))
     # Standard deviation axis extent
     radius_min = std_range[0] * max(max_std)
     radius_max = std_range[1] * max(max_std)
@@ -2102,17 +2101,18 @@ def taylordiagram(
             plot_kw[key].setdefault(
                 "color", get_scen_color(key, cat_colors) or style_colors[i]
             )
-        # convert corr to polar coordinates
-        plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
-
         # set defaults
         plot_kw[key] = {"label": key} | plot_kw[key]
 
         # legend will be handled later in this case
         if markers_key or colors_key:
             plot_kw[key]["label"] = ""
+
+        # plot
         pt = ax.scatter(
-            plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
+            np.arccos(da.sel(taylor_param="corr").values),
+            da.sel(taylor_param="sim_std").values,
+            **plot_kw[key],
         )
         points.append(pt)
 
