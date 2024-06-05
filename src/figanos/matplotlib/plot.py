@@ -1872,6 +1872,10 @@ def taylordiagram(
     contours_kw = empty_dict(contours_kw)
     legend_kw = empty_dict(legend_kw)
 
+    # preserve order of dimensions if used for marker/color
+    ordered_markers_type = None
+    ordered_colors_type = None
+
     # convert SSP, RCP, CMIP formats in keys
     if isinstance(data, dict):
         data = process_keys(data, convert_scen_name)
@@ -1899,6 +1903,11 @@ def taylordiagram(
         da = data[data_key]
         dims = list(set(da.dims) - {"taylor_param"})
         if dims != []:
+            if markers_key in dims:
+                ordered_markers_type = da[markers_key].values
+            if colors_key in dims:
+                ordered_colors_type = da[colors_key].values
+
             da = da.stack(pl_dims=dims)
             for i, dim_key in enumerate(da.pl_dims.values):
                 if isinstance(dim_key, list) or isinstance(dim_key, tuple):
@@ -1997,7 +2006,6 @@ def taylordiagram(
     )
 
     fig = plt.figure(**fig_kw)
-
     floating_ax = FloatingSubplot(fig, 111, grid_helper=ghelper)
     fig.add_subplot(floating_ax)
 
@@ -2078,15 +2086,22 @@ def taylordiagram(
     if colors_key or markers_key:
         if colors_key:
             # get_scen_color : look for SSP, RCP, CMIP model color
+            colors_type = (
+                ordered_colors_type
+                if ordered_colors_type is not None
+                else {da.attrs[colors_key] for da in data.values()}
+            )
             colorsd = {
                 k: get_scen_color(k, cat_colors) or style_colors[i]
-                for i, k in enumerate({da.attrs[colors_key] for da in data.values()})
+                for i, k in enumerate(colors_type)
             }
         if markers_key:
-            markersd = {
-                k: style_markers[i]
-                for i, k in enumerate({da.attrs[markers_key] for da in data.values()})
-            }
+            markers_type = (
+                ordered_markers_type
+                if ordered_markers_type is not None
+                else {da.attrs[markers_key] for da in data.values()}
+            )
+            markersd = {k: style_markers[i] for i, k in enumerate(markers_type)}
 
         for key, da in data.items():
             if colors_key:
