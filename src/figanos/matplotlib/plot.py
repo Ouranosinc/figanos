@@ -1356,8 +1356,20 @@ def heatmap(
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
     # setup fig, axis
-    if ax is None:
+    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(**fig_kw)
+    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        plot_kw.setdefault("col", None)
+        plot_kw.setdefault("row", None)
+        heatmap_dims = list(
+            set(da.dims)
+            - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
+        )
+        if da.name is None:
+            da = da.to_dataset(name="data").data
+        da_name = da.name
 
     # create cbar label
     if (
@@ -1389,11 +1401,16 @@ def heatmap(
         )
 
     # convert data to DataFrame
-    if len(da.coords) != 2:
-        raise ValueError("DataArray must have exactly two dimensions")
     if transpose:
         da = da.transpose()
-    df = da.to_pandas()
+    if "col" not in plot_kw and "row" not in plot_kw:
+        if len(da.dims) != 2:
+            raise ValueError("DataArray must have exactly two dimensions")
+        df = da.to_pandas()
+    else:
+        if len(heatmap_dims) != 2:
+            raise ValueError("DataArray must have exactly two dimensions")
+        df = da.to_dataframe().reset_index()
 
     # set defaults
     if divergent is not False:
@@ -1409,21 +1426,42 @@ def heatmap(
     plot_kw.setdefault("cmap", cmap)
 
     # plot
-    sns.heatmap(df, ax=ax, **plot_kw)
+    def draw_heatmap(*args, **kwargs):
+        data = kwargs.pop("data")
+        d = (
+            data
+            if len(args) == 0
+            else data.pivot(index=args[1], columns=args[0], values=args[2])
+        )
+        ax = sns.heatmap(d, **kwargs)
+        ax.set_xticklabels(
+            ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
+        )
+        ax.tick_params(axis="both", direction="out")
+        set_plot_attrs(
+            use_attrs,
+            da,
+            ax,
+            title_loc="center",
+            wrap_kw={"min_line_len": 35, "max_line_len": 44},
+        )
+        return ax
 
-    # format
-    plt.xticks(rotation=45, ha="right", rotation_mode="anchor")
-    ax.tick_params(axis="both", direction="out")
-
-    set_plot_attrs(
-        use_attrs,
-        da,
-        ax,
-        title_loc="center",
-        wrap_kw={"min_line_len": 35, "max_line_len": 44},
-    )
-
-    return ax
+    if ax is not None:
+        ax = draw_heatmap(data=df, ax=ax, **plot_kw)
+        return ax
+    elif "col" in plot_kw or "row" in plot_kw:
+        g = sns.FacetGrid(df, col=plot_kw["col"], row=plot_kw["row"])
+        plot_kw.pop("col")
+        plot_kw.pop("row")
+        cax = g.fig.add_axes([0.92, 0.12, 0.02, 0.8])
+        g.map_dataframe(
+            draw_heatmap, *heatmap_dims, da_name, **plot_kw, cbar=True, cbar_ax=cax
+        )
+        g.fig.subplots_adjust(right=0.9)
+        if "figsize" in fig_kw.keys():
+            g.fig.set_size_inches(*fig_kw["figsize"])
+        return g
 
 
 def scattermap(
