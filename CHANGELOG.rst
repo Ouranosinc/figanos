@@ -13,7 +13,7 @@ New features and enhancements
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
 * Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
-* Heatmap (`fg.matplotlib.heatmap`) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:pull:`219`, :issue:`208`).
+* Heatmap (`fg.matplotlib.heatmap`) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:issue:`208`, :pull:`219`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
