@@ -1361,6 +1361,10 @@ def heatmap(
     elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
+        if any([k != "figsize" for k in fig_kw.keys()]):
+            warnings.warn(
+                "Only figsize arguments can be passed to fig_kw when using facetgrid."
+            )
         plot_kw.setdefault("col", None)
         plot_kw.setdefault("row", None)
         heatmap_dims = list(
