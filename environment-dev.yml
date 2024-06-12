@@ -18,6 +18,7 @@ dependencies:
   - scikit-image
   - xarray
   - xclim >=0.47
+  - hvplot
   # To make the package and notebooks usable
   - dask
   - h5py
