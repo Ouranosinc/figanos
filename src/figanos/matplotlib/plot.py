@@ -5,6 +5,7 @@ import copy
 import math
 import warnings
 from collections.abc import Iterable
+from inspect import signature
 from pathlib import Path
 from typing import Any
 
@@ -1455,12 +1456,19 @@ def heatmap(
         ax = draw_heatmap(data=df, ax=ax, **plot_kw)
         return ax
     elif "col" in plot_kw or "row" in plot_kw:
-        g = sns.FacetGrid(df, col=plot_kw["col"], row=plot_kw["row"])
-        plot_kw.pop("col")
-        plot_kw.pop("row")
+        # When using xarray's FacetGrid, `plot_kw` can be used in the FacetGrid and in the plotting function
+        # With Seaborn, we need to be more careful and separate keywords.
+        plot_kw_hm = {
+            k: v for k, v in plot_kw.items() if k in signature(sns.heatmap).parameters
+        }
+        plot_kw_fg = {
+            k: v for k, v in plot_kw.items() if k in signature(sns.FacetGrid).parameters
+        }
+
+        g = sns.FacetGrid(df, **plot_kw_fg)
         cax = g.fig.add_axes([0.92, 0.12, 0.02, 0.8])
         g.map_dataframe(
-            draw_heatmap, *heatmap_dims, da_name, **plot_kw, cbar=True, cbar_ax=cax
+            draw_heatmap, *heatmap_dims, da_name, **plot_kw_hm, cbar=True, cbar_ax=cax
         )
         g.fig.subplots_adjust(right=0.9)
         if "figsize" in fig_kw.keys():
