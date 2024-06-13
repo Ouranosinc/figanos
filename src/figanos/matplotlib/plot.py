@@ -1464,6 +1464,14 @@ def heatmap(
         plot_kw_fg = {
             k: v for k, v in plot_kw.items() if k in signature(sns.FacetGrid).parameters
         }
+        unused_keys = (
+            set(plot_kw.keys()) - set(plot_kw_fg.keys()) - set(plot_kw_hm.keys())
+        )
+        if unused_keys != set():
+            warnings.warn(
+                f"`plot_kw` containted extra keywords: {unused_keys} that can't be used with `sns.heatmap` or `sns.FacetGrid`. "
+                "These keywords will be ignored"
+            )
 
         g = sns.FacetGrid(df, **plot_kw_fg)
         cax = g.fig.add_axes([0.92, 0.12, 0.02, 0.8])
