@@ -1368,6 +1368,7 @@ def heatmap(
             )
         plot_kw.setdefault("col", None)
         plot_kw.setdefault("row", None)
+        plot_kw.setdefault("margin_titles", True)
         heatmap_dims = list(
             set(da.dims)
             - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
@@ -1436,7 +1437,10 @@ def heatmap(
         d = (
             data
             if len(args) == 0
-            else data.pivot(index=args[1], columns=args[0], values=args[2])
+            # Any sorting should be performed before sending a DataArray in `fg.heatmap`
+            else data.pivot_table(
+                index=args[1], columns=args[0], values=args[2], sort=False
+            )
         )
         ax = sns.heatmap(d, **kwargs)
         ax.set_xticklabels(
