@@ -1468,9 +1468,9 @@ def heatmap(
             set(plot_kw.keys()) - set(plot_kw_fg.keys()) - set(plot_kw_hm.keys())
         )
         if unused_keys != set():
-            warnings.warn(
-                f"`plot_kw` containted extra keywords: {unused_keys} that can't be used with `sns.heatmap` or `sns.FacetGrid`. "
-                "These keywords will be ignored"
+            raise ValueError(
+                f"`heatmap` got unexpected keywords in `plot_kw`: {unused_keys}. Keywords in `plot_kw` should be keywords "
+                "allowed in `sns.heatmap` or `sns.FacetGrid`. "
             )
 
         g = sns.FacetGrid(df, **plot_kw_fg)
