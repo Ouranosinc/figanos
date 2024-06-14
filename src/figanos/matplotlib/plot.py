@@ -1824,6 +1824,7 @@ def taylordiagram(
     std_range: tuple = (0, 1.5),
     contours: int | None = 4,
     contours_kw: dict[str, Any] | None = None,
+    ref_std_line: bool = False,
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
@@ -1850,6 +1851,8 @@ def taylordiagram(
         Number of rsme contours to plot.
     contours_kw : dict, optional
         Arguments to pass to `plt.contour()` for the rmse contours.
+    ref_std_line : bool, optional
+        If True, draws a circular line on radius `std = ref_std`. Default: False
     legend_kw : dict, optional
         Arguments to pass to `plt.legend()`.
     std_label : str, optional
@@ -2046,6 +2049,18 @@ def taylordiagram(
     ref_pt = ax.scatter(0, ref_std, **ref_kw)
 
     points = [ref_pt]  # set up for later
+
+    # plot a circular line along `ref_std`
+    if ref_std_line:
+        angles_for_line = np.linspace(0, np.pi / 2, 100)
+        radii_for_line = np.full_like(angles_for_line, ref_std)
+        ax.plot(
+            angles_for_line,
+            radii_for_line,
+            color=ref_kw["color"],
+            linewidth=0.5,
+            linestyle="--",
+        )
 
     # rmse contours from reference standard deviation
     if contours:
