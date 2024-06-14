@@ -2059,7 +2059,7 @@ def taylordiagram(
             radii_for_line,
             color=ref_kw["color"],
             linewidth=0.5,
-            linestyle="--",
+            linestyle="-",
         )
 
     # rmse contours from reference standard deviation
