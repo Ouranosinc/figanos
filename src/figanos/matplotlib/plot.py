@@ -517,7 +517,6 @@ def timeseries(
                     backgroundalpha=1,
                 )
         if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
-            print("here")
             for idx, ax in enumerate(im.axs.flat):
                 ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
 
