@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import math
+import string
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
@@ -263,6 +264,7 @@ def timeseries(
     plot_kw: dict[str, Any] | None = None,
     legend: str = "lines",
     show_lat_lon: bool | str | int | tuple[float, float] = True,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
@@ -304,6 +306,9 @@ def timeseries(
         'upper center'       9
         'center'             10
         ==================   =============
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -511,6 +516,11 @@ def timeseries(
                     loc=show_lat_lon,
                     backgroundalpha=1,
                 )
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            print("here")
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
         return im
 
 
@@ -530,6 +540,7 @@ def gridmap(
     divergent: bool | int | float = False,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map from 2D data.
 
@@ -590,6 +601,9 @@ def gridmap(
         ==================   =============
     frame : bool
         Show or hide frame. Default False.
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -815,7 +829,13 @@ def gridmap(
                 )
 
         use_attrs.setdefault("suptitle", "long_name")
-        return set_plot_attrs(use_attrs, data, facetgrid=im)
+        im = set_plot_attrs(use_attrs, data, facetgrid=im)
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            print("here")
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
+        return im
 
 
 def gdfmap(
@@ -1444,6 +1464,7 @@ def scattermap(
     legend_kw: dict[str, Any] | None = None,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Make a scatter plot of georeferenced data on a map.
 
@@ -1510,6 +1531,9 @@ def scattermap(
         ==================   =============
     frame : bool
         Show or hide frame. Default False.
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -1814,6 +1838,10 @@ def scattermap(
     else:
         im.fig.suptitle(get_attributes("long_name", data))
         im.set_titles(template="{value}")
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
         return im
 
 
@@ -2080,6 +2108,7 @@ def hatchmap(
     legend_kw: dict[str, Any] | None = None,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map of hatches from 2D data.
 
@@ -2132,6 +2161,9 @@ def hatchmap(
         ==================   =============
     frame : bool
         Show or hide frame. Default False.
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -2422,6 +2454,11 @@ def hatchmap(
         if dattrs:
             use_attrs.setdefault("suptitle", "long_name")
             set_plot_attrs(use_attrs, dattrs, facetgrid=im)
+
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
         return im
 
 

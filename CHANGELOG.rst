@@ -4,7 +4,7 @@ Changelog
 
 0.4.0 (unreleased)
 ------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -13,6 +13,7 @@ New features and enhancements
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
 * Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
+* New argument ``enumerate_subplots`` for `gridmap`, `timeseries`, `hatchmap` and `scattermap`(:pull:`220`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
