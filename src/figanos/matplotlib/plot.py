@@ -1478,7 +1478,7 @@ def heatmap(
             )
 
         g = sns.FacetGrid(df, **plot_kw_fg)
-        cax = g.fig.add_axes([0.92, 0.12, 0.02, 0.8])
+        cax = g.fig.add_axes([0.95, 0.05, 0.02, 0.9])
         g.map_dataframe(
             draw_heatmap, *heatmap_dims, da_name, **plot_kw_hm, cbar=True, cbar_ax=cax
         )
