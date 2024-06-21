@@ -11,9 +11,10 @@ dependencies:
   - matplotlib-base
   - seaborn
   - geopandas
-  - numpy
+  - numpy<2.0.0
   - pandas >=2.2.0
   - platformdirs
+  - pint >=0.10,<0.24
   - pyyaml
   - scikit-image
   - xarray

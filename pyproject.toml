@@ -38,8 +38,9 @@ dependencies = [
   "cairosvg",
   "geopandas",
   "matplotlib",
-  "numpy",
+  "numpy<2.0.0",
   "pandas >=2.2.0",
+  "pint >=0.10,<0.24",
   "platformdirs",
   "pyyaml",
   "seaborn",
@@ -109,7 +110,7 @@ target-version = [
 ]
 
 [tool.bumpversion]
-current_version = "0.3.1-dev.7"
+current_version = "0.3.1-dev.8"
 commit = true
 commit_args = "--no-verify"
 tag = false

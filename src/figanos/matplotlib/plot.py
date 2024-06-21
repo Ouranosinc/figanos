@@ -1851,9 +1851,12 @@ def taylordiagram(
     std_range: tuple = (0, 1.5),
     contours: int | None = 4,
     contours_kw: dict[str, Any] | None = None,
+    ref_std_line: bool = False,
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
+    colors_key: str | None = None,
+    markers_key: str | None = None,
 ):
     """Build a Taylor diagram.
 
@@ -1875,21 +1878,33 @@ def taylordiagram(
         Number of rsme contours to plot.
     contours_kw : dict, optional
         Arguments to pass to `plt.contour()` for the rmse contours.
+    ref_std_line : bool, optional
+        If True, draws a circular line on radius `std = ref_std`. Default: False
     legend_kw : dict, optional
         Arguments to pass to `plt.legend()`.
     std_label : str, optional
         Label for the standard deviation (x and y) axes.
     corr_label : str, optional
         Label for the correlation axis.
+    colors_key : str, optional
+        Attribute or dimension of DataArrays used to separate DataArrays into groups with different colors. If present,
+        it overrides the "color" key in `plot_kw`.
+    markers_key : str, optional
+        Attribute or dimension of DataArrays used to separate DataArrays into groups with different markers. If present,
+        it overrides the "marker" key in `plot_kw`.
 
     Returns
     -------
-    matplotlib.axes.Axes
+    (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
     """
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
     contours_kw = empty_dict(contours_kw)
     legend_kw = empty_dict(legend_kw)
+
+    # preserve order of dimensions if used for marker/color
+    ordered_markers_type = None
+    ordered_colors_type = None
 
     # convert SSP, RCP, CMIP formats in keys
     if isinstance(data, dict):
@@ -1902,8 +1917,7 @@ def taylordiagram(
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
     elif not plot_kw:
-        plot_kw = {}
-
+        plot_kw = {k: {} for k in data.keys()}
     # check type
     for key, v in data.items():
         if not isinstance(v, xr.DataArray):
@@ -1912,6 +1926,35 @@ def taylordiagram(
             raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
         if key == "reference":
             raise ValueError("'reference' is not allowed as a key in data.")
+
+    # If there are other dimensions than 'taylor_param', create a bigger dict with them
+    data_keys = list(data.keys())
+    for data_key in data_keys:
+        da = data[data_key]
+        dims = list(set(da.dims) - {"taylor_param"})
+        if dims != []:
+            if markers_key in dims:
+                ordered_markers_type = da[markers_key].values
+            if colors_key in dims:
+                ordered_colors_type = da[colors_key].values
+
+            da = da.stack(pl_dims=dims)
+            for i, dim_key in enumerate(da.pl_dims.values):
+                if isinstance(dim_key, list) or isinstance(dim_key, tuple):
+                    dim_key = "-".join([str(k) for k in dim_key])
+                da0 = da.isel(pl_dims=i)
+                # if colors_key/markers_key is a dimension, add it as an attribute for later use
+                if markers_key in dims:
+                    da0.attrs[markers_key] = da0[markers_key].values.item()
+                if colors_key in dims:
+                    da0.attrs[colors_key] = da0[colors_key].values.item()
+                new_data_key = (
+                    f"{data_key}-{dim_key}" if data_key != "_no_label" else dim_key
+                )
+                data[new_data_key] = da0
+                plot_kw[new_data_key] = empty_dict(plot_kw[f"{data_key}"])
+            data.pop(data_key)
+            plot_kw.pop(data_key)
 
     # remove negative correlations
     initial_len = len(data)
@@ -1956,10 +1999,9 @@ def taylordiagram(
     # make labels
     if not std_label:
         try:
-            std_label = (
-                get_localized_term("standard deviation")
-                + f" ({list(data.values())[0].units})"
-            )
+            units = list(data.values())[0].units
+            std_label = get_localized_term("standard deviation")
+            std_label = std_label if units == "" else f"{std_label} ({units})"
         except AttributeError:
             std_label = get_localized_term("standard deviation").capitalize()
 
@@ -1976,12 +2018,11 @@ def taylordiagram(
     transform = PolarAxes.PolarTransform()
 
     # Setup the axis, here we map angles in degrees to angles in radius
-    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.8, 1])
-    rlocs_deg = rlocs * 90
-    tlocs = rlocs_deg * np.pi / 180  # convert degrees to radians
+    # Correlation labels
+    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1])
+    tlocs = np.arccos(rlocs)  # Conversion to polar angles
     gl1 = gf.FixedLocator(tlocs)  # Positions
-    tf1 = gf.DictFormatter(dict(zip(tlocs, np.flip(rlocs).astype(str))))
-
+    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs))))
     # Standard deviation axis extent
     radius_min = std_range[0] * max(max_std)
     radius_max = std_range[1] * max(max_std)
@@ -1995,7 +2036,6 @@ def taylordiagram(
     )
 
     fig = plt.figure(**fig_kw)
-
     floating_ax = FloatingSubplot(fig, 111, grid_helper=ghelper)
     fig.add_subplot(floating_ax)
 
@@ -2037,10 +2077,23 @@ def taylordiagram(
 
     points = [ref_pt]  # set up for later
 
+    # plot a circular line along `ref_std`
+    if ref_std_line:
+        angles_for_line = np.linspace(0, np.pi / 2, 100)
+        radii_for_line = np.full_like(angles_for_line, ref_std)
+        ax.plot(
+            angles_for_line,
+            radii_for_line,
+            color=ref_kw["color"],
+            linewidth=0.5,
+            linestyle="-",
+        )
+
     # rmse contours from reference standard deviation
     if contours:
         radii, angles = np.meshgrid(
-            np.linspace(radius_min, radius_max), np.linspace(0, np.pi / 2)
+            np.linspace(radius_min, radius_max),
+            np.linspace(0, np.pi / 2),
         )
         # Compute centered RMS difference
         rms = np.sqrt(ref_std**2 + radii**2 - 2 * ref_std * radii * np.cos(angles))
@@ -2050,7 +2103,8 @@ def taylordiagram(
 
         ax.clabel(ct, ct.levels, fontsize=8)
 
-        ct_line = Line2D(
+        # points.append(ct_line)
+        ct_line = ax.plot(
             [0],
             [0],
             ls=contours_kw["linestyles"],
@@ -2058,39 +2112,84 @@ def taylordiagram(
             c="k" if "colors" not in contours_kw else contours_kw["colors"],
             label="rmse",
         )
-        points.append(ct_line)
+        points.append(ct_line[0])
 
     # get color options
     style_colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
     if len(data) > len(style_colors):
         style_colors = style_colors * math.ceil(len(data) / len(style_colors))
     cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+    # get marker options (only used if `markers_key` is set)
+    style_markers = "oDv^<>p*hH+x|_"
+    if len(data) > len(style_markers):
+        style_markers = style_markers * math.ceil(len(data) / len(style_markers))
+
+    # set colors and markers styles based on discrimnating attributes (if specified)
+    if colors_key or markers_key:
+        if colors_key:
+            # get_scen_color : look for SSP, RCP, CMIP model color
+            colors_type = (
+                ordered_colors_type
+                if ordered_colors_type is not None
+                else {da.attrs[colors_key] for da in data.values()}
+            )
+            colorsd = {
+                k: get_scen_color(k, cat_colors) or style_colors[i]
+                for i, k in enumerate(colors_type)
+            }
+        if markers_key:
+            markers_type = (
+                ordered_markers_type
+                if ordered_markers_type is not None
+                else {da.attrs[markers_key] for da in data.values()}
+            )
+            markersd = {k: style_markers[i] for i, k in enumerate(markers_type)}
+
+        for key, da in data.items():
+            if colors_key:
+                plot_kw[key]["color"] = colorsd[da.attrs[colors_key]]
+            if markers_key:
+                plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # plot scatter
     for (key, da), i in zip(data.items(), range(len(data))):
         # look for SSP, RCP, CMIP model color
-        if get_scen_color(key, cat_colors):
-            plot_kw[key].setdefault("color", get_scen_color(key, cat_colors))
-        else:
-            plot_kw[key].setdefault("color", style_colors[i])
-
-        # convert corr to polar coordinates
-        plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
-
+        if colors_key is None:
+            plot_kw[key].setdefault(
+                "color", get_scen_color(key, cat_colors) or style_colors[i]
+            )
         # set defaults
         plot_kw[key] = {"label": key} | plot_kw[key]
 
+        # legend will be handled later in this case
+        if markers_key or colors_key:
+            plot_kw[key]["label"] = ""
+
         # plot
         pt = ax.scatter(
-            plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
+            np.arccos(da.sel(taylor_param="corr").values),
+            da.sel(taylor_param="sim_std").values,
+            **plot_kw[key],
         )
         points.append(pt)
 
     # legend
     legend_kw.setdefault("loc", "upper right")
-    fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
+    legend = fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
 
-    return floating_ax
+    # plot new legend if markers/colors represent a certain dimension
+    if colors_key or markers_key:
+        handles = list(floating_ax.get_legend_handles_labels()[0])
+        if markers_key:
+            for k, m in markersd.items():
+                handles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
+        if colors_key:
+            for k, c in colorsd.items():
+                handles.append(Line2D([0], [0], color=c, label=k, ls="-"))
+        legend.remove()
+        legend = fig.legend(handles=handles, **legend_kw)
+
+    return fig, floating_ax, legend
 
 
 def hatchmap(
