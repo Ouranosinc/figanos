@@ -6,6 +6,7 @@ import math
 import string
 import warnings
 from collections.abc import Iterable
+from inspect import signature
 from pathlib import Path
 from typing import Any
 
@@ -1375,8 +1376,25 @@ def heatmap(
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
     # setup fig, axis
-    if ax is None:
+    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(**fig_kw)
+    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        if any([k != "figsize" for k in fig_kw.keys()]):
+            warnings.warn(
+                "Only figsize arguments can be passed to fig_kw when using facetgrid."
+            )
+        plot_kw.setdefault("col", None)
+        plot_kw.setdefault("row", None)
+        plot_kw.setdefault("margin_titles", True)
+        heatmap_dims = list(
+            set(da.dims)
+            - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
+        )
+        if da.name is None:
+            da = da.to_dataset(name="data").data
+        da_name = da.name
 
     # create cbar label
     if (
@@ -1408,11 +1426,16 @@ def heatmap(
         )
 
     # convert data to DataFrame
-    if len(da.coords) != 2:
-        raise ValueError("DataArray must have exactly two dimensions")
     if transpose:
         da = da.transpose()
-    df = da.to_pandas()
+    if "col" not in plot_kw and "row" not in plot_kw:
+        if len(da.dims) != 2:
+            raise ValueError("DataArray must have exactly two dimensions")
+        df = da.to_pandas()
+    else:
+        if len(heatmap_dims) != 2:
+            raise ValueError("DataArray must have exactly two dimensions")
+        df = da.to_dataframe().reset_index()
 
     # set defaults
     if divergent is not False:
@@ -1428,21 +1451,60 @@ def heatmap(
     plot_kw.setdefault("cmap", cmap)
 
     # plot
-    sns.heatmap(df, ax=ax, **plot_kw)
+    def draw_heatmap(*args, **kwargs):
+        data = kwargs.pop("data")
+        d = (
+            data
+            if len(args) == 0
+            # Any sorting should be performed before sending a DataArray in `fg.heatmap`
+            else data.pivot_table(
+                index=args[1], columns=args[0], values=args[2], sort=False
+            )
+        )
+        ax = sns.heatmap(d, **kwargs)
+        ax.set_xticklabels(
+            ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
+        )
+        ax.tick_params(axis="both", direction="out")
+        set_plot_attrs(
+            use_attrs,
+            da,
+            ax,
+            title_loc="center",
+            wrap_kw={"min_line_len": 35, "max_line_len": 44},
+        )
+        return ax
 
-    # format
-    plt.xticks(rotation=45, ha="right", rotation_mode="anchor")
-    ax.tick_params(axis="both", direction="out")
+    if ax is not None:
+        ax = draw_heatmap(data=df, ax=ax, **plot_kw)
+        return ax
+    elif "col" in plot_kw or "row" in plot_kw:
+        # When using xarray's FacetGrid, `plot_kw` can be used in the FacetGrid and in the plotting function
+        # With Seaborn, we need to be more careful and separate keywords.
+        plot_kw_hm = {
+            k: v for k, v in plot_kw.items() if k in signature(sns.heatmap).parameters
+        }
+        plot_kw_fg = {
+            k: v for k, v in plot_kw.items() if k in signature(sns.FacetGrid).parameters
+        }
+        unused_keys = (
+            set(plot_kw.keys()) - set(plot_kw_fg.keys()) - set(plot_kw_hm.keys())
+        )
+        if unused_keys != set():
+            raise ValueError(
+                f"`heatmap` got unexpected keywords in `plot_kw`: {unused_keys}. Keywords in `plot_kw` should be keywords "
+                "allowed in `sns.heatmap` or `sns.FacetGrid`. "
+            )
 
-    set_plot_attrs(
-        use_attrs,
-        da,
-        ax,
-        title_loc="center",
-        wrap_kw={"min_line_len": 35, "max_line_len": 44},
-    )
-
-    return ax
+        g = sns.FacetGrid(df, **plot_kw_fg)
+        cax = g.fig.add_axes([0.95, 0.05, 0.02, 0.9])
+        g.map_dataframe(
+            draw_heatmap, *heatmap_dims, da_name, **plot_kw_hm, cbar=True, cbar_ax=cax
+        )
+        g.fig.subplots_adjust(right=0.9)
+        if "figsize" in fig_kw.keys():
+            g.fig.set_size_inches(*fig_kw["figsize"])
+        return g
 
 
 def scattermap(
