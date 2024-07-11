@@ -1373,6 +1373,8 @@ def heatmap(
             set(da.dims)
             - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
         )
+        # reorder heatmap_dims to respect original order
+        heatmap_dims = [d for d in da.dims if d in heatmap_dims]
         if da.name is None:
             da = da.to_dataset(name="data").data
         da_name = da.name
