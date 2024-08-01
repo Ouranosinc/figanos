@@ -11,6 +11,7 @@ import xarray as xr
 from bokeh.models import (
     ColumnDataSource,
     GlyphRenderer,
+    HoverTool,
     LegendItem,
     Line,
     Range1d,
@@ -192,7 +193,7 @@ def get_all_values(nested_dictionary) -> list:
 
 
 def curve_hover_hook(plot, element, att, form, x) -> None:
-    """Hook to pass to hover curve to show correct format"""
+    """Hook function to be passed to hvplot.opts to modify hover tooltips."""
     for hov_id, hover in plot.handles["hover_tools"].items():
         # print(hov_id)
         if hover.tooltips[0][0] != x:
@@ -210,6 +211,18 @@ def curve_hover_hook(plot, element, att, form, x) -> None:
         }
 
 
+def curve_hover_tool(att, form, r=None) -> list[HoverTool]:
+    """Tool to be passed to hvplot.opts to modify hover tooltips."""
+    tips = [
+        (att["xhover"], "$x{%F}"),
+        (att["yhover"], "$y{" + form + "}"),
+    ]
+    if r is not None:
+        tips.insert(0, ("realization", f"{r}"))
+    return [HoverTool(tooltips=tips, formatters={"$x": "datetime"})]
+
+
+# can probably delete this function
 def rm_curve_hover_hook(plot, element) -> None:
     """Hook to remove hover curve."""
     plot.handles["hover"].tooltips = None

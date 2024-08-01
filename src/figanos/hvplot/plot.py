@@ -1,6 +1,8 @@
 """Hvplot figanos plotting functions."""
 
+import copy
 import warnings
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -20,11 +22,12 @@ from figanos.matplotlib.utils import (
 from .utils import (
     add_default_opts_overlay,
     create_dict_timeseries,
+    curve_hover_hook,
+    curve_hover_tool,
     defaults_curves,
     formatters_data,
     get_all_values,
     get_glyph_param,
-    rm_curve_hover_hook,
     set_plot_attrs_hv,
     x_timeseries,
 )
@@ -57,16 +60,34 @@ def _plot_ens_reals(
             "groupby" in plot_kw[name].keys()
             and plot_kw[name]["groupby"] == "realization"
         ):
-            plot_kw[name] = {"by": "realization", "x": "time"} | plot_kw[name]
+            plot_kw[name] = {"by": "realization", "x": "time"} | plot_kw[
+                name
+            ]  # why did i put this two times?
         plot_kw[name] = {"by": "realization", "x": "time"} | plot_kw[name]
+        opts_kw[name].setdefault(
+            "hooks",
+            [
+                partial(
+                    curve_hover_hook,
+                    att=use_attrs,
+                    form=form,
+                    x=list(plot_kw.values())[-1]["x"],
+                )
+            ],
+        )
         return arr.hvplot.line(**plot_kw[name]).opts(**opts_kw[name])
     else:
         plot_kw[name].setdefault("label", name)
+        # opts_kw[name].setdefault("hooks", [
+        #  partial(curve_hover_hook, att=use_attrs, form=form, x=list(plot_kw.values())[-1]["x"])])
         for r in arr.realization:
             hv_fig[f"realization_{r.values.item()}"] = (
                 arr.sel(realization=r)
-                .hvplot.line(**plot_kw[name])
-                .opts(**opts_kw[name])
+                .hvplot.line(hover=False, **plot_kw[name])
+                .opts(
+                    tools=curve_hover_tool(use_attrs, form, r=r.values.item()),
+                    **opts_kw[name],
+                )
             )
         return hv_fig
 
@@ -95,26 +116,19 @@ def _plot_ens_pct_stats(
     else:
         lab = name
 
-    opts_kw_line = opts_kw[name]
-    if "hooks" in opts_kw[name]:
-        opts_kw_line["hooks"] = opts_kw_line["hooks"].append(rm_curve_hover_hook)
-    else:
-        opts_kw_line.setdefault("hooks", [rm_curve_hover_hook])
-    print(opts_kw_line)
+    plot_kw_line = copy.deepcopy(plot_kw[name])
+    plot_kw_line = {"label": lab, "hover": False} | plot_kw_line
     # plot
     hv_fig["line"] = (
         array_data[sorted_lines["middle"]]
-        .hvplot.line(label=lab, **plot_kw[name])
-        .opts(**opts_kw_line)
+        .hvplot.line(**plot_kw_line)
+        .opts(**opts_kw[name])
     )
 
     c = get_glyph_param(hv_fig["line"], "line_color")
     lab_area = fill_between_label(sorted_lines, name, array_categ, legend)
-    opts_kw_area = opts_kw[name]
-    if "hooks" in opts_kw[name]:
-        opts_kw_area["hooks"] = opts_kw_area["hooks"].append(rm_curve_hover_hook)
-    else:
-        opts_kw_area = opts_kw_area.setdefault("hooks", [rm_curve_hover_hook])
+    opts_kw_area = copy.deepcopy(opts_kw[name])
+    opts_kw_area.setdefault("tools", curve_hover_tool(use_attrs, form))
     plot_kw[name].setdefault("color", c)
     if "ENS_PCT_DIM" in array_categ[name]:
         arr = arr.to_dataset(dim="percentiles")
@@ -356,6 +370,7 @@ def timeseries(
             use_attrs,
         )
 
+    # CURVE_HOVER_HOOK doit être passer individuellement (sauf si dans by = 'realization')
     opts_kw = add_default_opts_overlay(
         opts_kw, form, legend, use_attrs, list(plot_kw.values())[-1]["x"], array_categ
     )
