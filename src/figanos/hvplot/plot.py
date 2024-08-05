@@ -28,6 +28,7 @@ from .utils import (
     formatters_data,
     get_all_values,
     get_glyph_param,
+    plot_coords,
     set_plot_attrs_hv,
     x_timeseries,
 )
@@ -374,5 +375,16 @@ def timeseries(
     opts_kw = add_default_opts_overlay(
         opts_kw, form, legend, use_attrs, list(plot_kw.values())[-1]["x"], array_categ
     )
+
+    if show_lat_lon:
+        opts_kw["overlay"].setdefault(
+            "hooks",
+            plot_coords(
+                list(data.values())[0],
+                loc=show_lat_lon,
+                param="location",
+                backgroundalpha=1,
+            ),
+        )
 
     return hv.Overlay(list(get_all_values(figs))).opts(**opts_kw["overlay"])

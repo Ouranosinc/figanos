@@ -12,6 +12,7 @@ from bokeh.models import (
     ColumnDataSource,
     GlyphRenderer,
     HoverTool,
+    Label,
     LegendItem,
     Line,
     Range1d,
@@ -298,23 +299,23 @@ def add_default_opts_overlay(opts_kw, form, legend, att, x, array_categ) -> dict
         dict
 
     """
-    if not any(
-        map(
-            lambda v: v
-            in [
-                "ENS_STATS_VAR_DS",
-                "ENS_PCT_VAR_DS",
-                "ENS_PCT_DIM_DS",
-                "ENS_PCT_DIM_DA",
-            ],
-            list(array_categ.values()),
-        )
-    ):
-        # add default tooltips hooks (x and y)
-        # should it be added to hook lists if already exists?
-        opts_kw["overlay"].setdefault(
-            "hooks", [partial(curve_hover_hook, att=att, form=form, x=x)]
-        )
+    # if not any(
+    #    map(
+    #        lambda v: v
+    #        in [
+    #            "ENS_STATS_VAR_DS",
+    #            "ENS_PCT_VAR_DS",
+    #            "ENS_PCT_DIM_DS",
+    #            "ENS_PCT_DIM_DA",
+    #        ],
+    #        list(array_categ.values()),
+    #    )
+    # ):
+    # add default tooltips hooks (x and y)
+    # should it be added to hook lists if already exists?
+    #    opts_kw["overlay"].setdefault(
+    #        "hooks", [partial(curve_hover_hook, att=att, form=form, x=x)]
+    #    )
 
     if legend == "'edge":
         warnings.warn(
@@ -489,3 +490,107 @@ def set_plot_attrs_hv(
         xhover = plot_kw[name]["x"]
     use_attrs["xhover"] = xhover
     return use_attrs, plot_kw
+
+
+def plot_coords_hook(plot, element, text, loc, bgc) -> None:
+    """Hook to add text to plot. Use hooks to have access to screen units."""
+    pk = {}
+    pk["background_fill_alpha"] = bgc
+
+    if isinstance(loc, str):
+        pk["x_units"] = "screen"
+        pk["y_units"] = "screen"
+
+        width, height = plot.state.width, plot.state.height
+        print(width)
+        print(height)
+
+        if loc == "center":
+            pk["y"] = (height - 150) / 2
+            pk["x"] = (width - 300) / 2
+        else:
+            if "upper" in loc:
+                pk["y"] = height - 150
+            if "lower" in loc:
+                pk["y"] = 10
+            if "right" in loc:
+                pk["x"] = width - 180
+                pk["text_align"] = "right"
+            if "left" in loc:
+                pk["x"] = 10
+                pk["text_align"] = "left"
+            if "center" in loc:
+                if loc[0] == "c":
+                    pk["y"] = (height - 150) / 2
+                else:
+                    pk["x"] = (width - 300) / 2
+    elif isinstance(loc, tuple):
+        pk["x_units"] = "data"
+        pk["y_units"] = "data"
+        pk["x"] = loc[0]
+        pk["y"] = loc[1]
+
+    label = Label(text=text, **pk)
+    plot.state.add_layout(label)
+
+
+def plot_coords(
+    xr_obj: xr.DataArray | xr.Dataset,
+    loc: str | tuple[float, float] | int,
+    param: str | None = None,
+    backgroundalpha: float = 1,
+) -> hv.Text:
+    """Plot the coordinates of an xarray object.
+
+    Parameters
+    ----------
+    xr_obj : xr.DataArray | xr.Dataset
+        The xarray object from which to plot the coordinates.
+    loc : str | tuple[float, float] | int
+        Location of text, replicating https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.legend.html.
+        If a tuple, must be in axes coordinates.
+    param : {"location", "time"}, optional
+        The parameter used.
+    backgroundalpha : float
+        Transparency of the text background. 1 is opaque, 0 is transparent.
+    projection: str
+        Custom projection. Default is None.
+
+    Returns
+    -------
+    hv.Text
+    """
+    text = None
+    if param == "location":
+        if "lat" in xr_obj.coords and "lon" in xr_obj.coords:
+            text = "lat={:.2f}, lon={:.2f}".format(
+                float(xr_obj["lat"]), float(xr_obj["lon"])
+            )
+        else:
+            warnings.warn(
+                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
+            )
+    if param == "time":
+        if "time" in xr_obj.coords:
+            text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
+
+        else:
+            warnings.warn('show_time set to True, but "time" not found in coords')
+
+    if isinstance(loc, int):
+        equiv = {
+            1: "upper right",
+            2: "upper left",
+            3: "lower left",
+            4: "lower right",
+            6: "center left",
+            7: "center right",
+            8: "lower center",
+            9: "upper center",
+            10: "center",
+        }
+        loc = equiv[loc]
+    if isinstance(loc, bool):
+        loc = "lower left"
+
+    return [partial(plot_coords_hook, text=text, loc=loc, bgc=backgroundalpha)]
