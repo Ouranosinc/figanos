@@ -1771,10 +1771,9 @@ def scattermap(
         )
         plot_kw_pop.setdefault("norm", norm)
 
-    # set defaults and create copy without vmin, vmax (conflicts with norm)
+    # set defaults and
     plot_kw_pop = {
         "cmap": cmap,
-        # "norm": norm,
         "transform": transform,
         "zorder": 8,
         "marker": "o",

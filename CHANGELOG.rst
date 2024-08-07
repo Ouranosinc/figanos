@@ -44,7 +44,7 @@ Internal changes
 
 Bug fixes
 ^^^^^^^^^
-* Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`184`, :issue:`239`).
+* Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`238`, :issue:`239`).
 
 
 0.3.0 (2024-02-16)
