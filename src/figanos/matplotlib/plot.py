@@ -1747,22 +1747,34 @@ def scattermap(
         else:
             plot_kw_pop.setdefault("s", pt_sizes[0])
 
-    # norm
-    plot_kw_pop.setdefault("vmin", np.nanmin(plot_data.values[mask]))
-    plot_kw_pop.setdefault("vmax", np.nanmax(plot_data.values[mask]))
+    if levels is not None:
+        if isinstance(levels, Iterable):
+            lin = levels
+        else:
+            lin = custom_cmap_norm(
+                cmap,
+                np.nanmin(plot_data.values[mask]),
+                np.nanmax(plot_data.values[mask]),
+                levels=levels,
+                divergent=divergent,
+                linspace_out=True,
+            )
+        plot_kw_pop.setdefault("levels", lin)
 
-    norm = custom_cmap_norm(
-        cmap,
-        vmin=plot_kw_pop["vmin"],
-        vmax=plot_kw_pop["vmax"],
-        levels=levels,
-        divergent=divergent,
-    )
+    elif (divergent is not False) and ("levels" not in plot_kw):
+        norm = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values[mask]),
+            np.nanmax(plot_data.values[mask]),
+            levels=levels,
+            divergent=divergent,
+        )
+        plot_kw_pop.setdefault("norm", norm)
 
     # set defaults and create copy without vmin, vmax (conflicts with norm)
     plot_kw_pop = {
         "cmap": cmap,
-        "norm": norm,
+        # "norm": norm,
         "transform": transform,
         "zorder": 8,
         "marker": "o",
@@ -1788,8 +1800,6 @@ def scattermap(
     else:
         plot_kw_pop.setdefault("edgecolor", "none")
 
-    for key in ["vmin", "vmax"]:
-        plot_kw_pop.pop(key)
     # plot
     plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
     if ax:

@@ -42,6 +42,11 @@ Internal changes
     * Maintainer-specific documentation has been added to new documentation page `releasing.rst`.
 * `figanos` now has a `CODE_OF_CONDUCT.rst` file adapting the Contributor Covenant v2.1 conventions. (:pull:`210`).
 
+Bug fixes
+^^^^^^^^^
+* Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`184`, :issue:`239`).
+
+
 0.3.0 (2024-02-16)
 ------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
