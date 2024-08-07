@@ -4,7 +4,9 @@ Changelog
 
 0.4.0 (unreleased)
 ------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`)
+
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -13,6 +15,10 @@ New features and enhancements
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
 * Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
+* New argument ``enumerate_subplots`` for `gridmap`, `timeseries`, `hatchmap` and `scattermap`(:pull:`220`).
+* ``fg.taylordiagram`` can now accept datasets with many dimensions (not only `taylor_params`), provided that they all share the same `ref_std` (e.g. normalized taylor diagrams)  (:pull:`214`).
+* A new optional way to organize points in a `fg.taylordiagram`  with  `colors_key`, `markers_key`  : DataArrays with a common dimension value or a common attrtibute are grouped with the same color/marker (:pull:`214`).
+* Heatmap (`fg.matplotlib.heatmap`) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:issue:`208`, :pull:`219`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
@@ -20,6 +26,7 @@ Breaking changes
 * `figanos` now uses a `'src' layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout>`_ for the package. (:pull:`210`).
 * `cartopy` has been pinned above v0.23.0 due to a licensing issue. (:pull:`210`).
 * `twine` and `wheel` have been removed from the `dev` requirements. (:pull:`210`).
+* ``fg.taylordiagram`` returns a tuple of `(fig, floating_ax, legend)` instead of only `floating_ax`. (:pull:`214`).
 
 Internal changes
 ^^^^^^^^^^^^^^^^
@@ -34,6 +41,11 @@ Internal changes
     * `CHANGES.rst` has been renamed to `CHANGELOG.rst`.
     * Maintainer-specific documentation has been added to new documentation page `releasing.rst`.
 * `figanos` now has a `CODE_OF_CONDUCT.rst` file adapting the Contributor Covenant v2.1 conventions. (:pull:`210`).
+
+Bug fixes
+^^^^^^^^^
+* Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`238`, :issue:`239`).
+
 
 0.3.0 (2024-02-16)
 ------------------
