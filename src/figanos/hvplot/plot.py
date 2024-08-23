@@ -40,7 +40,6 @@ def _plot_ens_reals(
     non_dict_data: bool,
     plot_kw: dict[str, Any],
     opts_kw: dict[str, Any] | list,
-    legend: str,
     form: str,
     use_attrs: dict[str, Any],
 ) -> dict:
