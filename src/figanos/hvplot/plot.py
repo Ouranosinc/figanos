@@ -167,7 +167,6 @@ def _plot_timeseries(
             non_dict_data,
             plot_kw,
             opts_kw,
-            legend,
             form,
             use_attrs,
         )

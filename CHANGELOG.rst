@@ -10,6 +10,7 @@ Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Bra
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* `figanos` now has timeseries available in the hvplot plotting library (:pull:`198`).
 * `figanos` now supports Python 3.12. (:pull:`210`).
 * Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
