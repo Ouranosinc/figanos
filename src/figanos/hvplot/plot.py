@@ -28,7 +28,6 @@ from .utils import (
     formatters_data,
     get_all_values,
     get_glyph_param,
-    plot_coords,
     set_plot_attrs_hv,
     x_timeseries,
 )
@@ -345,8 +344,6 @@ def timeseries(
 
     # get data and plot
     for name, arr in data.items():
-        # ToDo: if legend = 'edge' add hook in opts_kw
-
         #  remove 'label' to avoid error due to double 'label' args
         if "label" in plot_kw[name]:
             del plot_kw[name]["label"]
@@ -371,20 +368,10 @@ def timeseries(
             use_attrs,
         )
 
-    # CURVE_HOVER_HOOK doit être passer individuellement (sauf si dans by = 'realization')
-    opts_kw = add_default_opts_overlay(
-        opts_kw, form, legend, use_attrs, list(plot_kw.values())[-1]["x"], array_categ
+    # overlay opts_kw
+    if "overlay" not in opts_kw:
+        opts_kw["overlay"] = {}
+    opts_overlay = add_default_opts_overlay(
+        opts_kw["overlay"].copy(), legend, show_lat_lon, list(data.values())[0]
     )
-
-    if show_lat_lon:
-        opts_kw["overlay"].setdefault(
-            "hooks",
-            plot_coords(
-                list(data.values())[0],
-                loc=show_lat_lon,
-                param="location",
-                backgroundalpha=1,
-            ),
-        )
-
-    return hv.Overlay(list(get_all_values(figs))).opts(**opts_kw["overlay"])
+    return hv.Overlay(list(get_all_values(figs))).opts(**opts_overlay)

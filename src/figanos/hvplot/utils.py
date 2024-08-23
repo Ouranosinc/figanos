@@ -196,7 +196,6 @@ def get_all_values(nested_dictionary) -> list:
 def curve_hover_hook(plot, element, att, form, x) -> None:
     """Hook function to be passed to hvplot.opts to modify hover tooltips."""
     for hov_id, hover in plot.handles["hover_tools"].items():
-        # print(hov_id)
         if hover.tooltips[0][0] != x:
             hover.tooltips[-2:] = [
                 (att["xhover"], "$x{%F}"),
@@ -276,58 +275,51 @@ def formatters_data(data) -> str:
     return form
 
 
-def add_default_opts_overlay(opts_kw, form, legend, att, x, array_categ) -> dict:
+def add_default_opts_overlay(opts_kw, legend, show_lat_lon, data) -> dict:
     """Add default opts to curve plot.
 
     Parameters
     ----------
     opts_kw : dict
-        Custom options to be passed to opts().
-    form : str
-        Bokeh format.
+        Custom options to be passed to opts() of holoviews overlay figure.
     legend : str
         Type of legend.
-    att : dict
-        user_attrs.
-    x : str
-        Xarray coordinate to be used for plotting xaxis (ex: time).
-    array_categ : dict
-        Type of data array (ex: ENS_STATS_VAR_DS).
+    show_lat_lon : bool, tuple, str or int
+        Show latitude and longitude on figure
+    data : xr.DataArray | xr.Dataset | dict
+        Data to be plotted.
 
     Returns
     -------
         dict
 
     """
-    # if not any(
-    #    map(
-    #        lambda v: v
-    #        in [
-    #            "ENS_STATS_VAR_DS",
-    #            "ENS_PCT_VAR_DS",
-    #            "ENS_PCT_DIM_DS",
-    #            "ENS_PCT_DIM_DA",
-    #        ],
-    #        list(array_categ.values()),
-    #    )
-    # ):
-    # add default tooltips hooks (x and y)
-    # should it be added to hook lists if already exists?
-    #    opts_kw["overlay"].setdefault(
-    #        "hooks", [partial(curve_hover_hook, att=att, form=form, x=x)]
-    #    )
-
-    if legend == "'edge":
+    if legend == "edge":
         warnings.warn(
             "Legend 'edge' is not supported in hvplot. Using 'in_plot' instead."
         )
         legend = "in_plot"
     elif legend == "in_plot":
-        opts_kw["overlay"]["hooks"].append(
-            edge_legend
-        )  # test if should be overlay or to each nested dicts
+        opts_kw["show_legend"] = False
+        if "hooks" in list(opts_kw.keys()):
+            opts_kw["hooks"].append(edge_legend)
+        else:
+            opts_kw["hooks"] = [edge_legend]
     if not legend:
-        opts_kw["overlay"].setdefault("show_legend", False)
+        opts_kw.setdefault("show_legend", False)
+
+    if show_lat_lon:
+        sll = plot_coords(
+            list(data.values())[0],
+            loc=show_lat_lon,
+            param="location",
+            backgroundalpha=1,
+        )
+        if "hooks" in list(opts_kw.keys()):
+            opts_kw["hooks"].append(sll)
+        else:
+            opts_kw["hooks"] = [sll]
+
     return opts_kw
 
 
@@ -502,8 +494,6 @@ def plot_coords_hook(plot, element, text, loc, bgc) -> None:
         pk["y_units"] = "screen"
 
         width, height = plot.state.width, plot.state.height
-        print(width)
-        print(height)
 
         if loc == "center":
             pk["y"] = (height - 150) / 2
@@ -593,4 +583,4 @@ def plot_coords(
     if isinstance(loc, bool):
         loc = "lower left"
 
-    return [partial(plot_coords_hook, text=text, loc=loc, bgc=backgroundalpha)]
+    return partial(plot_coords_hook, text=text, loc=loc, bgc=backgroundalpha)
