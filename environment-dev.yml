@@ -19,7 +19,11 @@ dependencies:
   - scikit-image
   - xarray
   - xclim >=0.47
+  # for interactive figures
   - hvplot
+  - holoviews
+  - geoviews
+  - bokeh
   # To make the package and notebooks usable
   - dask
   - h5py
