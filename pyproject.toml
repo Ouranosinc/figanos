@@ -65,7 +65,7 @@ dev = [
   "mypy",
   "pytest >=7.3.1",
   "pytest-cov >=4.0.0",
-  "black ==24.4.2",
+  "black ==24.8.0",
   "blackdoc ==0.3.9",
   "isort ==5.13.2",
   "ruff >=0.3.0",
