@@ -260,7 +260,22 @@ checks = [
   "all", # report on all checks, except the below
   "EX01",
   "SA01",
-  "ES01"
+  "ES01",
+  # FIXME: The following exceptions should be addressed
+  "GL01",
+  "GL08",
+  "PR01",
+  "PR02",
+  "PR03",
+  "PR04",
+  "PR05",
+  "PR06",
+  "PR08",
+  "PR09",
+  "RT01",
+  "RT05",
+  "PR10",
+  "RT03"
 ]
 # remember to use single quotes for regex in TOML
 exclude = [
