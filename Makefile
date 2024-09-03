@@ -55,13 +55,14 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint/flake8: ## check style with flake8
-	ruff check src/figanos tests
-	flake8 --config=.flake8 src/figanos tests
+	python -m ruff check src/figanos tests
+	python -m flake8 --config=.flake8 src/figanos tests
+	python -m numpydoc lint src/figanos/**.py
 
 lint/black: ## check style with black
-	black --check src/figanos tests
-	blackdoc --check src/figanos docs
-	isort --check src/figanos tests
+	python -m black --check src/figanos tests
+	python -m blackdoc --check src/figanos docs
+	python -m isort --check src/figanos tests
 
 lint: lint/flake8 lint/black ## check style
 
@@ -69,12 +70,12 @@ test: ## run tests quickly with the default Python
 	python -m pytest
 
 test-all: ## run tests on every Python version with tox
-	tox
+	python -m tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source src/figanos -m pytest
-	coverage report -m
-	coverage html
+	python -m coverage run --source src/figanos -m pytest
+	python -m coverage report -m
+	python -m coverage html
 	$(BROWSER) htmlcov/index.html
 
 initialize-translations: clean-docs ## initialize translations, ignoring autodoc-generated files

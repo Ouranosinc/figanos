@@ -44,15 +44,14 @@ If you are proposing a feature:
 
 * Explain in detail how it would work.
 * Keep the scope as narrow as possible, to make it easier to implement.
-* Remember that this is a volunteer-driven project, and that contributions
-  are welcome. :)
+* Remember that this is a volunteer-driven project, and that contributions are welcome. :)
 
 Get Started!
 ------------
 
 .. note::
 
-    If you are new to using GitHub and `git`, please read `this guide <https://guides.github.com/activities/hello-world/>`_ first.
+    If you are new to using `GitHub <https://github.com/>`_ and ``git``, please read `this guide <https://guides.github.com/activities/hello-world/>`_ first.
 
 .. warning::
 
@@ -69,12 +68,19 @@ Get Started!
 
 Ready to contribute? Here's how to set up ``figanos`` for local development for developers outside Ouranos.
 
-#. Fork the ``figanos`` repo on GitHub.
-#. Clone your fork locally:
+#. First, clone the ``figanos`` repo locally.
 
-    .. code-block:: console
+    * If you are not a ``figanos`` collaborator, first fork the ``figanos`` repo on GitHub, then clone your fork locally.
 
-        git clone git@github.com:your_name_here/figanos.git
+        .. code-block:: console
+
+            git clone git@github.com:your_name_here/figanos.git
+
+    * If you are a ``figanos`` collaborator, clone the ``figanos`` repo directly.
+
+        .. code-block:: console
+
+            git clone git@github.com:Ouranosinc/figanos.git
 
 #. Install your local copy into a development environment. You can create a new Anaconda development environment with:
 
@@ -84,17 +90,24 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
         conda activate figanos
         make dev
 
-  This installs ``figanos`` in an "editable" state, meaning that changes to the code are immediately seen by the environment. To ensure a consistent coding style, `make dev` also installs the ``pre-commit`` hooks to your local clone.
+    If you are on Windows, replace the ``make dev`` command with the following:
 
-  On commit, ``pre-commit`` will check that ``black``, ``blackdoc``, ``isort``, ``flake8``, and ``ruff`` checks are passing, perform automatic fixes if possible, and warn of violations that require intervention. If your commit fails the checks initially, simply fix the errors, re-add the files, and re-commit.
+    .. code-block:: console
 
-  You can also run the hooks manually with:
+        python -m pip install -e .[dev]
+        pre-commit install
+
+    This installs ``figanos`` in an "editable" state, meaning that changes to the code are immediately seen by the environment. To ensure a consistent coding style, `make dev` also installs the ``pre-commit`` hooks to your local clone.
+
+    On commit, ``pre-commit`` will check that ``black``, ``blackdoc``, ``isort``, ``flake8``, and ``ruff`` checks are passing, perform automatic fixes if possible, and warn of violations that require intervention. If your commit fails the checks initially, simply fix the errors, re-add the files, and re-commit.
+
+    You can also run the hooks manually with:
 
     .. code-block:: console
 
         pre-commit run -a
 
-  If you want to skip the ``pre-commit`` hooks temporarily, you can pass the `--no-verify` flag to `git commit`.
+    If you want to skip the ``pre-commit`` hooks temporarily, you can pass the `--no-verify` flag to `git commit`.
 
 #. Create a branch for local development:
 
@@ -102,7 +115,7 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
 
         git checkout -b name-of-your-bugfix-or-feature
 
-  Now you can make your changes locally.
+    Now you can make your changes locally.
 
 #. When you're done making changes, we **strongly** suggest running the tests in your environment or with the help of ``tox``:
 
@@ -121,7 +134,7 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
         git commit -m "Your detailed description of your changes."
         git push origin name-of-your-bugfix-or-feature
 
-    If ``pre-commit`` hooks fail, try re-committing your changes (or, if need be, you can skip them with `git commit --no-verify`).
+    If ``pre-commit`` hooks fail, try fixing the issues, re-staging the files to be committed, and re-committing your changes (or, if need be, you can skip them with `git commit --no-verify`).
 
 #. Submit a `Pull Request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_ through the GitHub website.
 
@@ -137,13 +150,34 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
         # To simply test that the docs pass build checks
         python -m tox -e docs
 
+#. If changes to your branch are made on GitHub, you can update your local branch with:
+
+    .. code-block:: console
+
+        git checkout name-of-your-bugfix-or-feature
+        git fetch
+        git pull origin name-of-your-bugfix-or-feature
+
+    If you have merge conflicts, you might need to replace `git pull` with `git merge` and resolve the conflicts manually.
+    Resolving conflicts from the command line can be tricky. If you are not comfortable with this, you can ignore the last command and instead use a GUI like PyCharm or Visual Studio Code to merge the remote changes and resolve the conflicts.
+
+#. Before merging, your Pull Request will need to be based on the `main` branch of the ``figanos`` repository. If your branch is not up-to-date with the `main` branch, you can perform similar steps as above to update your branch:
+
+    .. code-block:: console
+
+        git checkout name-of-your-bugfix-or-feature
+        git fetch
+        git pull origin main
+
+    See the previous step for more information on resolving conflicts.
+
 #. Once your Pull Request has been accepted and merged to the `main` branch, several automated workflows will be triggered:
 
-   - The ``bump-version.yml`` workflow will automatically bump the patch version when pull requests are pushed to the `main` branch on GitHub. **It is not recommended to manually bump the version in your branch when merging (non-release) pull requests (this will cause the version to be bumped twice).**
-   - `ReadTheDocs` will automatically build the documentation and publish it to the `latest` branch of `figanos` documentation website.
-   - If your branch is not a fork (ie: you are a maintainer), your branch will be automatically deleted.
+    - The ``bump-version.yml`` workflow will automatically bump the patch version when pull requests are pushed to the `main` branch on GitHub. **It is not recommended to manually bump the version in your branch when merging (non-release) pull requests (this will cause the version to be bumped twice).**
+    - `ReadTheDocs` will automatically build the documentation and publish it to the `latest` branch of `figanos` documentation website.
+    - If your branch is not a fork (i.e. you are a maintainer), your branch will be automatically deleted.
 
-    You will have contributed your first changes to ``figanos``!
+You will have contributed your first changes to ``figanos``!
 
 Pull Request Guidelines
 -----------------------
@@ -152,9 +186,11 @@ Before you submit a pull request, check that it meets these guidelines:
 
 #. The pull request should include tests and should aim to provide `code coverage <https://en.wikipedia.org/wiki/Code_coverage>`_ for all new lines of code. You can use the `--cov-report html --cov figanos` flags during the call to ``pytest`` to generate an HTML report and analyse the current test coverage.
 
-#. If the pull request adds functionality, the docs should also be updated. Put your new functionality into a function with a docstring, and add the feature to the list in ``README.rst``.
+#. All functions should be documented with `docstrings` following the `numpydoc <https://numpydoc.readthedocs.io/en/latest/format.html>`_ format.
 
-#. The pull request should work for Python 3.9, 3.10, 3.11, and 3.12. Check that the tests pass for all supported Python versions.
+#. If the pull request adds functionality, either update the documentation or create a new notebook that demonstrates the feature. Library-defining features should also be listed in ``README.rst``.
+
+#. The pull request should work for all currently supported Python versions. Check the `pyproject.toml` or `tox.ini` files for the list of supported versions.
 
 
 Tips
@@ -176,16 +212,28 @@ For more information on running tests, see the `pytest documentation <https://do
 
 .. code-block:: console
 
-    black --check figanos tests
-    isort --check figanos tests
-    blackdoc --check figanos docs
-    ruff check figanos tests
-    flake8 figanos tests
+    python -m black --check src/figanos tests
+    python -m isort --check src/figanos tests
+    python -m blackdoc --check src/figanos docs
+    python -m ruff check src/figanos tests
+    python -m flake8 src/figanos tests
+    validate-docstrings src/figanos/**.py
 
-To get ``black``, ``isort``, ``blackdoc``, ``ruff``, and ``flake8`` (with plugins ``flake8-alphabetize`` and ``flake8-rst-docstrings``) simply install them with ``pip`` (or ``conda``) into your environment.
+To get ``black``, ``isort``, ``blackdoc``, ``ruff``, ``flake8`` (with the ``flake8-rst-docstrings`` plugin), and ``numpydoc`` (for ``validate-docstrings``), simply install them with ``pip`` (or ``conda``) into your environment.
+
+Translations
+------------
+
+If you would like to contribute to the French translation of the documentation, you can do so by running the following command:
+
+    .. code-block:: console
+
+        make initialize-translations
+
+This will create or update the French translation files in the `docs/locales/fr/LC_MESSAGES` directory. You can then edit the `.po` files in this directory to provide translations for the documentation.
 
 Code of Conduct
 ---------------
 
-Please note that this project is released with a `Contributor Code of Conduct <https://github.com/Sarahclaude/figanos/blob/main/CODE_OF_CONDUCT.rst>`_.
+Please note that this project is released with a `Contributor Code of Conduct <https://github.com/Sarahclaude/figanos/blob/main/CODE_OF_CONDUCT.md>`_.
 By participating in this project you agree to abide by its terms.
