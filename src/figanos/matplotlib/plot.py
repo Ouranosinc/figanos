@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 import math
 import string
 import warnings
@@ -53,6 +54,8 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     split_legend,
     wrap_text,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _plot_realizations(
@@ -686,7 +689,8 @@ def gridmap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1246,7 +1250,8 @@ def stripes(
         else:
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1415,7 +1420,8 @@ def heatmap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1696,7 +1702,8 @@ def scattermap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
