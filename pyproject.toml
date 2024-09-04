@@ -175,6 +175,9 @@ values = [
   "release"
 ]
 
+[tool.coverage.paths]
+source = ["src/", "*/site-packages/"]
+
 [tool.coverage.run]
 omit = ["tests/*.py"]
 relative_files = true
