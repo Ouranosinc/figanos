@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 import math
 import string
 import warnings
@@ -53,6 +54,8 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     split_legend,
     wrap_text,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _plot_realizations(
@@ -686,7 +689,8 @@ def gridmap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1246,7 +1250,8 @@ def stripes(
         else:
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1415,7 +1420,8 @@ def heatmap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1696,7 +1702,8 @@ def scattermap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -2651,33 +2658,31 @@ def partition(
 ) -> matplotlib.axes.Axes:
     """Figure of the partition of total uncertainty by components.
 
-    Uncertainty fractions can be computed with xclim
-    (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
+    Uncertainty fractions can be computed with xclim (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
     Make sure the use `fraction=True` in the xclim function call.
-
 
     Parameters
     ----------
-    data: xr.DataArray or xr.Dataset
-      Variance over time of the different components of uncertainty.
-      Output of a `xclim.ensembles._partitioning` function.
+    data : xr.DataArray or xr.Dataset
+        Variance over time of the different components of uncertainty.
+        Output of a `xclim.ensembles._partitioning` function.
     ax : matplotlib axis, optional
-        Matplotlib axis on which to plot
-    start_year: str
-      If None, the x-axis will be the time in year.
-      If str, the x-axis will show the number of year since start_year.
-    show_num: bool
-        If True, show the number of elements for each uncertainty components in parenthesis in the legend.
-        `data` should have attributes named after the components with a list its the elements.
-    fill_kw: dict
+        Matplotlib axis on which to plot.
+    start_year : str
+        If None, the x-axis will be the time in year.
+        If str, the x-axis will show the number of year since start_year.
+    show_num : bool
+        If True, show the number of elements for each uncertainty components in parentheses in the legend.
+        `data` should have attributes named after the components with a list of its the elements.
+    fill_kw : dict
         Keyword arguments passed to `ax.fill_between`.
         It is possible to pass a dictionary of keywords for each component (uncertainty coordinates).
-    line_kw: dict
+    line_kw : dict
         Keyword arguments passed to `ax.plot` for the lines in between the components.
         The default is {color="k", lw=2}. We recommend always using lw>=2.
-    fig_kw: dict
+    fig_kw : dict
         Keyword arguments passed to `plt.subplots`.
-    legend_kw: dict
+    legend_kw : dict
         Keyword arguments passed to `ax.legend`.
 
     Returns

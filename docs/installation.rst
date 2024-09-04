@@ -2,6 +2,22 @@
 Installation
 ============
 
+..
+    We strongly recommend installing figanos in an Anaconda Python environment.
+    Furthermore, due to the complexity of some packages, the default dependency solver can take a long time to resolve the environment.
+    If `mamba` is not already your default solver, consider running the following commands in order to speed up the process:
+
+        .. code-block:: console
+
+            conda install -n base conda-libmamba-solver
+            conda config --set solver libmamba
+
+If you don't have `pip`_ installed, this `Python installation guide`_ can guide you through the process.
+
+.. _pip: https://pip.pypa.io
+.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
+
+
 Official Source
 ---------------
 
