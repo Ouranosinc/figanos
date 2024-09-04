@@ -176,7 +176,7 @@ values = [
 ]
 
 [tool.coverage.paths]
-source = ["src/", "*/site-packages/"]
+source = ["src/figanos/", "*/site-packages/figanos/"]
 
 [tool.coverage.run]
 omit = ["tests/*.py"]
