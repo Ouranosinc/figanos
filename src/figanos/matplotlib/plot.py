@@ -1767,7 +1767,7 @@ def scattermap(
                 divergent=divergent,
                 linspace_out=True,
             )
-        plot_kw_pop.setdefault("levels", lin)
+        plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
         norm = custom_cmap_norm(
@@ -1777,7 +1777,7 @@ def scattermap(
             levels=levels,
             divergent=divergent,
         )
-        plot_kw_pop.setdefault("norm", norm)
+        plot_kw.setdefault("norm", norm)
 
     # matplotlib.pyplot.scatter treats "edgecolor" and "edgecolors" as aliases so we accept "edgecolor" and convert it
     if "edgecolor" in plot_kw and "edgecolors" not in plot_kw:
