@@ -21,8 +21,9 @@ Need help?
    notebooks/figanos_multiplots
    api
    contributing
+   releasing
    authors
-   changes
+   changelog
 
 .. toctree::
    :maxdepth: 1

@@ -19,7 +19,7 @@ build:
     python: "mambaforge-22.9"
   jobs:
     pre_build:
-      - sphinx-apidoc -o docs/apidoc --private --module-first figanos
+      - sphinx-apidoc -o docs/apidoc --private --module-first src/figanos
       # - sphinx-build -M gettext docs docs/_build
 
 conda:

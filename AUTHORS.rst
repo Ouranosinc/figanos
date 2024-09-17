@@ -20,3 +20,4 @@ Contributors
 
 * Gabriel Rondeau-Genesse <rondeau-genesse.gabriel@ouranos.ca> `@RondeauG <https://github.com/RondeauG>`_
 * Marco Braun <Braun.Marco@ouranos.ca> `@vindelico <https://github.com/vindelico>`_
+* Éric Dupuis <dupuis.eric@ouranos.ca> `@coxipi <https://github.com/coxipi>`_

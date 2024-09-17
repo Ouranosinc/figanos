@@ -6,11 +6,14 @@ import urllib.parse
 import urllib.request
 import warnings
 from pathlib import Path
+from urllib.error import URLError
 
 import platformdirs
 import yaml
 
 __all__ = ["Logos"]
+
+logger = logging.getLogger(__name__)
 
 LOGO_CONFIG_FILE = "logo_mapping.yaml"
 OURANOS_LOGOS_URL = "https://raw.githubusercontent.com/Ouranosinc/.github/main/images/"
@@ -93,7 +96,7 @@ class Logos:
                     f"No logo configuration file found. Creating one at {self.catalogue}."
                 )
             self._config.mkdir(parents=True, exist_ok=True)
-            with open(self.catalogue, "w") as f:
+            with self.catalogue.open("w", encoding="utf-8") as f:
                 yaml.dump(dict(logos={}), f)
 
     def __str__(self) -> str:
@@ -143,7 +146,7 @@ class Logos:
             if not install_logo_path.exists():
                 shutil.copy(logo_path, install_logo_path)
 
-            logging.info("Setting %s logo to %s", name, install_logo_path)
+            logger.info("Setting %s logo to %s", name, install_logo_path)
             _logo_mapping[name] = str(install_logo_path)
             self.catalogue.write_text(yaml.dump(dict(logos=_logo_mapping)))
             self.reload_config()
@@ -175,12 +178,15 @@ class Logos:
                     if not (self._config / file).exists():
                         logo_url = urllib.parse.urljoin(OURANOS_LOGOS_URL, file)
                         try:
-                            urllib.request.urlretrieve(logo_url, self._config / file)
-                            self.set_logo(self._config / file)
-                        except Exception as e:
-                            logging.error(
-                                f"Error downloading or setting Ouranos logo: {e}"
+                            urllib.request.urlretrieve(  # noqa: S310
+                                audit_url(logo_url), self._config / file
                             )
+                            self.set_logo(self._config / file)
+                        except URLError as e:
+                            logger.error(e)
+                        except OSError as e:
+                            msg = f"Error downloading or setting Ouranos logo: {e}"
+                            logger.error(msg)
 
             if Path(self.default).stem == "figanos_logo":
                 _default_ouranos_logo = (
@@ -195,3 +201,24 @@ class Logos:
                 "You have not indicated that you have permission to use the Ouranos logo. "
                 "If you do, please set the `permitted` argument to `True`."
             )
+
+
+def audit_url(url: str, context: str | None = None) -> str:
+    """Check if the URL is well-formed.
+
+    Raises
+    ------
+    URLError
+        If the URL is not well-formed.
+    """
+    msg = ""
+    result = urllib.parse.urlparse(url)
+    if result.scheme == "http":
+        msg = f"{context if context else ''} URL is not using secure HTTP: '{url}'".strip()
+    if not all([result.scheme, result.netloc]):
+        msg = f"{context if context else ''} URL is not well-formed: '{url}'".strip()
+
+    if msg:
+        logger.error(msg)
+        raise URLError(msg)
+    return url

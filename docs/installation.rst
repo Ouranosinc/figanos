@@ -2,40 +2,54 @@
 Installation
 ============
 
+..
+    We strongly recommend installing figanos in an Anaconda Python environment.
+    Furthermore, due to the complexity of some packages, the default dependency solver can take a long time to resolve the environment.
+    If `mamba` is not already your default solver, consider running the following commands in order to speed up the process:
+
+        .. code-block:: console
+
+            conda install -n base conda-libmamba-solver
+            conda config --set solver libmamba
+
+If you don't have `pip`_ installed, this `Python installation guide`_ can guide you through the process.
+
+.. _pip: https://pip.pypa.io
+.. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
+
+
 Official Source
 ---------------
 
-To install figanos, run these commands in your terminal:
+To install `figanos`, run these commands in your terminal:
 
 .. code-block:: console
 
-    $ mamba install -c conda-forge gdal
-    $ python -m pip install figanos
+    mamba install -c conda-forge gdal
+    python -m pip install figanos
 
 Development Installation (conda + pip)
 --------------------------------------
 
-For development purposes, we provide the means for generating a conda environment with the latest dependencies in an `environment.yml` file at the top-level of the `Github repo`_.
+For development purposes, we provide the means for generating a conda environment with the latest dependencies in an `environment.yml` file at the top-level of the `Github repo <https://github.com/Ouranosinc/figanos>`_.
 
 In order to get started, first clone the repo locally:
 
 .. code-block:: console
 
-    $ git clone git@github.com:Ouranosinc/figanos.git
+    git clone git@github.com:Ouranosinc/figanos.git
 
 Then you can create the environment and install the package:
 
 .. code-block:: console
 
-    $ cd figanos
-    $ conda env create -f environment-dev.yml
+    cd figanos
+    conda env create -f environment-dev.yml
 
-Finally, perform an `--symlink` install of figanos:
+Finally, perform an `--editable` install of `figanos`:
 
 .. code-block:: console
 
-    $ flit install --symlink
+    python -m pip install -e .
     # Or
-    $ make dev
-
-.. _Github repo: https://github.com/Ouranosinc/figanos
+    make dev

@@ -53,15 +53,15 @@ def get_localized_term(term, locale=None):
     Parameters
     ----------
     term : str
-      A word or short phrase to translate.
+        A word or short phrase to translate.
     locale : str, optional
-      A 2-letter locale name to translate to.
-      Default is None, which will pull the locale
-      from xclim's "metadata_locales" option (taking the first).
+        A 2-letter locale name to translate to.
+        Default is None, which will pull the locale from xclim's "metadata_locales" option (taking the first).
 
-    Return
-    ------
-    str : Translated term.
+    Returns
+    -------
+    str
+        Translated term.
     """
     locale = locale or (XC_OPTIONS[METADATA_LOCALES] or ["en"])[0]
     if locale == "en":
@@ -828,8 +828,8 @@ def get_var_group(
     If `da` is a Dataset, look in the DataArray of the first variable.
     """
     # create dict
-    with open(path_to_json) as f:
-        var_dict = json.load(f)
+    with pathlib.Path(path_to_json).open(encoding="utf-8") as _f:
+        var_dict = json.load(_f)
 
     matches = []
 
@@ -967,8 +967,8 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
 def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
     """Wrap text.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     text : str
         The text to wrap.
     min_line_len : int
@@ -1052,8 +1052,8 @@ def convert_scen_name(name: str) -> str:
 
 def get_scen_color(name: str, path_to_dict: str | pathlib.Path) -> str:
     """Get color corresponding to SSP,RCP, model or CMIP substring from a dictionary."""
-    with open(path_to_dict) as f:
-        color_dict = json.load(f)
+    with pathlib.Path(path_to_dict).open(encoding="utf-8") as _f:
+        color_dict = json.load(_f)
 
     color = None
     for entry in color_dict:
@@ -1078,19 +1078,16 @@ def categorical_colors() -> dict[str, str]:
     path = (
         pathlib.Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
     )
-    with open(path) as f:
-        cat = json.load(f)
+    with path.open(encoding="utf-8") as _f:
+        cat = json.load(_f)
 
         return cat
 
 
-def get_mpl_styles() -> dict[str, str]:
-    """Get the available matplotlib styles and their paths, as a dictionary."""
-    folder = pathlib.Path(__file__).parent / "style/"
-    paths = sorted(folder.glob("*.mplstyle"))
-    names = [str(p).split("/")[-1].removesuffix(".mplstyle") for p in paths]
-    styles = {str(name): path for name, path in zip(names, paths)}
-
+def get_mpl_styles() -> dict[str, pathlib.Path]:
+    """Get the available matplotlib styles and their paths as a dictionary."""
+    files = sorted(pathlib.Path(__file__).parent.joinpath("style").glob("*.mplstyle"))
+    styles = {style.stem: style for style in files}
     return styles
 
 
@@ -1139,15 +1136,15 @@ def add_cartopy_features(
     if isinstance(features, list):
         features = {f: {} for f in features}
 
-    for f in features:
-        if "scale" not in features[f]:
-            ax.add_feature(getattr(cfeature, f.upper()), **features[f])
+    for feat in features:
+        if "scale" not in features[feat]:
+            ax.add_feature(getattr(cfeature, feat.upper()), **features[feat])
         else:
-            scale = features[f].pop("scale")
+            scale = features[feat].pop("scale")
             ax.add_feature(
-                getattr(cfeature, f.upper()).with_scale(scale), **features[f]
+                getattr(cfeature, feat.upper()).with_scale(scale), **features[feat]
             )
-            features[f]["scale"] = scale  # put back
+            features[feat]["scale"] = scale  # put back
     return ax
 
 
