@@ -127,12 +127,12 @@ serialize = [
 filename = "CHANGELOG.rst"
 include_bumps = ["release"]
 search = """\
-`Unreleased <https://github.com/Sarahclaude/figanos>`_ (latest)
----------------------------------------------------------------
+`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+--------------------------------------------------------------
 """
 replace = """\
-`Unreleased <https://github.com/Sarahclaude/figanos>`_ (latest)
----------------------------------------------------------------
+`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+--------------------------------------------------------------
 
 Contributors:
 
