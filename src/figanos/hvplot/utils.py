@@ -379,7 +379,7 @@ def set_plot_attrs_hv(
     use_attrs: dict[str, Any],
     xr_obj: Union[xr.DataArray, xr.Dataset],
     plot_kw: dict[str, Any],
-    wrap_kw: dict[str, Any] | None = None,
+    wrap_kw: Union[dict[str, Any], None] = None,
 ) -> [dict, dict]:
     """Set plot attributes with the last plot_kw entry based on use_attr."""
     # set default use_attrs values
