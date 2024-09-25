@@ -101,7 +101,7 @@ def _plot_ens_pct_stats(
     legend: str,
     form: str,
     use_attrs: dict[str, Any],
-    sub_name: str | None = None,
+    sub_name: Union[str, None] = None,
 ) -> dict:
     """Plot ensembles with percentiles and statistics (min/moy/max)."""
     hv_fig = {}
@@ -153,7 +153,7 @@ def _plot_timeseries(
     legend: str,
     form: str,
     use_attrs: dict[str, Any],
-) -> dict | hv.element.chart.Curve | hv.core.overlay.Overlay:
+) -> Union[dict, hv.element.chart.Curve, hv.core.overlay.Overlay]:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots."""
     hv_fig = {}
 
@@ -251,12 +251,12 @@ def _plot_timeseries(
 
 def timeseries(
     data: Union[dict[str, Any], xr.DataArray, xr.Dataset],
-    use_attrs: dict[str, Any] | None = None,
-    plot_kw: dict[str, Any] | None = None,
-    opts_kw: dict[str, Any] | None = None,
+    use_attrs: Union[dict[str, Any], None] = None,
+    plot_kw: Union[dict[str, Any], None] = None,
+    opts_kw: Union[dict[str, Any], None] = None,
     legend: str = "lines",
-    show_lat_lon: bool | str | int | tuple[float, float] = True,
-) -> hv.element.chart.Curve | hv.core.overlay.Overlay:
+    show_lat_lon: Union[bool, str, int, tuple[float, float]] = True,
+) -> Union[hv.element.chart.Curve, hv.core.overlay.Overlay]:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
