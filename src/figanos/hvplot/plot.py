@@ -43,7 +43,7 @@ def _plot_ens_reals(
     form: str,
     use_attrs: dict[str, Any],
 ) -> dict:
-    """Plot realizations ensembles"""
+    """Plot realizations ensembles."""
     hv_fig = {}
 
     if array_categ[name] == "ENS_REALS_DS":
@@ -103,7 +103,7 @@ def _plot_ens_pct_stats(
     use_attrs: dict[str, Any],
     sub_name: str | None = None,
 ) -> dict:
-    """Plot ensembles with percentiles and statistics (min/moy/max)"""
+    """Plot ensembles with percentiles and statistics (min/moy/max)."""
     hv_fig = {}
 
     # create a dictionary labeling the middle, upper and lower line
@@ -285,7 +285,6 @@ def timeseries(
     Returns
     -------
         hvplot.Overlay
-
     """
     # timeseries dict/data
     use_attrs, data, plot_kw, opts_kw, non_dict_data = create_dict_timeseries(
