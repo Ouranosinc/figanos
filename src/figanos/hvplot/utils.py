@@ -80,7 +80,7 @@ def set_hv_style(*args: str | dict) -> None:
 
 
 def defaults_curves() -> None:
-    """Adds Ouranos defaults to curves that can't be added to bokeh theme."""
+    """Add Ouranos defaults to curves that can't be added to bokeh theme."""
     return hv.opts.defaults(
         hv.opts.Curve(
             color=hv.Cycle(
@@ -101,7 +101,7 @@ def defaults_curves() -> None:
 
 
 def get_glyph_param(hplt, param) -> str:
-    """Returns bokeh glyph parameters from hvplot object."""
+    """Return bokeh glyph parameters from hvplot object."""
     # Get the Bokeh renderer
     renderer = hv.renderer("bokeh")
     plot = renderer.get_plot(hplt)
@@ -109,14 +109,12 @@ def get_glyph_param(hplt, param) -> str:
 
 
 def hook_real_dict(plot, element) -> None:
-    """Creates hook between hvplot and bokeh to have custom legend to link all realizations insde a key to the same label in legend."""
+    """Create hook between hvplot and bokeh to have custom legend to link all realizations insde a key to the same label in legend."""
     # Iterate over the elements in the overlay to get their labels
     if isinstance(element, hv.Overlay):
-        labels = []
-        for sub_element in element.values():
-            labels.append(
-                sub_element.label
-            )  # would be better if added check for LineType of sub elements
+        labels = [
+            sub_element.label for sub_element in element.values()
+        ]  # would be better if added check for LineType of sub elements
 
     rends = {}  # store glyph to create legend
     colors = []  # store new colors to know which glyph to add to legend
@@ -137,7 +135,7 @@ def hook_real_dict(plot, element) -> None:
 
 
 def edge_legend(plot, element) -> None:
-    """Creates hook between hvplot and bokeh to have custom legend to link all realizations insde a key to the same label in legend."""
+    """Create hook between hvplot and bokeh to have custom legend to link all realizations insde a key to the same label in legend."""
     l_txt = []
 
     for renderer in plot.handles["plot"].renderers:
@@ -186,7 +184,7 @@ def edge_legend(plot, element) -> None:
 
 def get_all_values(nested_dictionary) -> list:
     """Get all values from a nested dictionary."""
-    for key, value in nested_dictionary.items():
+    for value in nested_dictionary.values():
         if isinstance(value, collections.abc.Mapping):
             yield from get_all_values(value)
         else:
@@ -195,7 +193,7 @@ def get_all_values(nested_dictionary) -> list:
 
 def curve_hover_hook(plot, element, att, form, x) -> None:
     """Hook function to be passed to hvplot.opts to modify hover tooltips."""
-    for hov_id, hover in plot.handles["hover_tools"].items():
+    for hover in plot.handles["hover_tools"].values():
         if hover.tooltips[0][0] != x:
             hover.tooltips[-2:] = [
                 (att["xhover"], "$x{%F}"),
@@ -292,7 +290,6 @@ def add_default_opts_overlay(opts_kw, legend, show_lat_lon, data) -> dict:
     Returns
     -------
         dict
-
     """
     if legend == "edge":
         warnings.warn(
