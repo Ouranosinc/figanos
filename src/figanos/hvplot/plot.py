@@ -39,7 +39,7 @@ def _plot_ens_reals(
     arr: xr.DataArray,
     non_dict_data: bool,
     plot_kw: dict[str, Any],
-    opts_kw: dict[str, Any] | list,
+    opts_kw: Union[dict[str, Any], list],
     form: str,
     use_attrs: dict[str, Any],
 ) -> dict:
