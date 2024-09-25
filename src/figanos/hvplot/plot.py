@@ -4,7 +4,7 @@ import copy
 import warnings
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import holoviews as hv
 import hvplot  # noqa: F401
@@ -145,7 +145,7 @@ def _plot_ens_pct_stats(
 
 def _plot_timeseries(
     name: str,
-    arr: xr.DataArray | xr.Dataset,
+    arr: Union[xr.DataArray, xr.Dataset],
     array_categ: dict[str, str],
     plot_kw: dict[str, Any],
     opts_kw: dict[str, Any],
@@ -250,7 +250,7 @@ def _plot_timeseries(
 
 
 def timeseries(
-    data: dict[str, Any] | xr.DataArray | xr.Dataset,
+    data: Union[dict[str, Any], xr.DataArray, xr.Dataset],
     use_attrs: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
     opts_kw: dict[str, Any] | None = None,

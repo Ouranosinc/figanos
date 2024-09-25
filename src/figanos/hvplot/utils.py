@@ -377,7 +377,7 @@ def x_timeseries(data, plot_kw) -> None:
 
 def set_plot_attrs_hv(
     use_attrs: dict[str, Any],
-    xr_obj: xr.DataArray | xr.Dataset,
+    xr_obj: Union[xr.DataArray, xr.Dataset],
     plot_kw: dict[str, Any],
     wrap_kw: dict[str, Any] | None = None,
 ) -> [dict, dict]:
@@ -522,9 +522,9 @@ def plot_coords_hook(plot, element, text, loc, bgc) -> None:
 
 
 def plot_coords(
-    xr_obj: xr.DataArray | xr.Dataset,
-    loc: str | tuple[float, float] | int,
-    param: str | None = None,
+    xr_obj: Union[xr.DataArray, xr.Dataset],
+    loc: Union[str, tuple[float, float], int],
+    param: Union[str, None] = None,
     backgroundalpha: float = 1,
 ) -> hv.Text:
     """Plot the coordinates of an xarray object.
