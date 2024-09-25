@@ -4,7 +4,7 @@ import collections.abc
 import pathlib
 import warnings
 from functools import partial
-from typing import Any
+from typing import Any, Union
 
 import holoviews as hv
 import xarray as xr
@@ -44,7 +44,7 @@ def get_hv_styles() -> dict[str, str]:
     return {str(name): path for name, path in zip(names, paths)}
 
 
-def set_hv_style(*args: str | dict) -> None:
+def set_hv_style(*args: Union[str, dict]) -> None:
     """Set the holoviews bokeh style using a yaml file or a dict.
 
     Parameters
