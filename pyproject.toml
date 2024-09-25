@@ -46,7 +46,11 @@ dependencies = [
   "seaborn",
   "scikit-image",
   "xarray",
-  "xclim >=0.47"
+  "xclim >=0.47",
+  "hvplot",
+  "holoviews",
+  "geoviews",
+  "bokeh"
 ]
 
 [project.optional-dependencies]
