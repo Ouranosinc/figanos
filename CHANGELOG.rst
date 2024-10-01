@@ -46,6 +46,7 @@ Internal changes
     * CI configurations have been updated to use hashed commits for PyPI-sourced dependencies.
     * `flake8-alphabetize` has been replaced with `ruff` for some linting checks.
 * Updated the notebook coding conventions to adapt to changes in `xclim-testdata`. (:pull:`246`).
+* Workflows now make better use of caching to speed up the CI testing process. (:pull:`262`).
 
 Bug fixes
 ^^^^^^^^^

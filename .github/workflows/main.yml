@@ -31,15 +31,16 @@ jobs:
           - "3.x"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
       - name: Checkout Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       - name: Set up Python${{ matrix.python-version }}
         uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
+          cache: "pip"
       - name: Install CI libraries
         run: |
           python -m pip install --require-hashes -r CI/requirements_ci.txt
@@ -48,27 +49,30 @@ jobs:
           python -m tox -e lint
 
   test-pypi:
-    name: Test with Python${{ matrix.python-version }} (tox)
+    name: Test with Python${{ matrix.python-version }} (tox, ${{ matrix.os }})
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ 'ubuntu-latest' ]
         python-version:
           - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
+#          - "3.13"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
       - name: Checkout Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       - name: Set up Python${{ matrix.python-version }}
         uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
+          cache: "pip"
       - name: Install GDAL
         run: |
           sudo apt-get update
@@ -76,6 +80,11 @@ jobs:
       - name: Install CI libraries
         run: |
           python -m pip install --require-hashes -r CI/requirements_ci.txt
+      - name: Environment Caching
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: .tox
+          key: ${{ matrix.os }}-Python${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'tox.ini') }}
       - name: Test with tox
         run: tox
         env:
@@ -85,11 +94,12 @@ jobs:
           COVERALLS_SERVICE_NAME: github
 
   test-conda:
-    name: Test with Python${{ matrix.python-version }} (Anaconda)
+    name: Test with Python${{ matrix.python-version }} (Anaconda, ${{ matrix.os }})
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ 'ubuntu-latest' ]
         python-version:
           - "3.9"
           - "3.12"
@@ -98,11 +108,11 @@ jobs:
         shell: bash -l {0}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit
       - name: Checkout Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       - name: Setup Conda (Micromamba) with Python${{ matrix.python-version }}
         uses: mamba-org/setup-micromamba@f8b8a1e23a26f60a44c853292711bacfd3eac822 # v1.9.0
         with:
@@ -110,6 +120,7 @@ jobs:
           environment-file: environment-dev.yml
           create-args: >-
             python=${{ matrix.python-version }}
+          micromamba-version: "1.5.10-0"  # pinned to avoid the breaking changes with mamba and micromamba (2.0.0).
       - name: Micromamba version
         run: |
           echo "micromamba $(micromamba --version)"
@@ -137,19 +148,13 @@ jobs:
       - test-pypi
       - test-conda
     runs-on: ubuntu-latest
-    container: python:3-slim
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
-          sparse-checkout: |
-            CI/requirements_ci.txt
-      - name: Install CI libraries
-        run: |
-          python -m pip install --require-hashes -r CI/requirements_ci.txt
-      - name: Coveralls finished
-        run: |
-          python -m coveralls --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_SERVICE_NAME: github
+          disable-sudo: true
+          egress-policy: audit
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@643bc377ffa44ace6394b2b5d0d3950076de9f63 # v2.3.0
+        with:
+          parallel-finished: true
