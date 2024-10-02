@@ -17,6 +17,7 @@ New features and enhancements
 * ``fg.taylordiagram`` can now accept datasets with many dimensions (not only `taylor_params`), provided that they all share the same `ref_std` (e.g. normalized taylor diagrams)  (:pull:`214`).
 * A new optional way to organize points in a ``fg.taylordiagram``  with  `colors_key`, `markers_key`  : DataArrays with a common dimension value or a common attribute are grouped with the same color/marker (:pull:`214`).
 * Heatmap (``fg.matplotlib.heatmap``) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:issue:`208`, :pull:`219`).
+* New function ``fg.matplotlib.triheatmap`` (:pull:`199`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
