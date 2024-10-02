@@ -2888,7 +2888,7 @@ def triheatmap(
         zs = (xss * ys) % 10
         triangles1 = [
             (i + j * (m + 1), i + 1 + j * (m + 1), i + (j + 1) * (m + 1))
-            for j in range(N)
+            for j in range(n)
             for i in range(m)
         ]
         triangles2 = [
