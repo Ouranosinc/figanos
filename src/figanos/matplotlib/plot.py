@@ -2905,8 +2905,8 @@ def triheatmap(
             for t, val, plotkw in zip(triangul, d, plot_kw)
         ]
 
-        plt.xticks(np.array(range(m)) + 0.5, labels=labels_x, rotation=45)
-        plt.yticks(np.array(range(n)) + 0.5, labels=labels_y, rotation=90)
+        ax.set_xticks(np.array(range(m)) + 0.5, labels=labels_x, rotation=45)
+        ax.set_yticks(np.array(range(n)) + 0.5, labels=labels_y, rotation=90)
 
     elif len(d) == 4:
 
@@ -2949,17 +2949,17 @@ def triheatmap(
             ax.tripcolor(t, np.ravel(val), **plotkw)
             for t, val, plotkw in zip(triangul, d, plot_kw)
         ]
-        plt.xticks(np.array(range(m)), labels=labels_x, rotation=45)
-        plt.yticks(np.array(range(n)), labels=labels_y, rotation=90)
+        ax.set_xticks(np.array(range(m)), labels=labels_x, rotation=45)
+        ax.set_yticks(np.array(range(n)), labels=labels_y, rotation=90)
 
     else:
         raise ValueError(
             f"The length of the dimensiondim ({dim},{len(d)}) should be either 2 or 4. It represents the number of triangles."
         )
 
-    plt.xlabel(other_dims[0])
-    plt.ylabel(other_dims[1])
-    plt.gca().set_aspect("equal", "box")
+    ax.set_xlabel(other_dims[0])
+    ax.set_ylabel(other_dims[1])
+    ax.set_aspect("equal", "box")
     ax.invert_yaxis()
     ax.tick_params(direction="out")
     ax.spines["bottom"].set_visible(False)
@@ -2994,9 +2994,9 @@ def triheatmap(
                 " by passing vmin/vmax or norm to plot_kw."
             )
     elif (cbar == "each") or (cbar is True):
-        for i in range(len(d)):
+        for i in reversed(range(len(d))):  # swithc order of colorbars
             plt.colorbar(imgs[i], ax=ax, **cbar_kw[i])
 
-    plt.title(get_attributes(use_attrs.get("title", None), data))
+    ax.set_title(get_attributes(use_attrs.get("title", None), data))
 
     return ax
