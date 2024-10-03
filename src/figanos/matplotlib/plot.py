@@ -2773,14 +2773,14 @@ def partition(
 
 def triheatmap(
     data: xr.DataArray | xr.Dataset,
-    dim: str,
+    z: str,
     ax: matplotlib.axes.Axes | None = None,
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None | list = None,
     cmap: str | matplotlib.colors.Colormap | None = None,
     divergent: bool | int | float = False,
-    cbar: bool | str = False,
+    cbar: bool | str = "unique",
     cbar_kw: dict[str, Any] | None | list = None,
 ) -> matplotlib.axes.Axes:
     """Create a triangle heatmap from a DataArray.
@@ -2792,11 +2792,14 @@ def triheatmap(
     ----------
     data : DataArray or Dataset
         Input data do plot.
+    z: str
+        Dimension to plot on the triangles. Its length should be 2 or 4.
     ax : matplotlib axis, optional
         Matplotlib axis on which to plot, with the same projection as the one specified.
     use_attrs : dict, optional
         Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
         Default value is {'cbar_label': 'long_name',"cbar_units": "units"}.
+        Valid keys are: 'title', 'xlabel', 'ylabel', 'cbar_label', 'cbar_units'.
     fig_kw : dict, optional
         Arguments to pass to `plt.figure()`.
     plot_kw :  dict, optional
@@ -2860,15 +2863,25 @@ def triheatmap(
         )
 
     # prep data
-    d = [da.sel(**{dim: v}).values for v in da[dim].values]
+    d = [da.sel(**{z: v}).values for v in da[z].values]
 
-    other_dims = [di for di in da.dims if di != dim]
+    other_dims = [di for di in da.dims if di != z]
     if len(other_dims) > 2:
         warnings.warn(
             "More than 3 dimensions in data. The first two after dim will be used as the dimensions of the heatmap."
         )
     if len(other_dims) < 2:
-        raise ValueError("Data must have 3 dimensions.")
+        raise ValueError(
+            "Data must have 3 dimensions. If you only have 2 dimensions, use fg.heatmap."
+        )
+
+    if plot_kw == {} and cbar in ["unique", True]:
+        warnings.warn(
+            'With cbar="unique" only the colorbar of the first triangle'
+            " will be shown. No `plot_kw` was passed. vmin and vmax will be set the max"
+            " and min of data."
+        )
+        plot_kw = {"vmax": da.max().values, "vmin": da.min().values}
 
     if isinstance(plot_kw, dict):
         plot_kw.setdefault("cmap", cmap)
@@ -2954,14 +2967,19 @@ def triheatmap(
 
     else:
         raise ValueError(
-            f"The length of the dimensiondim ({dim},{len(d)}) should be either 2 or 4. It represents the number of triangles."
+            f"The length of the dimensiondim ({z},{len(d)}) should be either 2 or 4. It represents the number of triangles."
         )
 
+    ax.set_title(get_attributes(use_attrs.get("title", None), data))
     ax.set_xlabel(other_dims[0])
     ax.set_ylabel(other_dims[1])
+    if "xlabel" in use_attrs:
+        ax.set_xlabel(get_attributes(use_attrs["xlabel"], data))
+    if "ylabel" in use_attrs:
+        ax.set_ylabel(get_attributes(use_attrs["ylabel"], data))
     ax.set_aspect("equal", "box")
     ax.invert_yaxis()
-    ax.tick_params(direction="out")
+    ax.tick_params(left=False, bottom=False)
     ax.spines["bottom"].set_visible(False)
     ax.spines["left"].set_visible(False)
 
@@ -2987,16 +3005,9 @@ def triheatmap(
         cbar_kw = [cbar_kw for _ in range(len(d))]
     if cbar == "unique":
         plt.colorbar(imgs[0], ax=ax, **cbar_kw[0])
-        if plot_kw is None:
-            warnings.warn(
-                'With cbar="unique"  only the colorbar of the first triangle'
-                " will be shown. Make sure the cbar of all triangles are the same"
-                " by passing vmin/vmax or norm to plot_kw."
-            )
+
     elif (cbar == "each") or (cbar is True):
         for i in reversed(range(len(d))):  # swithc order of colorbars
             plt.colorbar(imgs[i], ax=ax, **cbar_kw[i])
-
-    ax.set_title(get_attributes(use_attrs.get("title", None), data))
 
     return ax
