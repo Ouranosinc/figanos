@@ -27,6 +27,7 @@ from cartopy import crs as ccrs
 from matplotlib.cm import ScalarMappable
 from matplotlib.lines import Line2D
 from matplotlib.projections import PolarAxes
+from matplotlib.tri import Triangulation
 from mpl_toolkits.axisartist.floating_axes import FloatingSubplot, GridHelperCurveLinear
 
 from figanos.matplotlib.utils import (  # masknan_sizes_key,
@@ -2766,5 +2767,247 @@ def partition(
 
     ax.set_ylim(0, 100)
     ax.legend(**legend_kw)
+
+    return ax
+
+
+def triheatmap(
+    data: xr.DataArray | xr.Dataset,
+    z: str,
+    ax: matplotlib.axes.Axes | None = None,
+    use_attrs: dict[str, Any] | None = None,
+    fig_kw: dict[str, Any] | None = None,
+    plot_kw: dict[str, Any] | None | list = None,
+    cmap: str | matplotlib.colors.Colormap | None = None,
+    divergent: bool | int | float = False,
+    cbar: bool | str = "unique",
+    cbar_kw: dict[str, Any] | None | list = None,
+) -> matplotlib.axes.Axes:
+    """Create a triangle heatmap from a DataArray.
+
+    Note that most of the code comes from:
+    https://stackoverflow.com/questions/66048529/how-to-create-a-heatmap-where-each-cell-is-divided-into-4-triangles
+
+    Parameters
+    ----------
+    data : DataArray or Dataset
+        Input data do plot.
+    z: str
+        Dimension to plot on the triangles. Its length should be 2 or 4.
+    ax : matplotlib axis, optional
+        Matplotlib axis on which to plot, with the same projection as the one specified.
+    use_attrs : dict, optional
+        Dict linking a plot element (key, e.g. 'title') to a DataArray attribute (value, e.g. 'Description').
+        Default value is {'cbar_label': 'long_name',"cbar_units": "units"}.
+        Valid keys are: 'title', 'xlabel', 'ylabel', 'cbar_label', 'cbar_units'.
+    fig_kw : dict, optional
+        Arguments to pass to `plt.figure()`.
+    plot_kw :  dict, optional
+        Arguments to pass to the 'plt.tripcolor()' function.
+        It can be a list of dictionaries to pass different arguments to each type of triangles (upper/lower or north/east/south/west).
+    cmap : matplotlib.colors.Colormap or str, optional
+        Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
+        If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray
+        or its 'history' attribute and use corresponding colormap, aligned with the IPCC Visual Style Guide 2022
+        (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
+    divergent : bool or int or float
+        If int or float, becomes center of cmap. Default center is 0.
+    cbar : {False, True, 'unique', 'each'}
+        If False, don't show the colorbar.
+        If True or 'unique', show a unique colorbar for all triangle types. (The cbar of the first triangle is used).
+        If 'each', show a colorbar for each triangle type.
+    cbar_kw : dict or list
+        Arguments to pass to 'fig.colorbar()'.
+        It can be a list of dictionaries to pass different arguments to each type of triangles (upper/lower or north/east/south/west).
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+    """
+    # create empty dicts if None
+    use_attrs = empty_dict(use_attrs)
+    fig_kw = empty_dict(fig_kw)
+    plot_kw = empty_dict(plot_kw)
+    cbar_kw = empty_dict(cbar_kw)
+
+    # select data to plot
+    if isinstance(data, xr.DataArray):
+        da = data
+    elif isinstance(data, xr.Dataset):
+        if len(data.data_vars) > 1:
+            warnings.warn(
+                "data is xr.Dataset; only the first variable will be used in plot"
+            )
+        da = list(data.values())[0]
+    else:
+        raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
+
+    # setup fig, axis
+    if ax is None:
+        fig, ax = plt.subplots(**fig_kw)
+
+    # colormap
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                pass
+                logging.log("Colormap not found. Using default.")
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=da),
+            divergent=divergent,
+        )
+
+    # prep data
+    d = [da.sel(**{z: v}).values for v in da[z].values]
+
+    other_dims = [di for di in da.dims if di != z]
+    if len(other_dims) > 2:
+        warnings.warn(
+            "More than 3 dimensions in data. The first two after dim will be used as the dimensions of the heatmap."
+        )
+    if len(other_dims) < 2:
+        raise ValueError(
+            "Data must have 3 dimensions. If you only have 2 dimensions, use fg.heatmap."
+        )
+
+    if plot_kw == {} and cbar in ["unique", True]:
+        warnings.warn(
+            'With cbar="unique" only the colorbar of the first triangle'
+            " will be shown. No `plot_kw` was passed. vmin and vmax will be set the max"
+            " and min of data."
+        )
+        plot_kw = {"vmax": da.max().values, "vmin": da.min().values}
+
+    if isinstance(plot_kw, dict):
+        plot_kw.setdefault("cmap", cmap)
+        plot_kw.setdefault("ec", "white")
+        plot_kw = [plot_kw for _ in range(len(d))]
+
+    labels_x = da[other_dims[0]].values
+    labels_y = da[other_dims[1]].values
+    m, n = d[0].shape[0], d[0].shape[1]
+
+    # plot
+    if len(d) == 2:
+
+        x = np.arange(m + 1)
+        y = np.arange(n + 1)
+        xss, ys = np.meshgrid(x, y)
+        zs = (xss * ys) % 10
+        triangles1 = [
+            (i + j * (m + 1), i + 1 + j * (m + 1), i + (j + 1) * (m + 1))
+            for j in range(n)
+            for i in range(m)
+        ]
+        triangles2 = [
+            (i + 1 + j * (m + 1), i + 1 + (j + 1) * (m + 1), i + (j + 1) * (m + 1))
+            for j in range(n)
+            for i in range(m)
+        ]
+        triang1 = Triangulation(xss.ravel(), ys.ravel(), triangles1)
+        triang2 = Triangulation(xss.ravel(), ys.ravel(), triangles2)
+        triangul = [triang1, triang2]
+
+        imgs = [
+            ax.tripcolor(t, np.ravel(val), **plotkw)
+            for t, val, plotkw in zip(triangul, d, plot_kw)
+        ]
+
+        ax.set_xticks(np.array(range(m)) + 0.5, labels=labels_x, rotation=45)
+        ax.set_yticks(np.array(range(n)) + 0.5, labels=labels_y, rotation=90)
+
+    elif len(d) == 4:
+
+        xv, yv = np.meshgrid(
+            np.arange(-0.5, m), np.arange(-0.5, n)
+        )  # vertices of the little squares
+        xc, yc = np.meshgrid(
+            np.arange(0, m), np.arange(0, n)
+        )  # centers of the little squares
+        x = np.concatenate([xv.ravel(), xc.ravel()])
+        y = np.concatenate([yv.ravel(), yc.ravel()])
+        cstart = (m + 1) * (n + 1)  # indices of the centers
+
+        triangles_n = [
+            (i + j * (m + 1), i + 1 + j * (m + 1), cstart + i + j * m)
+            for j in range(n)
+            for i in range(m)
+        ]
+        triangles_e = [
+            (i + 1 + j * (m + 1), i + 1 + (j + 1) * (m + 1), cstart + i + j * m)
+            for j in range(n)
+            for i in range(m)
+        ]
+        triangles_s = [
+            (i + 1 + (j + 1) * (m + 1), i + (j + 1) * (m + 1), cstart + i + j * m)
+            for j in range(n)
+            for i in range(m)
+        ]
+        triangles_w = [
+            (i + (j + 1) * (m + 1), i + j * (m + 1), cstart + i + j * m)
+            for j in range(n)
+            for i in range(m)
+        ]
+        triangul = [
+            Triangulation(x, y, triangles)
+            for triangles in [triangles_n, triangles_e, triangles_s, triangles_w]
+        ]
+
+        imgs = [
+            ax.tripcolor(t, np.ravel(val), **plotkw)
+            for t, val, plotkw in zip(triangul, d, plot_kw)
+        ]
+        ax.set_xticks(np.array(range(m)), labels=labels_x, rotation=45)
+        ax.set_yticks(np.array(range(n)), labels=labels_y, rotation=90)
+
+    else:
+        raise ValueError(
+            f"The length of the dimensiondim ({z},{len(d)}) should be either 2 or 4. It represents the number of triangles."
+        )
+
+    ax.set_title(get_attributes(use_attrs.get("title", None), data))
+    ax.set_xlabel(other_dims[0])
+    ax.set_ylabel(other_dims[1])
+    if "xlabel" in use_attrs:
+        ax.set_xlabel(get_attributes(use_attrs["xlabel"], data))
+    if "ylabel" in use_attrs:
+        ax.set_ylabel(get_attributes(use_attrs["ylabel"], data))
+    ax.set_aspect("equal", "box")
+    ax.invert_yaxis()
+    ax.tick_params(left=False, bottom=False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+
+    # create cbar label
+    # set default use_attrs values
+    use_attrs.setdefault("cbar_label", "long_name")
+    use_attrs.setdefault("cbar_units", "units")
+    if (
+        "cbar_units" in use_attrs
+        and len(get_attributes(use_attrs["cbar_units"], data)) >= 1
+    ):  # avoids '()' as label
+        cbar_label = (
+            get_attributes(use_attrs["cbar_label"], data)
+            + " ("
+            + get_attributes(use_attrs["cbar_units"], data)
+            + ")"
+        )
+    else:
+        cbar_label = get_attributes(use_attrs["cbar_label"], data)
+
+    if isinstance(cbar_kw, dict):
+        cbar_kw.setdefault("label", cbar_label)
+        cbar_kw = [cbar_kw for _ in range(len(d))]
+    if cbar == "unique":
+        plt.colorbar(imgs[0], ax=ax, **cbar_kw[0])
+
+    elif (cbar == "each") or (cbar is True):
+        for i in reversed(range(len(d))):  # swithc order of colorbars
+            plt.colorbar(imgs[i], ax=ax, **cbar_kw[i])
 
     return ax
