@@ -19,6 +19,7 @@ Need help?
    notebooks/figanos_docs
    notebooks/figanos_colours
    notebooks/figanos_multiplots
+   notebooks/figanos_hvplot
    api
    contributing
    releasing

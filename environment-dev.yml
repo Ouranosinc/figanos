@@ -4,6 +4,7 @@ channels:
   - default
 dependencies:
   - python>=3.9,<3.13
+  # Don't forget to sync changes between environment.yml and pyproject.toml!
   # Main
   - cartopy >=0.23.0
   - cairosvg
@@ -18,6 +19,11 @@ dependencies:
   - scikit-image
   - xarray
   - xclim >=0.47
+  # for interactive figures
+  - hvplot
+  - holoviews
+  - geoviews
+  - bokeh
   # To make the package and notebooks usable
   - dask
   - h5py
