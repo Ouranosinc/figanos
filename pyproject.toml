@@ -37,17 +37,17 @@ dynamic = ["description", "version"]
 dependencies = [
   "cartopy >=0.23.0",
   "cairosvg",
-  "geopandas",
-  "matplotlib",
-  "numpy<2.0.0",
+  "geopandas >=1.0",
+  "matplotlib >=3.6.0",
+  "numpy >=1.23.0,<2.0.0",
   "pandas >=2.2.0",
   "pint >=0.10,<0.24",
   "platformdirs",
-  "pyyaml",
+  "pyyaml >=6.0.1",
   "seaborn",
   "scikit-image",
-  "xarray",
-  "xclim >=0.47"
+  "xarray >=2022.6.0",
+  "xclim >=0.52.2"
 ]
 
 [project.optional-dependencies]
@@ -74,15 +74,17 @@ dev = [
   "pre-commit >=3.5.0"
 ]
 docs = [
-  # Documentation and examples
+  # To make the package and notebooks usable
   "dask",
-  "h5py",
-  "netcdf4",
-  "zarr",
   "geoviews",
+  "h5py",
   "holoviews",
+  "netcdf4",
+  "pooch >=1.8.0", # for xclim-testdata
+  "zarr >=2.13.0",
+  # Documentation
   "ipykernel",
-  "ipython",
+  "ipython >=8.5.0",
   "jupyter_client",
   "nbsphinx",
   "sphinx-book-theme >=1.0",

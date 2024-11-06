@@ -7,25 +7,25 @@ dependencies:
   # Main
   - cartopy >=0.23.0
   - cairosvg
-  - matplotlib-base
+  - matplotlib-base >=3.6.0
   - seaborn
-  - geopandas
-  - numpy <2.0.0
+  - geopandas >=1.0
+  - numpy >=1.23.0,<2.0.0
   - pandas >=2.2.0
   - platformdirs
   - pint >=0.10,<0.24
-  - pyyaml
+  - pyyaml >=6.0.1
   - scikit-image
-  - xarray
-  - xclim >=0.47
+  - xarray >=2022.6.0
+  - xclim >=0.52.2
   # To make the package and notebooks usable
   - dask
-  - h5py
-  - netcdf4
-  - pyyaml
-  - zarr
   - geoviews
+  - h5py
   - holoviews
+  - netcdf4
+  - pooch >=1.8.0  # for xclim-testdata
+  - zarr >=2.13.0
   # Development
   - black ==24.10.0
   - blackdoc ==0.3.9
@@ -47,6 +47,7 @@ dependencies:
   - watchdog >=4.0.0
   # Docs
   - ipykernel
+  - ipython >=8.5.0
   - jupyter_client
   - nbsphinx
   - notebook
