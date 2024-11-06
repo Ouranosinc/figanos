@@ -11,7 +11,7 @@ New features and enhancements
 * `figanos` now supports Python 3.12. (:pull:`210`).
 * Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
-* Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
+* Fix ``NaN`` issues, extreme values in sizes legend and added ``edgecolors`` in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
 * New argument ``enumerate_subplots`` for `gridmap`, `timeseries`, `hatchmap` and `scattermap`(:pull:`220`).
 * ``fg.taylordiagram`` can now accept datasets with many dimensions (not only `taylor_params`), provided that they all share the same `ref_std` (e.g. normalized taylor diagrams)  (:pull:`214`).
@@ -47,6 +47,10 @@ Internal changes
     * `flake8-alphabetize` has been replaced with `ruff` for some linting checks.
 * Updated the notebook coding conventions to adapt to changes in `xclim-testdata`. (:pull:`246`).
 * Workflows now make better use of caching to speed up the CI testing process. (:pull:`262`).
+* Updated the `cookiecutter` template to the latest version. (:pull:`273`):
+    * Several development dependencies have been updated to their latest versions.
+    * Updated the GitHub Actions in Workflows to their latest versions.
+* The documentation has been adapted to use the latest testing data fetching mechanism from `xclim`. (:pull:`273`).
 
 Bug fixes
 ^^^^^^^^^
