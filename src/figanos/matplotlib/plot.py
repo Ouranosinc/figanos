@@ -534,7 +534,7 @@ def gridmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.PlateCarree(),
+    projection: ccrs.Projection = ccrs.LambertConformal(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
@@ -836,7 +836,6 @@ def gridmap(
         use_attrs.setdefault("suptitle", "long_name")
         im = set_plot_attrs(use_attrs, data, facetgrid=im)
         if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
-            print("here")
             for idx, ax in enumerate(im.axs.flat):
                 ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
 
@@ -849,7 +848,7 @@ def gdfmap(
     ax: cartopy.mpl.geoaxes.GeoAxes | cartopy.mpl.geoaxes.GeoAxesSubplot | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.PlateCarree(),
+    projection: ccrs.Projection = ccrs.LambertConformal(),
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | list[int | float] | None = None,
@@ -1520,8 +1519,8 @@ def scattermap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.PlateCarree(),
-    transform: ccrs.Projection | None = ccrs.PlateCarree(),
+    projection: ccrs.Projection = ccrs.LambertConformal(),
+    transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
     sizes: str | bool | None = None,
@@ -1656,11 +1655,13 @@ def scattermap(
 
     # setup transform
     if transform is None:
-        if "lat" in data.dims and "lon" in data.dims:
-            transform = ccrs.PlateCarree()
-        elif "rlat" in data.dims and "rlon" in data.dims:
+        if "rlat" in data.dims and "rlon" in data.dims:
             if hasattr(data, "rotated_pole"):
                 transform = get_rotpole(data)
+        elif (
+            "lat" in data.coords and "lon" in data.coords
+        ):  # need to work with station dims
+            transform = ccrs.PlateCarree()
 
     # setup fig, ax
     if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
@@ -2277,7 +2278,7 @@ def hatchmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.PlateCarree(),
+    projection: ccrs.Projection = ccrs.LambertConformal(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
