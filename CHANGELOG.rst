@@ -18,7 +18,7 @@ New features and enhancements
 * A new optional way to organize points in a ``fg.taylordiagram``  with  `colors_key`, `markers_key`  : DataArrays with a common dimension value or a common attribute are grouped with the same color/marker (:pull:`214`).
 * Heatmap (``fg.matplotlib.heatmap``) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:issue:`208`, :pull:`219`).
 * New function ``fg.matplotlib.triheatmap`` (:pull:`199`).
-* Reorganized the documentation (:pull:`278`).
+* Reorganized the documentation and add gallery (:issue:`278`,:issue:`274`,:issue:`202`,:pull:`278`).
 
 Breaking changes
 ^^^^^^^^^^^^^^^^

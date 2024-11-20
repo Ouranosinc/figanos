@@ -1,7 +1,7 @@
 Gallery
 ========
 
-Here is a gallery of examples of figanos. They illustrate the kinds of things you can do with this library.
+Here is a gallery of examples of figanos.
 Go to the examples to see how to generate these figures.
 
 
