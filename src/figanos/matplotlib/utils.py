@@ -104,7 +104,9 @@ def check_timeindex(
         for name, obj in xr_objs.items():
             if "time" in obj.dims:
                 if isinstance(obj.get_index("time"), xr.CFTimeIndex):
-                    conv_obj = obj.convert_calendar("standard", use_cftime=None)
+                    conv_obj = obj.convert_calendar(
+                        "standard", use_cftime=None, align_on="year"
+                    )
                     xr_objs[name] = conv_obj
                     warnings.warn(
                         "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar."
@@ -113,7 +115,9 @@ def check_timeindex(
     else:
         if "time" in xr_objs.dims:
             if isinstance(xr_objs.get_index("time"), xr.CFTimeIndex):
-                conv_obj = xr_objs.convert_calendar("standard", use_cftime=None)
+                conv_obj = xr_objs.convert_calendar(
+                    "standard", use_cftime=None, align_on="year"
+                )
                 xr_objs = conv_obj
                 warnings.warn(
                     "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar."
