@@ -30,7 +30,7 @@ def test_package_metadata():
     """Test the package metadata."""
     project = find_spec("figanos").submodule_search_locations[0]
 
-    metadata = pathlib.Path(project).resolve().joinpath("conftest.py")
+    metadata = pathlib.Path(project).resolve().joinpath("__init__.py")
 
     with metadata.open() as f:
         contents = f.read()
