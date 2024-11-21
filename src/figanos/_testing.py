@@ -18,7 +18,8 @@ def pitou():
 
     _pitou = pooch.Pooch(
         path=pooch.os_cache("figanos"),
-        base_url="https://raw.githubusercontent.com/Ouranosinc/figanos/main/src/figanos/data/test_data/",
+        # base_url="https://raw.githubusercontent.com/Ouranosinc/figanos/main/src/figanos/data/test_data/",
+        base_url="https://raw.githubusercontent.com/Ouranosinc/figanos/split-doc/src/figanos/data/test_data/",
         registry={
             "hatchmap-ens_stats.nc": "fc52d0551747fa0a7153f1ecfebf3e697993590c6c7c4c6a6f9f32700df9d32d",
             "hatchmap-inf_5.nc": "8f22522dc153d8d347bdf97bf85e49d08a5ecbc61c64372e713a0d25638e48ac",
