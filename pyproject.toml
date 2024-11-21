@@ -80,7 +80,7 @@ docs = [
   "h5py",
   "holoviews",
   "netcdf4",
-  "pooch >=1.8.0", # for xclim-testdata
+  "pooch >=1.8.0", # for local and xclim-testdata
   "zarr >=2.13.0",
   # Documentation
   "ipykernel",
@@ -223,7 +223,8 @@ exclude = [
   "docs/_*",
   "docs/apidoc/modules.rst",
   "docs/apidoc/figanos*.rst",
-  "docs/locales"
+  "docs/locales",
+  "src/figanos/data/test_data/*.nc"
 ]
 
 [tool.isort]
