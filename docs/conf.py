@@ -129,11 +129,12 @@ html_theme_options = {"navigation_with_keys": False}
 # so a file named "default.css" will overwrite the builtin "default.css".
 if not os.path.exists("_static"):
     os.makedirs("_static")
-html_static_path = ["_static"]
 
 # Custom images folder for the gallery
 if not os.path.exists("notebooks/images"):
     os.makedirs("notebooks/images")
+
+html_static_path = ["_static", "notebooks/images"]
 
 # -- Options for HTMLHelp output ---------------------------------------
 
