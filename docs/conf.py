@@ -131,6 +131,10 @@ if not os.path.exists("_static"):
     os.makedirs("_static")
 html_static_path = ['_static']
 
+# Custom images folder for the gallery
+if not os.path.exists("notebooks/images"):
+    os.makedirs("notebooks/images")
+html_extra_path = ["notebooks/images"]
 
 # -- Options for HTMLHelp output ---------------------------------------
 
