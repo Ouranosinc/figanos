@@ -40,7 +40,6 @@ clean-docs: ## remove docs artifacts
 	rm -f docs/apidoc/figanos*.rst
 	rm -f docs/apidoc/modules.rst
 	rm -fr docs/locales/fr/LC_MESSAGES/*.mo
-	# rm -f docs/notebooks/images/*.png
 	$(MAKE) -C docs clean
 
 clean-pyc: ## remove Python file artifacts
