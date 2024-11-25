@@ -66,7 +66,10 @@ repos:
     hooks:
       - id: nbstripout
         files: '.ipynb'
-        args: [ '--extra-keys=metadata.kernelspec' ]
+        args: [
+          '--extra-keys="metadata.kernelspec"',
+          '--keep-metadata-keys="cell.metadata.nbsphinx"'
+        ]
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.35.1
     hooks:
