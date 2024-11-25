@@ -34,7 +34,6 @@ def pitou():
     # Overload the fetch method to add user-agent headers
     @wraps(_pitou.fetch_diversion)
     def _fetch(*args: str, **kwargs: Union[bool, Callable]) -> str:
-
         def _downloader(
             url: str,
             output_file: Union[str, IO],

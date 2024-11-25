@@ -86,7 +86,7 @@ def empty_dict(param) -> dict:
 
 
 def check_timeindex(
-    xr_objs: xr.DataArray | xr.Dataset | dict[str, Any]
+    xr_objs: xr.DataArray | xr.Dataset | dict[str, Any],
 ) -> xr.DataArray | xr.Dataset | dict[str, Any]:
     """Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
 
@@ -770,7 +770,12 @@ def split_legend(
 
         if in_plot is True:
             ax.text(
-                last_x + label_bump, last_y, label, ha="left", va="center", color=color
+                last_x + label_bump,
+                last_y,
+                label,
+                ha="left",
+                va="center",
+                color=color,
             )
         else:
             trans = mpl.transforms.blended_transform_factory(ax.transAxes, ax.transData)
@@ -788,7 +793,10 @@ def split_legend(
 
 
 def fill_between_label(
-    sorted_lines: dict[str, Any], name: str, array_categ: dict[str, Any], legend: str
+    sorted_lines: dict[str, Any],
+    name: str,
+    array_categ: dict[str, Any],
+    legend: str,
 ) -> str:
     """Create a label for the shading around a line in line plots.
 
@@ -810,7 +818,11 @@ def fill_between_label(
     """
     if legend != "full":
         label = None
-    elif array_categ[name] in ["ENS_PCT_VAR_DS", "ENS_PCT_DIM_DS", "ENS_PCT_DIM_DA"]:
+    elif array_categ[name] in [
+        "ENS_PCT_VAR_DS",
+        "ENS_PCT_DIM_DS",
+        "ENS_PCT_DIM_DA",
+    ]:
         label = get_localized_term("{}th-{}th percentiles").format(
             get_suffix(sorted_lines["lower"]), get_suffix(sorted_lines["upper"])
         )
@@ -1146,7 +1158,8 @@ def add_cartopy_features(
         else:
             scale = features[feat].pop("scale")
             ax.add_feature(
-                getattr(cfeature, feat.upper()).with_scale(scale), **features[feat]
+                getattr(cfeature, feat.upper()).with_scale(scale),
+                **features[feat],
             )
             features[feat]["scale"] = scale  # put back
     return ax

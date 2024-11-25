@@ -480,7 +480,6 @@ def timeseries(
 
         return ax
     else:
-
         if legend is not None:
             if not im.axs[-1, -1].get_legend_handles_labels()[
                 0
@@ -787,11 +786,19 @@ def gridmap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+                    ax,
+                    plot_data,
+                    param="time",
+                    loc="lower right",
+                    backgroundalpha=1,
                 )
             elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
+                    ax,
+                    plot_data,
+                    param="time",
+                    loc=show_time,
+                    backgroundalpha=1,
                 )
 
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
@@ -826,11 +833,19 @@ def gridmap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
+                    None,
+                    plot_data,
+                    param="time",
+                    loc="lower right",
+                    backgroundalpha=1,
                 )
             elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
+                    None,
+                    plot_data,
+                    param="time",
+                    loc=show_time,
+                    backgroundalpha=1,
                 )
 
         use_attrs.setdefault("suptitle", "long_name")
@@ -944,7 +959,11 @@ def gdfmap(
 
     if (levels is not None) or (divergent is not False):
         norm = custom_cmap_norm(
-            cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
+            cmap,
+            plot_kw["vmin"],
+            plot_kw["vmax"],
+            levels=levels,
+            divergent=divergent,
         )
         plot_kw.setdefault("norm", norm)
 
@@ -1257,7 +1276,8 @@ def stripes(
     elif cmap is None:
         cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(path_to_json=cdata, da=list(data.values())[0]), divergent=True
+            get_var_group(path_to_json=cdata, da=list(data.values())[0]),
+            divergent=True,
         )
 
     # create cmap norm
@@ -1469,7 +1489,10 @@ def heatmap(
         )
         ax = sns.heatmap(d, **kwargs)
         ax.set_xticklabels(
-            ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
+            ax.get_xticklabels(),
+            rotation=45,
+            ha="right",
+            rotation_mode="anchor",
         )
         ax.tick_params(axis="both", direction="out")
         set_plot_attrs(
@@ -1505,7 +1528,12 @@ def heatmap(
         g = sns.FacetGrid(df, **plot_kw_fg)
         cax = g.fig.add_axes([0.95, 0.05, 0.02, 0.9])
         g.map_dataframe(
-            draw_heatmap, *heatmap_dims, da_name, **plot_kw_hm, cbar=True, cbar_ax=cax
+            draw_heatmap,
+            *heatmap_dims,
+            da_name,
+            **plot_kw_hm,
+            cbar=True,
+            cbar_ax=cax,
         )
         g.fig.subplots_adjust(right=0.9)
         if "figsize" in fig_kw.keys():
@@ -1830,11 +1858,19 @@ def scattermap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+                    ax,
+                    plot_data,
+                    param="time",
+                    loc="lower right",
+                    backgroundalpha=1,
                 )
             elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
+                    ax,
+                    plot_data,
+                    param="time",
+                    loc=show_time,
+                    backgroundalpha=1,
                 )
 
         if (frame is False) and (im.colorbar is not None):
@@ -1863,11 +1899,19 @@ def scattermap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
+                    None,
+                    plot_data,
+                    param="time",
+                    loc="lower right",
+                    backgroundalpha=1,
                 )
             elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
+                    None,
+                    plot_data,
+                    param="time",
+                    loc=show_time,
+                    backgroundalpha=1,
                 )
 
     # size legend
@@ -2595,11 +2639,19 @@ def hatchmap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
+                    ax,
+                    plot_data,
+                    param="time",
+                    loc="lower right",
+                    backgroundalpha=1,
                 )
             elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
+                    ax,
+                    plot_data,
+                    param="time",
+                    loc=show_time,
+                    backgroundalpha=1,
                 )
 
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
@@ -2623,7 +2675,11 @@ def hatchmap(
         if show_time:
             if show_time is True:
                 plot_coords(
-                    None, dattrs, param="time", loc="lower right", backgroundalpha=1
+                    None,
+                    dattrs,
+                    param="time",
+                    loc="lower right",
+                    backgroundalpha=1,
                 )
             elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
@@ -2745,12 +2801,20 @@ def partition(
             num = len(data.attrs.get(u, []))  # compatible with pre PR PR #1529
             label = f"{u} ({num})" if show_num and num else u
             ax.fill_between(
-                time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
+                time,
+                past_y,
+                present_y,
+                label=label,
+                **fill_kw.get(u, fk_direct),
             )
             black_lines.append(present_y)
             past_y = present_y
     ax.fill_between(
-        time, past_y, 100, label="variability", **fill_kw.get("variability", fk_direct)
+        time,
+        past_y,
+        100,
+        label="variability",
+        **fill_kw.get("variability", fk_direct),
     )
 
     # Draw black lines
@@ -2895,7 +2959,6 @@ def triheatmap(
 
     # plot
     if len(d) == 2:
-
         x = np.arange(m + 1)
         y = np.arange(n + 1)
         xss, ys = np.meshgrid(x, y)
@@ -2906,7 +2969,11 @@ def triheatmap(
             for i in range(m)
         ]
         triangles2 = [
-            (i + 1 + j * (m + 1), i + 1 + (j + 1) * (m + 1), i + (j + 1) * (m + 1))
+            (
+                i + 1 + j * (m + 1),
+                i + 1 + (j + 1) * (m + 1),
+                i + (j + 1) * (m + 1),
+            )
             for j in range(n)
             for i in range(m)
         ]
@@ -2923,7 +2990,6 @@ def triheatmap(
         ax.set_yticks(np.array(range(n)) + 0.5, labels=labels_y, rotation=90)
 
     elif len(d) == 4:
-
         xv, yv = np.meshgrid(
             np.arange(-0.5, m), np.arange(-0.5, n)
         )  # vertices of the little squares
@@ -2945,7 +3011,11 @@ def triheatmap(
             for i in range(m)
         ]
         triangles_s = [
-            (i + 1 + (j + 1) * (m + 1), i + (j + 1) * (m + 1), cstart + i + j * m)
+            (
+                i + 1 + (j + 1) * (m + 1),
+                i + (j + 1) * (m + 1),
+                cstart + i + j * m,
+            )
             for j in range(n)
             for i in range(m)
         ]
@@ -2956,7 +3026,12 @@ def triheatmap(
         ]
         triangul = [
             Triangulation(x, y, triangles)
-            for triangles in [triangles_n, triangles_e, triangles_s, triangles_w]
+            for triangles in [
+                triangles_n,
+                triangles_e,
+                triangles_s,
+                triangles_w,
+            ]
         ]
 
         imgs = [

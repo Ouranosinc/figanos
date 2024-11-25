@@ -314,7 +314,7 @@ exclude = [
   ".eggs",
   ".git",
   "build",
-  "docs"
+  "docs/conf.py"
 ]
 
 [tool.ruff.format]
