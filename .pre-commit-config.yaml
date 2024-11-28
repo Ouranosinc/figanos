@@ -48,7 +48,8 @@ repos:
     hooks:
       - id: ruff
         args: [ '--fix' ]
-      # - id: ruff-format
+      - id: ruff-format
+        exclude: ^src/figanos
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.1
     hooks:
@@ -66,7 +67,10 @@ repos:
     hooks:
       - id: nbstripout
         files: '.ipynb'
-        args: [ '--extra-keys=metadata.kernelspec' ]
+        args: [
+          '--extra-keys="metadata.kernelspec"',
+          '--keep-metadata-keys="cell.metadata.nbsphinx"'
+        ]
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.35.1
     hooks:

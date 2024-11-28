@@ -25,3 +25,4 @@ __version__ = "0.3.1-dev.13"
 from . import matplotlib
 from ._data import data
 from ._logo import Logos
+from ._testing import pitou

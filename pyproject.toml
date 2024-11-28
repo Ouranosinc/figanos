@@ -80,7 +80,7 @@ docs = [
   "h5py",
   "holoviews",
   "netcdf4",
-  "pooch >=1.8.0", # for xclim-testdata
+  "pooch >=1.8.0", # for local and xclim-testdata
   "zarr >=2.13.0",
   # Documentation
   "ipykernel",
@@ -198,6 +198,7 @@ include = [
   "README.rst",
   "docs/*.rst",
   "docs/Makefile",
+  "docs/_static/_gallery/*.png",
   "docs/_static/_images/*.gif",
   "docs/_static/_images/*.jpg",
   "docs/_static/_images/*.png",
@@ -223,7 +224,8 @@ exclude = [
   "docs/_*",
   "docs/apidoc/modules.rst",
   "docs/apidoc/figanos*.rst",
-  "docs/locales"
+  "docs/locales",
+  "src/figanos/data/test_data/*.nc"
 ]
 
 [tool.isort]
@@ -312,7 +314,7 @@ exclude = [
   ".eggs",
   ".git",
   "build",
-  "docs"
+  "docs/conf.py"
 ]
 
 [tool.ruff.format]
