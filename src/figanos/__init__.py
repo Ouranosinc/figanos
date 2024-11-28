@@ -20,7 +20,7 @@
 
 __author__ = """Sarah-Claude Bourdeau-Goulet"""
 __email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"
-__version__ = "0.3.1-dev.13"
+__version__ = "0.3.1-dev.14"
 
 from . import matplotlib
 from ._data import data
