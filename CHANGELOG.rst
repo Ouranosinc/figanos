@@ -53,10 +53,12 @@ Internal changes
     * Several development dependencies have been updated to their latest versions.
     * Updated the GitHub Actions in Workflows to their latest versions.
 * The documentation has been adapted to use the latest testing data fetching mechanism from `xclim`. (:pull:`273`).
+* Updated the `cookiecutter` template to the latest version. Dependencies and GitHub Actions have been updated. (:pull:`282`).
 
 Bug fixes
 ^^^^^^^^^
 * Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`238`, :issue:`239`).
+* Updated the default testing data URL in the `pitou` function to point to the correct branch. (:pull:`282`).
 
 0.3.0 (2024-02-16)
 ------------------
