@@ -36,7 +36,7 @@ classifiers = [
 dynamic = ["description", "version"]
 dependencies = [
   "cartopy >=0.23.0",
-  "cairosvg",
+  "cairosvg >=2.6.0",
   "geopandas >=1.0",
   "matplotlib >=3.6.0",
   "numpy >=1.23.0,<2.0.0",
@@ -44,8 +44,8 @@ dependencies = [
   "pint >=0.10,<0.24",
   "platformdirs",
   "pyyaml >=6.0.1",
-  "seaborn",
-  "scikit-image",
+  "seaborn >=0.13.0",
+  "scikit-image >=0.20.0",
   "xarray >=2022.6.0",
   "xclim >=0.52.2"
 ]

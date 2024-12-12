@@ -6,16 +6,16 @@ dependencies:
   - python>=3.9,<3.13
   # Main
   - cartopy >=0.23.0
-  - cairosvg
+  - cairosvg >=2.6.0
   - matplotlib-base >=3.6.0
-  - seaborn
+  - seaborn >=0.13.0
   - geopandas >=1.0
   - numpy >=1.23.0,<2.0.0
   - pandas >=2.2.0
   - platformdirs
   - pint >=0.10,<0.24
   - pyyaml >=6.0.1
-  - scikit-image
+  - scikit-image >=0.20.0
   - xarray >=2022.6.0
   - xclim >=0.52.2
   # To make the package and notebooks usable
