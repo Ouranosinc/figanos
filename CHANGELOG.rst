@@ -5,7 +5,7 @@ Changelog
 0.4.0 (unreleased)
 ------------------
 
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`)
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`),  Juliette Lavoie (:user:`juliettelavoie`)
 
 
 New features and enhancements
