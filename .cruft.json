@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/Ouranosinc/cookiecutter-pypackage",
-  "commit": "f750ad2185cbb56df6f7e98a269bdd8399283ea8",
+  "commit": "b27c2d5f8126ea1aefae29a6f5ccfdafad96395d",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -11,7 +11,7 @@
       "project_slug": "figanos",
       "project_short_description": "Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
       "pypi_username": "Sarahclaude",
-      "version": "0.3.1-dev.13",
+      "version": "0.3.1-dev.15",
       "use_pytest": "y",
       "use_black": "y",
       "use_conda": "y",
