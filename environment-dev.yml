@@ -13,7 +13,7 @@ dependencies:
   - numpy >=1.23.0,<2.0.0
   - pandas >=2.2.0
   - platformdirs
-  - pint >=0.24.4
+  - pint >=0.10
   - pyyaml >=6.0.1
   - scikit-image
   - xarray >=2022.6.0
