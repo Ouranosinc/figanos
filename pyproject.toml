@@ -41,7 +41,7 @@ dependencies = [
   "matplotlib >=3.6.0",
   "numpy >=1.23.0,<2.0.0",
   "pandas >=2.2.0",
-  "pint >=0.10,<0.24",
+  "pint >=0.24.4",
   "platformdirs",
   "pyyaml >=6.0.1",
   "seaborn",
