@@ -54,6 +54,7 @@ Internal changes
     * Updated the GitHub Actions in Workflows to their latest versions.
 * The documentation has been adapted to use the latest testing data fetching mechanism from `xclim`. (:pull:`273`).
 * Updated the `cookiecutter` template to the latest version. Dependencies and GitHub Actions have been updated. (:pull:`282`).
+* The `bump-version.yml` GitHub Workflow has been updated to use the Ouranos Helper Bot instead of personal access tokens. (:pull:`287`).
 
 Bug fixes
 ^^^^^^^^^
