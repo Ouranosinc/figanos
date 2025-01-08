@@ -91,7 +91,8 @@ docs = [
   "sphinx-codeautolink",
   "sphinx-copybutton",
   "sphinx-intl",
-  "sphinxcontrib-napoleon"
+  "sphinxcontrib-napoleon",
+  "pygments <2.19" # FIXME: temprorary fix, https://github.com/felix-hilden/sphinx-codeautolink/issues/153
 ]
 all = ["figanos[dev]", "figanos[docs]"]
 
