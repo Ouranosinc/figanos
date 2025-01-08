@@ -13,7 +13,7 @@ dependencies:
   - numpy >=1.23.0,<2.0.0
   - pandas >=2.2.0
   - platformdirs
-  - pint >=0.10,<0.24
+  - pint >=0.10
   - pyyaml >=6.0.1
   - scikit-image >=0.20.0
   - xarray >=2022.6.0
@@ -59,3 +59,4 @@ dependencies:
   - sphinx-copybutton
   - sphinx-intl
   - sphinxcontrib-napoleon
+  - pygments <2.19 #FIXME: temprorary fix, https://github.com/felix-hilden/sphinx-codeautolink/issues/153
