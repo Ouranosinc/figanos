@@ -2,7 +2,7 @@ name: figanos
 channels:
   - conda-forge
 dependencies:
-  - python>=3.9,<3.13
+  - python>=3.10,<3.13
   # Main
   - cartopy >=0.23.0
   - cairosvg >=2.6.0

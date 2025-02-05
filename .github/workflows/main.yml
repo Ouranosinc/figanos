@@ -111,7 +111,7 @@ jobs:
       matrix:
         os: [ 'ubuntu-latest' ]
         python-version:
-          - "3.9"
+          - "3.10"
           - "3.12"
     defaults:
       run:

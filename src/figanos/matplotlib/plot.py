@@ -124,7 +124,7 @@ def _plot_timeseries(
     ax: matplotlib.axes.Axes
         Axe to be used for plotting.
     name : str
-        Dictionnary key of the plotted data.
+        Dictionary key of the plotted data.
     arr : Dataset/DataArray
         Data to be plotted.
     plot_kw : dict
@@ -736,7 +736,7 @@ def gridmap(
         plot_kw.setdefault("cbar_kwargs", {})
         plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
 
-    # bug xlim / ylim + transfrom in facetgrids
+    # bug xlim / ylim + transform in facetgrids
     # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
     if transform and ("xlim" in plot_kw and "ylim" in plot_kw):
         extent = [
@@ -1816,7 +1816,7 @@ def scattermap(
         "marker": "o",
     } | plot_kw_pop
 
-    # chek if edgecolors in plot_kw and match len of plot_data
+    # check if edgecolors in plot_kw and match len of plot_data
     if "edgecolors" in plot_kw:
         if matplotlib.colors.is_color_like(plot_kw["edgecolors"]):
             plot_kw_pop["edgecolors"] = np.repeat(
@@ -2457,7 +2457,7 @@ def hatchmap(
             if hasattr(list(plot_data.values())[0], "rotated_pole"):
                 transform = get_rotpole(list(plot_data.values())[0])
 
-    # bug xlim / ylim + transfrom in facetgrids
+    # bug xlim / ylim + transform in facetgrids
     # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
     if transform and (
         "xlim" in list(plot_kw.values())[0] and "ylim" in list(plot_kw.values())[0]
@@ -3083,7 +3083,7 @@ def triheatmap(
         plt.colorbar(imgs[0], ax=ax, **cbar_kw[0])
 
     elif (cbar == "each") or (cbar is True):
-        for i in reversed(range(len(d))):  # swithc order of colorbars
+        for i in reversed(range(len(d))):  # switch order of colour bars
             plt.colorbar(imgs[i], ax=ax, **cbar_kw[i])
 
     return ax

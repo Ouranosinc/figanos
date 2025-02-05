@@ -179,7 +179,7 @@ values = [
 ]
 
 [tool.codespell]
-ignore-words-list = "astroid,fonction,socio-economic"
+ignore-words-list = "ans,astroid,fonction,socio-economic,vas,vie"
 
 [tool.coverage.paths]
 source = ["src/figanos/", "*/site-packages/figanos/"]

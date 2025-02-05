@@ -15,7 +15,7 @@ The following features are included in the package:
 * Automatically links attributes from xarray objects to plot elements (title, axes), with customization options.
 * Automatically assigns colors to some common variables and, following the IPCC visual guidelines.
 * Provides options to visually enhance the plots, and includes a default style to ensure coherence when creating multiple plots.
-* Returns a `matplotlib axes object <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes>`_ that is fully customizeable through matplotlib functions and methods.
+* Returns a `matplotlib axes object <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes>`_ that is fully customisable through matplotlib functions and methods.
 
 
 Need help?
