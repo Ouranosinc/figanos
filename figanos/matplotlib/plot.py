@@ -1683,8 +1683,6 @@ def scattermap(
         "norm": norm,
         "transform": transform,
         "zorder": 8,
-        "marker": "o",
-        "edgecolors": "none",
     } | plot_kw
 
     # chek if edgecolors in plot_kw and match len of plot_data
