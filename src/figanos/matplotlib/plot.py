@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import copy
+import logging
 import math
+import string
 import warnings
 from collections.abc import Iterable
+from inspect import signature
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +54,8 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     split_legend,
     wrap_text,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _plot_realizations(
@@ -263,6 +268,7 @@ def timeseries(
     plot_kw: dict[str, Any] | None = None,
     legend: str = "lines",
     show_lat_lon: bool | str | int | tuple[float, float] = True,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
@@ -304,6 +310,9 @@ def timeseries(
         'upper center'       9
         'center'             10
         ==================   =============
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -511,6 +520,10 @@ def timeseries(
                     loc=show_lat_lon,
                     backgroundalpha=1,
                 )
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
         return im
 
 
@@ -530,6 +543,7 @@ def gridmap(
     divergent: bool | int | float = False,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map from 2D data.
 
@@ -590,6 +604,9 @@ def gridmap(
         ==================   =============
     frame : bool
         Show or hide frame. Default False.
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -672,7 +689,8 @@ def gridmap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -815,7 +833,13 @@ def gridmap(
                 )
 
         use_attrs.setdefault("suptitle", "long_name")
-        return set_plot_attrs(use_attrs, data, facetgrid=im)
+        im = set_plot_attrs(use_attrs, data, facetgrid=im)
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            print("here")
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
+        return im
 
 
 def gdfmap(
@@ -1226,7 +1250,8 @@ def stripes(
         else:
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1356,8 +1381,25 @@ def heatmap(
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
     # setup fig, axis
-    if ax is None:
+    if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(**fig_kw)
+    elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
+        raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
+    elif ax is None:
+        if any([k != "figsize" for k in fig_kw.keys()]):
+            warnings.warn(
+                "Only figsize arguments can be passed to fig_kw when using facetgrid."
+            )
+        plot_kw.setdefault("col", None)
+        plot_kw.setdefault("row", None)
+        plot_kw.setdefault("margin_titles", True)
+        heatmap_dims = list(
+            set(da.dims)
+            - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
+        )
+        if da.name is None:
+            da = da.to_dataset(name="data").data
+        da_name = da.name
 
     # create cbar label
     if (
@@ -1378,7 +1420,8 @@ def heatmap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1389,11 +1432,16 @@ def heatmap(
         )
 
     # convert data to DataFrame
-    if len(da.coords) != 2:
-        raise ValueError("DataArray must have exactly two dimensions")
     if transpose:
         da = da.transpose()
-    df = da.to_pandas()
+    if "col" not in plot_kw and "row" not in plot_kw:
+        if len(da.dims) != 2:
+            raise ValueError("DataArray must have exactly two dimensions")
+        df = da.to_pandas()
+    else:
+        if len(heatmap_dims) != 2:
+            raise ValueError("DataArray must have exactly two dimensions")
+        df = da.to_dataframe().reset_index()
 
     # set defaults
     if divergent is not False:
@@ -1409,21 +1457,60 @@ def heatmap(
     plot_kw.setdefault("cmap", cmap)
 
     # plot
-    sns.heatmap(df, ax=ax, **plot_kw)
+    def draw_heatmap(*args, **kwargs):
+        data = kwargs.pop("data")
+        d = (
+            data
+            if len(args) == 0
+            # Any sorting should be performed before sending a DataArray in `fg.heatmap`
+            else data.pivot_table(
+                index=args[1], columns=args[0], values=args[2], sort=False
+            )
+        )
+        ax = sns.heatmap(d, **kwargs)
+        ax.set_xticklabels(
+            ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
+        )
+        ax.tick_params(axis="both", direction="out")
+        set_plot_attrs(
+            use_attrs,
+            da,
+            ax,
+            title_loc="center",
+            wrap_kw={"min_line_len": 35, "max_line_len": 44},
+        )
+        return ax
 
-    # format
-    plt.xticks(rotation=45, ha="right", rotation_mode="anchor")
-    ax.tick_params(axis="both", direction="out")
+    if ax is not None:
+        ax = draw_heatmap(data=df, ax=ax, **plot_kw)
+        return ax
+    elif "col" in plot_kw or "row" in plot_kw:
+        # When using xarray's FacetGrid, `plot_kw` can be used in the FacetGrid and in the plotting function
+        # With Seaborn, we need to be more careful and separate keywords.
+        plot_kw_hm = {
+            k: v for k, v in plot_kw.items() if k in signature(sns.heatmap).parameters
+        }
+        plot_kw_fg = {
+            k: v for k, v in plot_kw.items() if k in signature(sns.FacetGrid).parameters
+        }
+        unused_keys = (
+            set(plot_kw.keys()) - set(plot_kw_fg.keys()) - set(plot_kw_hm.keys())
+        )
+        if unused_keys != set():
+            raise ValueError(
+                f"`heatmap` got unexpected keywords in `plot_kw`: {unused_keys}. Keywords in `plot_kw` should be keywords "
+                "allowed in `sns.heatmap` or `sns.FacetGrid`. "
+            )
 
-    set_plot_attrs(
-        use_attrs,
-        da,
-        ax,
-        title_loc="center",
-        wrap_kw={"min_line_len": 35, "max_line_len": 44},
-    )
-
-    return ax
+        g = sns.FacetGrid(df, **plot_kw_fg)
+        cax = g.fig.add_axes([0.95, 0.05, 0.02, 0.9])
+        g.map_dataframe(
+            draw_heatmap, *heatmap_dims, da_name, **plot_kw_hm, cbar=True, cbar_ax=cax
+        )
+        g.fig.subplots_adjust(right=0.9)
+        if "figsize" in fig_kw.keys():
+            g.fig.set_size_inches(*fig_kw["figsize"])
+        return g
 
 
 def scattermap(
@@ -1444,6 +1531,7 @@ def scattermap(
     legend_kw: dict[str, Any] | None = None,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Make a scatter plot of georeferenced data on a map.
 
@@ -1510,6 +1598,9 @@ def scattermap(
         ==================   =============
     frame : bool
         Show or hide frame. Default False.
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -1609,7 +1700,8 @@ def scattermap(
         if cmap not in plt.colormaps():
             try:
                 cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                logger.error(e)
                 pass
 
     elif cmap is None:
@@ -1663,14 +1755,29 @@ def scattermap(
     # norm
     plot_kw.setdefault("vmin", np.nanmin(plot_data.values[mask]))
     plot_kw.setdefault("vmax", np.nanmax(plot_data.values[mask]))
+    if levels is not None:
+        if isinstance(levels, Iterable):
+            lin = levels
+        else:
+            lin = custom_cmap_norm(
+                cmap,
+                np.nanmin(plot_data.values[mask]),
+                np.nanmax(plot_data.values[mask]),
+                levels=levels,
+                divergent=divergent,
+                linspace_out=True,
+            )
+        plot_kw.setdefault("levels", lin)
 
-    norm = custom_cmap_norm(
-        cmap,
-        vmin=plot_kw["vmin"],
-        vmax=plot_kw["vmax"],
-        levels=levels,
-        divergent=divergent,
-    )
+    elif (divergent is not False) and ("levels" not in plot_kw):
+        norm = custom_cmap_norm(
+            cmap,
+            np.nanmin(plot_data.values[mask]),
+            np.nanmax(plot_data.values[mask]),
+            levels=levels,
+            divergent=divergent,
+        )
+        plot_kw.setdefault("norm", norm)
 
     # matplotlib.pyplot.scatter treats "edgecolor" and "edgecolors" as aliases so we accept "edgecolor" and convert it
     if "edgecolor" in plot_kw and "edgecolors" not in plot_kw:
@@ -1680,7 +1787,6 @@ def scattermap(
     # set defaults and create copy without vmin, vmax (conflicts with norm)
     plot_kw = {
         "cmap": cmap,
-        "norm": norm,
         "transform": transform,
         "zorder": 8,
     } | plot_kw
@@ -1817,6 +1923,10 @@ def scattermap(
     else:
         im.fig.suptitle(get_attributes("long_name", data))
         im.set_titles(template="{value}")
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
         return im
 
 
@@ -1827,9 +1937,12 @@ def taylordiagram(
     std_range: tuple = (0, 1.5),
     contours: int | None = 4,
     contours_kw: dict[str, Any] | None = None,
+    ref_std_line: bool = False,
     legend_kw: dict[str, Any] | None = None,
     std_label: str | None = None,
     corr_label: str | None = None,
+    colors_key: str | None = None,
+    markers_key: str | None = None,
 ):
     """Build a Taylor diagram.
 
@@ -1851,21 +1964,33 @@ def taylordiagram(
         Number of rsme contours to plot.
     contours_kw : dict, optional
         Arguments to pass to `plt.contour()` for the rmse contours.
+    ref_std_line : bool, optional
+        If True, draws a circular line on radius `std = ref_std`. Default: False
     legend_kw : dict, optional
         Arguments to pass to `plt.legend()`.
     std_label : str, optional
         Label for the standard deviation (x and y) axes.
     corr_label : str, optional
         Label for the correlation axis.
+    colors_key : str, optional
+        Attribute or dimension of DataArrays used to separate DataArrays into groups with different colors. If present,
+        it overrides the "color" key in `plot_kw`.
+    markers_key : str, optional
+        Attribute or dimension of DataArrays used to separate DataArrays into groups with different markers. If present,
+        it overrides the "marker" key in `plot_kw`.
 
     Returns
     -------
-    matplotlib.axes.Axes
+    (plt.figure, mpl_toolkits.axisartist.floating_axes.FloatingSubplot, plt.legend)
     """
     plot_kw = empty_dict(plot_kw)
     fig_kw = empty_dict(fig_kw)
     contours_kw = empty_dict(contours_kw)
     legend_kw = empty_dict(legend_kw)
+
+    # preserve order of dimensions if used for marker/color
+    ordered_markers_type = None
+    ordered_colors_type = None
 
     # convert SSP, RCP, CMIP formats in keys
     if isinstance(data, dict):
@@ -1878,8 +2003,7 @@ def taylordiagram(
         data = {"_no_label": data}  # mpl excludes labels starting with "_" from legend
         plot_kw = {"_no_label": empty_dict(plot_kw)}
     elif not plot_kw:
-        plot_kw = {}
-
+        plot_kw = {k: {} for k in data.keys()}
     # check type
     for key, v in data.items():
         if not isinstance(v, xr.DataArray):
@@ -1888,6 +2012,35 @@ def taylordiagram(
             raise ValueError("All DataArrays must contain a 'taylor_param' dimension.")
         if key == "reference":
             raise ValueError("'reference' is not allowed as a key in data.")
+
+    # If there are other dimensions than 'taylor_param', create a bigger dict with them
+    data_keys = list(data.keys())
+    for data_key in data_keys:
+        da = data[data_key]
+        dims = list(set(da.dims) - {"taylor_param"})
+        if dims != []:
+            if markers_key in dims:
+                ordered_markers_type = da[markers_key].values
+            if colors_key in dims:
+                ordered_colors_type = da[colors_key].values
+
+            da = da.stack(pl_dims=dims)
+            for i, dim_key in enumerate(da.pl_dims.values):
+                if isinstance(dim_key, list) or isinstance(dim_key, tuple):
+                    dim_key = "-".join([str(k) for k in dim_key])
+                da0 = da.isel(pl_dims=i)
+                # if colors_key/markers_key is a dimension, add it as an attribute for later use
+                if markers_key in dims:
+                    da0.attrs[markers_key] = da0[markers_key].values.item()
+                if colors_key in dims:
+                    da0.attrs[colors_key] = da0[colors_key].values.item()
+                new_data_key = (
+                    f"{data_key}-{dim_key}" if data_key != "_no_label" else dim_key
+                )
+                data[new_data_key] = da0
+                plot_kw[new_data_key] = empty_dict(plot_kw[f"{data_key}"])
+            data.pop(data_key)
+            plot_kw.pop(data_key)
 
     # remove negative correlations
     initial_len = len(data)
@@ -1932,10 +2085,9 @@ def taylordiagram(
     # make labels
     if not std_label:
         try:
-            std_label = (
-                get_localized_term("standard deviation")
-                + f" ({list(data.values())[0].units})"
-            )
+            units = list(data.values())[0].units
+            std_label = get_localized_term("standard deviation")
+            std_label = std_label if units == "" else f"{std_label} ({units})"
         except AttributeError:
             std_label = get_localized_term("standard deviation").capitalize()
 
@@ -1952,12 +2104,11 @@ def taylordiagram(
     transform = PolarAxes.PolarTransform()
 
     # Setup the axis, here we map angles in degrees to angles in radius
-    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.8, 1])
-    rlocs_deg = rlocs * 90
-    tlocs = rlocs_deg * np.pi / 180  # convert degrees to radians
+    # Correlation labels
+    rlocs = np.array([0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1])
+    tlocs = np.arccos(rlocs)  # Conversion to polar angles
     gl1 = gf.FixedLocator(tlocs)  # Positions
-    tf1 = gf.DictFormatter(dict(zip(tlocs, np.flip(rlocs).astype(str))))
-
+    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs))))
     # Standard deviation axis extent
     radius_min = std_range[0] * max(max_std)
     radius_max = std_range[1] * max(max_std)
@@ -1971,7 +2122,6 @@ def taylordiagram(
     )
 
     fig = plt.figure(**fig_kw)
-
     floating_ax = FloatingSubplot(fig, 111, grid_helper=ghelper)
     fig.add_subplot(floating_ax)
 
@@ -2013,10 +2163,23 @@ def taylordiagram(
 
     points = [ref_pt]  # set up for later
 
+    # plot a circular line along `ref_std`
+    if ref_std_line:
+        angles_for_line = np.linspace(0, np.pi / 2, 100)
+        radii_for_line = np.full_like(angles_for_line, ref_std)
+        ax.plot(
+            angles_for_line,
+            radii_for_line,
+            color=ref_kw["color"],
+            linewidth=0.5,
+            linestyle="-",
+        )
+
     # rmse contours from reference standard deviation
     if contours:
         radii, angles = np.meshgrid(
-            np.linspace(radius_min, radius_max), np.linspace(0, np.pi / 2)
+            np.linspace(radius_min, radius_max),
+            np.linspace(0, np.pi / 2),
         )
         # Compute centered RMS difference
         rms = np.sqrt(ref_std**2 + radii**2 - 2 * ref_std * radii * np.cos(angles))
@@ -2026,7 +2189,8 @@ def taylordiagram(
 
         ax.clabel(ct, ct.levels, fontsize=8)
 
-        ct_line = Line2D(
+        # points.append(ct_line)
+        ct_line = ax.plot(
             [0],
             [0],
             ls=contours_kw["linestyles"],
@@ -2034,39 +2198,84 @@ def taylordiagram(
             c="k" if "colors" not in contours_kw else contours_kw["colors"],
             label="rmse",
         )
-        points.append(ct_line)
+        points.append(ct_line[0])
 
     # get color options
     style_colors = matplotlib.rcParams["axes.prop_cycle"].by_key()["color"]
     if len(data) > len(style_colors):
         style_colors = style_colors * math.ceil(len(data) / len(style_colors))
     cat_colors = Path(__file__).parents[1] / "data/ipcc_colors/categorical_colors.json"
+    # get marker options (only used if `markers_key` is set)
+    style_markers = "oDv^<>p*hH+x|_"
+    if len(data) > len(style_markers):
+        style_markers = style_markers * math.ceil(len(data) / len(style_markers))
+
+    # set colors and markers styles based on discrimnating attributes (if specified)
+    if colors_key or markers_key:
+        if colors_key:
+            # get_scen_color : look for SSP, RCP, CMIP model color
+            colors_type = (
+                ordered_colors_type
+                if ordered_colors_type is not None
+                else {da.attrs[colors_key] for da in data.values()}
+            )
+            colorsd = {
+                k: get_scen_color(k, cat_colors) or style_colors[i]
+                for i, k in enumerate(colors_type)
+            }
+        if markers_key:
+            markers_type = (
+                ordered_markers_type
+                if ordered_markers_type is not None
+                else {da.attrs[markers_key] for da in data.values()}
+            )
+            markersd = {k: style_markers[i] for i, k in enumerate(markers_type)}
+
+        for key, da in data.items():
+            if colors_key:
+                plot_kw[key]["color"] = colorsd[da.attrs[colors_key]]
+            if markers_key:
+                plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # plot scatter
     for (key, da), i in zip(data.items(), range(len(data))):
         # look for SSP, RCP, CMIP model color
-        if get_scen_color(key, cat_colors):
-            plot_kw[key].setdefault("color", get_scen_color(key, cat_colors))
-        else:
-            plot_kw[key].setdefault("color", style_colors[i])
-
-        # convert corr to polar coordinates
-        plot_corr = (1 - da.sel(taylor_param="corr").values) * 90 * np.pi / 180
-
+        if colors_key is None:
+            plot_kw[key].setdefault(
+                "color", get_scen_color(key, cat_colors) or style_colors[i]
+            )
         # set defaults
         plot_kw[key] = {"label": key} | plot_kw[key]
 
+        # legend will be handled later in this case
+        if markers_key or colors_key:
+            plot_kw[key]["label"] = ""
+
         # plot
         pt = ax.scatter(
-            plot_corr, da.sel(taylor_param="sim_std").values, **plot_kw[key]
+            np.arccos(da.sel(taylor_param="corr").values),
+            da.sel(taylor_param="sim_std").values,
+            **plot_kw[key],
         )
         points.append(pt)
 
     # legend
     legend_kw.setdefault("loc", "upper right")
-    fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
+    legend = fig.legend(points, [pt.get_label() for pt in points], **legend_kw)
 
-    return floating_ax
+    # plot new legend if markers/colors represent a certain dimension
+    if colors_key or markers_key:
+        handles = list(floating_ax.get_legend_handles_labels()[0])
+        if markers_key:
+            for k, m in markersd.items():
+                handles.append(Line2D([0], [0], color="k", label=k, marker=m, ls=""))
+        if colors_key:
+            for k, c in colorsd.items():
+                handles.append(Line2D([0], [0], color=c, label=k, ls="-"))
+        legend.remove()
+        legend = fig.legend(handles=handles, **legend_kw)
+
+    return fig, floating_ax, legend
 
 
 def hatchmap(
@@ -2083,6 +2292,7 @@ def hatchmap(
     legend_kw: dict[str, Any] | bool = True,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
+    enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
     """Create map of hatches from 2D data.
 
@@ -2135,6 +2345,9 @@ def hatchmap(
         ==================   =============
     frame : bool
         Show or hide frame. Default False.
+    enumerate_subplots: bool
+        If True, enumerate subplots with letters.
+        Only works with facetgrids (pass `col` or `row` in plot_kw).
 
     Returns
     -------
@@ -2428,6 +2641,11 @@ def hatchmap(
         if dattrs:
             use_attrs.setdefault("suptitle", "long_name")
             set_plot_attrs(use_attrs, dattrs, facetgrid=im)
+
+        if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            for idx, ax in enumerate(im.axs.flat):
+                ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
+
         return im
 
 
@@ -2451,33 +2669,31 @@ def partition(
 ) -> matplotlib.axes.Axes:
     """Figure of the partition of total uncertainty by components.
 
-    Uncertainty fractions can be computed with xclim
-    (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
+    Uncertainty fractions can be computed with xclim (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
     Make sure the use `fraction=True` in the xclim function call.
-
 
     Parameters
     ----------
-    data: xr.DataArray or xr.Dataset
-      Variance over time of the different components of uncertainty.
-      Output of a `xclim.ensembles._partitioning` function.
+    data : xr.DataArray or xr.Dataset
+        Variance over time of the different components of uncertainty.
+        Output of a `xclim.ensembles._partitioning` function.
     ax : matplotlib axis, optional
-        Matplotlib axis on which to plot
-    start_year: str
-      If None, the x-axis will be the time in year.
-      If str, the x-axis will show the number of year since start_year.
-    show_num: bool
-        If True, show the number of elements for each uncertainty components in parenthesis in the legend.
-        `data` should have attributes named after the components with a list its the elements.
-    fill_kw: dict
+        Matplotlib axis on which to plot.
+    start_year : str
+        If None, the x-axis will be the time in year.
+        If str, the x-axis will show the number of year since start_year.
+    show_num : bool
+        If True, show the number of elements for each uncertainty components in parentheses in the legend.
+        `data` should have attributes named after the components with a list of its the elements.
+    fill_kw : dict
         Keyword arguments passed to `ax.fill_between`.
         It is possible to pass a dictionary of keywords for each component (uncertainty coordinates).
-    line_kw: dict
+    line_kw : dict
         Keyword arguments passed to `ax.plot` for the lines in between the components.
         The default is {color="k", lw=2}. We recommend always using lw>=2.
-    fig_kw: dict
+    fig_kw : dict
         Keyword arguments passed to `plt.subplots`.
-    legend_kw: dict
+    legend_kw : dict
         Keyword arguments passed to `ax.legend`.
 
     Returns

@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 """Tests for `figanos` package."""
 
 import pathlib
-import pkgutil
+from importlib.util import find_spec
 
 import pytest
 
@@ -27,12 +28,12 @@ def test_content(response):
 
 def test_package_metadata():
     """Test the package metadata."""
-    project = pkgutil.get_loader("figanos").get_filename()
+    project = find_spec("figanos").submodule_search_locations[0]
 
-    metadata = pathlib.Path(project).resolve().parent.joinpath("__init__.py")
+    metadata = pathlib.Path(project).resolve().joinpath("__init__.py")
 
-    with open(metadata) as f:
+    with metadata.open() as f:
         contents = f.read()
         assert """Sarah-Claude Bourdeau-Goulet""" in contents
         assert '__email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"' in contents
-        assert '__version__ = "0.3.1-dev.4"' in contents
+        assert '__version__ = "0.3.1-dev.11"' in contents

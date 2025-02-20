@@ -1,17 +1,17 @@
 {
   "template": "https://github.com/Ouranosinc/cookiecutter-pypackage",
-  "commit": "f391bbd6ee14ab2478c64a1f78b74bd9903cae81",
+  "commit": "b9dc57245a77dd3c465a444d4943884ee92157ea",
   "checkout": null,
   "context": {
     "cookiecutter": {
       "full_name": "Sarah-Claude Bourdeau-Goulet",
       "email": "bourdeau-goulet.sarah-claude@ouranos.ca",
-      "github_username": "Sarahclaude",
+      "github_username": "Ouranosinc",
       "project_name": "figanos",
       "project_slug": "figanos",
       "project_short_description": "Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
       "pypi_username": "Sarahclaude",
-      "version": "0.3.1-dev.4",
+      "version": "0.3.1-dev.11",
       "use_pytest": "y",
       "use_black": "y",
       "use_conda": "y",
@@ -22,6 +22,7 @@
       "create_author_file": "y",
       "open_source_license": "Apache Software License 2.0",
       "generated_with_cruft": "y",
+      "__gh_slug": "https://github.com/Ouranosinc/figanos",
       "_template": "https://github.com/Ouranosinc/cookiecutter-pypackage"
     }
   },
