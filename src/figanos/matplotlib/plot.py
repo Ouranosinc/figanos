@@ -1819,6 +1819,7 @@ def scattermap(
         "cmap": cmap,
         "transform": transform,
         "zorder": 8,
+        "marker": "o",
     } | plot_kw
 
     # check if edgecolors in plot_kw and match len of plot_data
