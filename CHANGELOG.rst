@@ -20,6 +20,7 @@ New features and enhancements
 * New function ``fg.matplotlib.triheatmap`` (:pull:`199`).
 * Reorganized the documentation and add gallery (:issue:`278`, :issue:`274`, :issue:`202`, :pull:`279`).
 * Added a new `pooch`-based mechanism for fetching and caching testing data used in the notebooks (``fg.pitou().fetch()``). (:pull:`279`).
+* No-legend option in ``hatchmap``; use ``edgecolor`` and ``edgecolors`` as aliases (:pull:`195`)
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
