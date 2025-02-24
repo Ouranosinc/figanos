@@ -42,7 +42,7 @@ dependencies = [
   "numpy >=1.23.0,<2.0.0",
   "pandas >=2.2.0",
   "pint >=0.10",
-  "platformdirs",
+  "platformdirs >=4.0",
   "pyyaml >=6.0.1",
   "seaborn >=0.13.0",
   "scikit-image >=0.20.0",
@@ -86,12 +86,11 @@ docs = [
   "ipython >=8.5.0",
   "jupyter_client",
   "nbsphinx >=0.9.5",
-  "sphinx >=7.0.0",
+  "sphinx >=7.0.0,<8.2.0", # pinned until nbsphinx is updated to support Sphinx 8.2
   "sphinx-book-theme >=1.0",
   "sphinx-codeautolink >=0.16.2",
   "sphinx-copybutton",
-  "sphinx-intl",
-  "sphinxcontrib-napoleon"
+  "sphinx-intl"
 ]
 all = ["figanos[dev]", "figanos[docs]"]
 
