@@ -11,7 +11,7 @@ dependencies:
   - geopandas >=1.0
   - numpy >=1.23.0,<2.0.0
   - pandas >=2.2.0
-  - platformdirs
+  - platformdirs >=4.0
   - pint >=0.10
   - pyyaml >=6.0.1
   - scikit-image >=0.20.0
@@ -48,13 +48,10 @@ dependencies:
   - ipykernel
   - ipython >=8.5.0
   - jupyter_client
-  - nbsphinx
+  - nbsphinx >=0.9.5
   - notebook
-  - pandoc
-  - sphinx >=6.2.0
-  - sphinx-autoapi
+  - sphinx >=7.0.0,<8.2.0  # pinned until nbsphinx is updated to support Sphinx 8.2
   - sphinx-book-theme >=1.0.0
   - sphinx-codeautolink >=0.16.2
   - sphinx-copybutton
   - sphinx-intl
-  - sphinxcontrib-napoleon
