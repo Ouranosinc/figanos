@@ -49,6 +49,7 @@ autosectionlabel_prefix_document = True
 autosectionlabel_maxdepth = 2
 
 nbsphinx_execute = "always"
+suppress_warnings = ["codeautolink.match_name"]
 
 # To ensure that underlined fields (e.g. `_field`) are shown in the docs.
 autodoc_default_options = {
