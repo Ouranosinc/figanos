@@ -52,6 +52,6 @@ dependencies:
   - notebook
   - sphinx >=7.0.0,<8.2.0  # pinned until nbsphinx is updated to support Sphinx 8.2
   - sphinx-book-theme >=1.0.0
-  - sphinx-codeautolink >=0.16.2
+  - sphinx-codeautolink
   - sphinx-copybutton
   - sphinx-intl
