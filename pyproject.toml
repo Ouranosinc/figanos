@@ -83,7 +83,7 @@ docs = [
   "zarr >=2.13.0",
   # Documentation
   "ipykernel",
-  "ipython >=8.5.0",
+  "ipython >=8.5.0,!=9.0.0",
   "jupyter_client",
   "nbsphinx >=0.9.5",
   "sphinx >=7.0.0,<8.2.0", # pinned until nbsphinx is updated to support Sphinx 8.2
