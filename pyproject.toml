@@ -133,18 +133,19 @@ search = """\
 --------------------------------------------------------------
 """
 replace = """\
-`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
---------------------------------------------------------------
+..
+    `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+    --------------------------------------------------------------
 
-Contributors:
+    Contributors:
 
-Changes
-^^^^^^^
-* No change.
+    Changes
+    ^^^^^^^
+    * No change.
 
-Fixes
-^^^^^
-* No change.
+    Fixes
+    ^^^^^
+    * No change.
 
 .. _changes_{new_version}:
 

@@ -67,8 +67,10 @@ Bug fixes
 * Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`238`, :issue:`239`).
 * Updated the default testing data URL in the `pitou` function to point to the correct branch. (:pull:`282`).
 
-0.3.0 (2024-02-16)
-------------------
+.. _changes_0.3.0:
+
+v0.3.0 (2024-02-16)
+-------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
 
 New features and enhancements
@@ -118,7 +120,9 @@ Bug fixes
 * Fixed an issue with the `divergent` argument getting ignored (:pull:`132`).
 * Some small documentation fixes for working uniquely in a `conda` environment. (:pull:`138`).
 
-0.2.0 (2023-06-19)
+.. _changes_0.2.0:
+
+v0.2.0 (2023-06-19)
 ------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
@@ -142,8 +146,10 @@ Internal changes
     * Automated testing with `tox` now updated to use v4.0+ conventions.
     * Removed all references to `travis.ci`.
 
-0.1.0 (2023-06-08)
-------------------
+.. _changes_0.1.0:
+
+v0.1.0 (2023-06-08)
+-------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Alexis Beaupré-Laperrière (:user:`Beauprel`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 * First release on PyPI.
