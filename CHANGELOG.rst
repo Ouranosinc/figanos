@@ -139,7 +139,7 @@ Bug fixes
 .. _changes_0.2.0:
 
 v0.2.0 (2023-06-19)
-------------------
+-------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
