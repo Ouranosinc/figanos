@@ -21,6 +21,7 @@ on:
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.rst
       - Makefile
+      - README.rst
       - docs/*.py
       - docs/*.rst
       - environment-dev.yml

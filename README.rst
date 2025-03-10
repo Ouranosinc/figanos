@@ -57,7 +57,7 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
         :target: https://figanos.readthedocs.io/en/latest/
         :alt: Documentation Status
 
-.. |isort| image:: https://img.shieldsio/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
+.. |isort| image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
         :target: https://pycqa.github.io/isort/
         :alt: Isort
 
