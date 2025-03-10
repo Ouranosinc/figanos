@@ -19,7 +19,7 @@ Changelog
 .. _changes_0.4.0:
 
 `v0.4.0 <https://github.com/Ouranosinc/figanos/tree/0.4.0>`_  (2025-03-10)
-----------------------------------------------------------------------------
+--------------------------------------------------------------------------
 Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
