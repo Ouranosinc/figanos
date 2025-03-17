@@ -14,7 +14,7 @@ Changelog
 
     Fixes
     ^^^^^
-    * Rotated pole with a different name are now accepted. (:pull:`308`).
+    * `fg.utils.get_rotpole` now accept more general inputs. (:pull:`308`).
 
 .. _changes_0.4.0:
 
