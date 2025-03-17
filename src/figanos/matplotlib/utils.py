@@ -968,10 +968,33 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
     ccrs.RotatedPole or None
     """
     try:
+
+        if isinstance(xr_obj, xr.Dataset):
+            ds = xr_obj
+            gridmap = [
+                ds[v].attrs["grid_mapping"]
+                for v in ds.data_vars
+                if "grid_mapping" in ds[v].attrs
+            ]
+            gridmap += [
+                c for c in ds.coords if ds[c].attrs.get("grid_mapping_name", None)
+            ]
+            gridmap = list(np.unique(gridmap))
+
+            if len(gridmap) > 1:
+                warnings.warn(
+                    f"There are conflicting grid_mapping attributes in the dataset. Assuming {gridmap[0]}."
+                )
+
+            coord_name = gridmap[0] if gridmap else "rotated_pole"
+        else:
+            # If it can't find grid_mapping, assume it's rotated_pole
+            coord_name = xr_obj.attrs.get("grid_mapping", "rotated_pole")
+
         rotpole = ccrs.RotatedPole(
-            pole_longitude=xr_obj.rotated_pole.grid_north_pole_longitude,
-            pole_latitude=xr_obj.rotated_pole.grid_north_pole_latitude,
-            central_rotated_longitude=xr_obj.rotated_pole.north_pole_grid_longitude,
+            pole_longitude=xr_obj[coord_name].grid_north_pole_longitude,
+            pole_latitude=xr_obj[coord_name].grid_north_pole_latitude,
+            central_rotated_longitude=xr_obj[coord_name].north_pole_grid_longitude,
         )
         return rotpole
 

@@ -6,7 +6,7 @@ Changelog
     `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
     --------------------------------------------------------------
 
-    Contributors:
+    Contributors: Juliette Lavoie (:user:`juliettelavoie`)
 
     Changes
     ^^^^^^^
@@ -14,7 +14,7 @@ Changelog
 
     Fixes
     ^^^^^
-    * No change.
+    * Rotated pole with a different name are now accepted. (:pull:`308`).
 
 .. _changes_0.4.0:
 

@@ -650,8 +650,7 @@ def gridmap(
         if "lat" in data.dims and "lon" in data.dims:
             transform = ccrs.PlateCarree()
         if "rlat" in data.dims and "rlon" in data.dims:
-            if hasattr(data, "rotated_pole"):
-                transform = get_rotpole(data)
+            transform = get_rotpole(data)
 
     # setup fig, ax
     if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
@@ -1682,8 +1681,7 @@ def scattermap(
     # setup transform
     if transform is None:
         if "rlat" in data.dims and "rlon" in data.dims:
-            if hasattr(data, "rotated_pole"):
-                transform = get_rotpole(data)
+            transform = get_rotpole(data)
         elif (
             "lat" in data.coords and "lon" in data.coords
         ):  # need to work with station dims
@@ -2462,8 +2460,7 @@ def hatchmap(
         if "lat" in trdata.dims and "lon" in trdata.dims:
             transform = ccrs.PlateCarree()
         elif "rlat" in trdata.dims and "rlon" in trdata.dims:
-            if hasattr(list(plot_data.values())[0], "rotated_pole"):
-                transform = get_rotpole(list(plot_data.values())[0])
+            transform = get_rotpole(list(plot_data.values())[0])
 
     # bug xlim / ylim + transform in facetgrids
     # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
