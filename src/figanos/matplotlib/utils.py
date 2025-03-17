@@ -970,7 +970,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
     try:
 
         if isinstance(xr_obj, xr.Dataset):
-            gridmap = xr_obj.cf.grid_mapping_names.get('rotated_latitude_longitude', [])
+            gridmap = xr_obj.cf.grid_mapping_names.get("rotated_latitude_longitude", [])
 
             if len(gridmap) > 1:
                 warnings.warn(
