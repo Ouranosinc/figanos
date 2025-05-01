@@ -7,10 +7,10 @@ import math
 import pathlib
 import re
 import warnings
+from collections.abc import Callable
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
 from typing import Any
-from collections.abc import Callable
 
 import cairosvg
 import cartopy.crs as ccrs
