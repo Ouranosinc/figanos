@@ -1,5 +1,6 @@
 from functools import wraps
-from typing import IO, Callable, Optional, Union
+from typing import IO, Optional, Union
+from collections.abc import Callable
 
 __all__ = ["pitou"]
 
@@ -32,12 +33,12 @@ def pitou():
 
     # Overload the fetch method to add user-agent headers
     @wraps(_pitou.fetch_diversion)
-    def _fetch(*args: str, **kwargs: Union[bool, Callable]) -> str:
+    def _fetch(*args: str, **kwargs: bool | Callable) -> str:
         def _downloader(
             url: str,
-            output_file: Union[str, IO],
+            output_file: str | IO,
             poocher: pooch.Pooch,
-            check_only: Optional[bool] = False,
+            check_only: bool | None = False,
         ) -> None:
             """Download the file from the URL and save it to the save_path."""
             headers = {"User-Agent": f"figanos ({__figanos_version__})"}

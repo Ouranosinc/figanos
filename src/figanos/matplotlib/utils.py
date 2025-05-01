@@ -9,7 +9,8 @@ import re
 import warnings
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 import cairosvg
 import cartopy.crs as ccrs
