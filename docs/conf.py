@@ -20,6 +20,7 @@
 import os
 import sys
 from datetime import datetime
+from typing import Any
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -48,6 +49,7 @@ autosectionlabel_prefix_document = True
 autosectionlabel_maxdepth = 2
 
 nbsphinx_execute = "always"
+suppress_warnings = ["codeautolink.match_name"]
 
 # To ensure that underlined fields (e.g. `_field`) are shown in the docs.
 autodoc_default_options = {
@@ -68,7 +70,7 @@ templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a dictionary of suffix: filetype
-source_suffix = {'.rst': 'restructuredtext'}
+source_suffix = {".rst": "restructuredtext"}
 
 # The master toctree document.
 master_doc = "index"
@@ -129,8 +131,7 @@ html_theme_options = {"navigation_with_keys": False}
 # so a file named "default.css" will overwrite the builtin "default.css".
 if not os.path.exists("_static"):
     os.makedirs("_static")
-html_static_path = ['_static']
-
+html_static_path = ["_static"]
 
 # -- Options for HTMLHelp output ---------------------------------------
 
@@ -140,7 +141,7 @@ htmlhelp_basename = "figanosdoc"
 
 # -- Options for LaTeX output ------------------------------------------
 
-latex_elements = {
+latex_elements: dict[str, Any] = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',

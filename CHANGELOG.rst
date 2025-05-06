@@ -4,7 +4,26 @@ Changelog
 
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`)
+Contributors: Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
+
+Changes
+^^^^^^^
+* `figanos` now supports Python 3.13 and has dropped support for Python 3.9. (:pull:`322`).
+* Several base dependencies have been updated to more modern versions. (:pull:`322`):
+  * `numpy` has been updated to `>=1.25.0` (no longer pinned below `2.0.0`).
+  * `pint` has been updated to `>=0.18.0`.
+  * `scikit-image` has been updated to `>=0.21.0`.
+  * `xarray` has been updated to `>=2023.11.0`.
+
+Fixes
+^^^^^
+* `fg.utils.get_rotpole` now accept more general inputs. (:pull:`308`).
+
+.. _changes_0.4.0:
+
+`v0.4.0 <https://github.com/Ouranosinc/figanos/tree/0.4.0>`_ (2025-03-10)
+-------------------------------------------------------------------------
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -12,13 +31,16 @@ New features and enhancements
 * `figanos` now supports Python 3.12. (:pull:`210`).
 * Use list or ndarray as levels for colorbar in gridmap and small bug fixes (:pull:`176`).
 * Added style sheet ``transparent.mplstyle`` (:issue:`183`, :pull:`185`)
-* Fix ``NaN`` issues, extreme values in sizes legend and added edgecolors in ``fg.matplotlib.scattermap``  (:pull:`184`).
+* Fix ``NaN`` issues, extreme values in sizes legend and added ``edgecolors`` in ``fg.matplotlib.scattermap``  (:pull:`184`).
 * New function ``fg.data`` for fetching package data and defined `matplotlib` style definitions. (:pull:`211`).
 * New argument ``enumerate_subplots`` for `gridmap`, `timeseries`, `hatchmap` and `scattermap`(:pull:`220`).
 * ``fg.taylordiagram`` can now accept datasets with many dimensions (not only `taylor_params`), provided that they all share the same `ref_std` (e.g. normalized taylor diagrams)  (:pull:`214`).
 * A new optional way to organize points in a ``fg.taylordiagram``  with  `colors_key`, `markers_key`  : DataArrays with a common dimension value or a common attribute are grouped with the same color/marker (:pull:`214`).
 * Heatmap (``fg.matplotlib.heatmap``) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:issue:`208`, :pull:`219`).
 * New function ``fg.matplotlib.triheatmap`` (:pull:`199`).
+* Reorganized the documentation and add gallery (:issue:`278`, :issue:`274`, :issue:`202`, :pull:`279`).
+* Added a new `pooch`-based mechanism for fetching and caching testing data used in the notebooks (``fg.pitou().fetch()``). (:pull:`279`).
+* No-legend option in ``hatchmap``; use ``edgecolor`` and ``edgecolors`` as aliases (:pull:`195`)
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
@@ -48,13 +70,27 @@ Internal changes
     * `flake8-alphabetize` has been replaced with `ruff` for some linting checks.
 * Updated the notebook coding conventions to adapt to changes in `xclim-testdata`. (:pull:`246`).
 * Workflows now make better use of caching to speed up the CI testing process. (:pull:`262`).
+* Updated the `cookiecutter` template to the latest version. (:pull:`273`):
+    * Several development dependencies have been updated to their latest versions.
+    * Updated the GitHub Actions in Workflows to their latest versions.
+* The documentation has been adapted to use the latest testing data fetching mechanism from `xclim`. (:pull:`273`).
+* Updated the `cookiecutter` template to the latest version. Dependencies and GitHub Actions have been updated. (:pull:`282`).
+* The `bump-version.yml` GitHub Workflow has been updated to use the Ouranos Helper Bot instead of personal access tokens. (:pull:`287`).
+* Updated the `cookiecutter` template to the latest version. (:pull:`295`):
+    * Added a CodeQL Advanced configuration.
+    * Updated versions of many GitHub Actions and Python dependencies.
+    * Removed `coveralls` from the CI dependencies.
+    * Added `pre-commit` hooks for `vulture` (dead code) and `codespell` (typos).
 
 Bug fixes
 ^^^^^^^^^
 * Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`238`, :issue:`239`).
+* Updated the default testing data URL in the `pitou` function to point to the correct branch. (:pull:`282`).
 
-0.3.0 (2024-02-16)
-------------------
+.. _changes_0.3.0:
+
+v0.3.0 (2024-02-16)
+-------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
 
 New features and enhancements
@@ -104,8 +140,10 @@ Bug fixes
 * Fixed an issue with the `divergent` argument getting ignored (:pull:`132`).
 * Some small documentation fixes for working uniquely in a `conda` environment. (:pull:`138`).
 
-0.2.0 (2023-06-19)
-------------------
+.. _changes_0.2.0:
+
+v0.2.0 (2023-06-19)
+-------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
@@ -128,8 +166,10 @@ Internal changes
     * Automated testing with `tox` now updated to use v4.0+ conventions.
     * Removed all references to `travis.ci`.
 
-0.1.0 (2023-06-08)
-------------------
+.. _changes_0.1.0:
+
+v0.1.0 (2023-06-08)
+-------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Alexis Beaupré-Laperrière (:user:`Beauprel`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 * First release on PyPI.

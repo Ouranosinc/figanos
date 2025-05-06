@@ -3,12 +3,12 @@ default_language_version:
 
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.17.0
+    rev: v3.19.1
     hooks:
       - id: pyupgrade
         args: [ '--py39-plus' ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -21,67 +21,97 @@ repos:
       - id: check-yaml
         args: [ '--allow-multiple-documents' ]
   - repo: https://github.com/pappasam/toml-sort
-    rev: v0.23.1
+    rev: v0.24.2
     hooks:
       - id: toml-sort-fix
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.0
+    hooks:
+      - id: yamllint
+        args: [ '--config-file=.yamllint.yaml' ]
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
       - id: python-check-blanket-noqa
+      - id: python-check-blanket-type-ignore
       - id: python-no-eval
       - id: python-no-log-warn
       - id: python-use-type-annotations
+      - id: rst-directive-colons
       - id: rst-inline-touching-normal
+      - id: text-unicode-replacement-char
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.8.0
+    rev: 25.1.0
     hooks:
       - id: black
         exclude: ^docs/
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         args: [ '--profile=black', '--filter-files', "--add_imports='from __future__ import annotations'" ]
         exclude: ^docs/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.7
+    rev: v0.11.4
     hooks:
       - id: ruff
         args: [ '--fix' ]
-      # - id: ruff-format
+      - id: ruff-format
+        exclude: ^src/figanos
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.2.0
     hooks:
       - id: flake8
         additional_dependencies: [ 'flake8-rst-docstrings' ]
         args: [ '--config=.flake8' ]
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.14
+    hooks:
+      - id: vulture
+#  - repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: v1.14.1
+#    hooks:
+#      - id: mypy
   - repo: https://github.com/keewis/blackdoc
     rev: v0.3.9
     hooks:
       - id: blackdoc
-        additional_dependencies: [ 'black==24.8.0' ]
+        additional_dependencies: [ 'black==25.1.0' ]
       - id: blackdoc-autoupdate-black
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies: [ 'tomli' ]
+        args: [ '--toml=pyproject.toml' ]
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.7.1
+    rev: 0.8.1
     hooks:
       - id: nbstripout
         files: '.ipynb'
-        args: [ '--extra-keys=metadata.kernelspec' ]
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
-    hooks:
-      - id: yamllint
-        args: [ '--config-file=.yamllint.yaml' ]
+        args: [
+          '--extra-keys="metadata.kernelspec"',
+          '--keep-metadata-keys="cell.metadata.nbsphinx"'
+        ]
   - repo: https://github.com/numpy/numpydoc
     rev: v1.8.0
     hooks:
       - id: numpydoc-validation
         exclude: ^docs/|^tests/
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.29.1
+    rev: 0.32.1
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.5.2
+    hooks:
+      - id: zizmor
+        args: [ '--config=.zizmor.yml' ]
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
   - repo: meta
     hooks:
       - id: check-hooks-apply

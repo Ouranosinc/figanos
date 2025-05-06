@@ -7,9 +7,9 @@ figanos
 +----------------------------+-----------------------------------------------------+
 | Documentation and Support  | |docs|                                              |
 +----------------------------+-----------------------------------------------------+
-| Open Source                | |license| |ossf|                                    |
+| Open Source                | |license| |ossf-score|                              |
 +----------------------------+-----------------------------------------------------+
-| Coding Standards           | |black| |ruff| |pre-commit|                         |
+| Coding Standards           | |black| |isort| |ruff| |ossf-bp| |pre-commit|       |
 +----------------------------+-----------------------------------------------------+
 | Development Status         | |status| |build| |coveralls|                        |
 +----------------------------+-----------------------------------------------------+
@@ -57,11 +57,19 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
         :target: https://figanos.readthedocs.io/en/latest/
         :alt: Documentation Status
 
+.. |isort| image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
+        :target: https://pycqa.github.io/isort/
+        :alt: Isort
+
 .. |license| image:: https://img.shields.io/pypi/l/figanos
         :target: https://github.com/Ouranosinc/figanos/blob/main/LICENSE
         :alt: License
 
-.. |ossf| image:: https://api.securityscorecards.dev/projects/github.com/Ouranosinc/figanos/badge
+.. |ossf-bp| image:: https://bestpractices.coreinfrastructure.org/projects/9945/badge
+        :target: https://bestpractices.coreinfrastructure.org/projects/9945
+        :alt: Open Source Security Foundation Best Practices
+
+.. |ossf-score| image:: https://api.securityscorecards.dev/projects/github.com/Ouranosinc/figanos/badge
         :target: https://securityscorecards.dev/viewer/?uri=github.com/Ouranosinc/figanos
         :alt: OpenSSF Scorecard
 
