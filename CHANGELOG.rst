@@ -24,8 +24,8 @@ Contributors: Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:use
 
 Changes
 ^^^^^^^
-* `figanos` now supports Python 3.13 and has dropped support for Python 3.9. (:pull:`322`).
-* Several base dependencies have been updated to more modern versions. (:pull:`322`):
+* `figanos` now supports Python 3.13 and has dropped support for Python 3.9 (:pull:`322`).
+* Several base dependencies have been updated to more modern versions (:pull:`322`):
   * `numpy` has been updated to `>=1.25.0` (no longer pinned below `2.0.0`).
   * `pint` has been updated to `>=0.18.0`.
   * `scikit-image` has been updated to `>=0.21.0`.
@@ -33,7 +33,7 @@ Changes
 
 Fixes
 ^^^^^
-* `fg.utils.get_rotpole` now accept more general inputs. (:pull:`308`).
+* The `fg.utils.get_rotpole` function now accepts more general inputs (:pull:`308`).
 
 .. _changes_0.4.0:
 
