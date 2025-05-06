@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  # Don't forget to sync changes between environment.yml and pyproject.toml!
   - python>=3.10,<3.14
   # Main
   - cartopy >=0.23.0
@@ -38,12 +39,15 @@ dependencies:
   - watchdog >=4.0.0
   # Notebooks
   - dask
-  - geoviews
   - h5py
-  - holoviews
   - netcdf4
   - pooch >=1.8.0  # for xclim-testdata
   - zarr >=2.13.0
+  # Interactive figures
+  - hvplot
+  - holoviews
+  - geoviews
+  - bokeh
   # Docs
   - ipykernel
   - ipython >=8.5.0, !=9.0.0
