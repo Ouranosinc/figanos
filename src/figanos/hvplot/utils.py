@@ -44,7 +44,7 @@ def get_hv_styles() -> dict[str, str]:
     return {str(name): path for name, path in zip(names, paths)}
 
 
-def set_hv_style(*args: Union[str, dict]) -> None:
+def set_hv_style(*args: str | dict) -> None:
     """Set the holoviews bokeh style using a yaml file or a dict.
 
     Parameters
@@ -377,9 +377,9 @@ def x_timeseries(data, plot_kw) -> None:
 
 def set_plot_attrs_hv(
     use_attrs: dict[str, Any],
-    xr_obj: Union[xr.DataArray, xr.Dataset],
+    xr_obj: xr.DataArray | xr.Dataset,
     plot_kw: dict[str, Any],
-    wrap_kw: Union[dict[str, Any], None] = None,
+    wrap_kw: dict[str, Any] | None = None,
 ) -> [dict, dict]:
     """Set plot attributes with the last plot_kw entry based on use_attr."""
     # set default use_attrs values
@@ -522,9 +522,9 @@ def plot_coords_hook(plot, element, text, loc, bgc) -> None:
 
 
 def plot_coords(
-    xr_obj: Union[xr.DataArray, xr.Dataset],
-    loc: Union[str, tuple[float, float], int],
-    param: Union[str, None] = None,
+    xr_obj: xr.DataArray | xr.Dataset,
+    loc: str | tuple[float, float] | int,
+    param: str | None = None,
     backgroundalpha: float = 1,
 ) -> hv.Text:
     """Plot the coordinates of an xarray object.
