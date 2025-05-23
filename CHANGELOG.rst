@@ -6,7 +6,7 @@ Changelog
     `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
     --------------------------------------------------------------
 
-    Contributors:
+    Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
 
     Changes
     ^^^^^^^
@@ -14,7 +14,7 @@ Changelog
 
     Fixes
     ^^^^^
-    * No change.
+    * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC ()
 
 .. _changes_0.5.0:
 

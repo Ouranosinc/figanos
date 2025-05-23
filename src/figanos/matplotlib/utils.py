@@ -1090,6 +1090,7 @@ def get_scen_color(name: str, path_to_dict: str | pathlib.Path) -> str:
     for entry in color_dict:
         if entry in name:
             color = color_dict[entry]
+            color = tuple([i/255 for i in color])
             break
 
     return color
