@@ -14,7 +14,7 @@ Changelog
 
     Fixes
     ^^^^^
-    * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC ()
+    * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`).
 
 .. _changes_0.5.0:
 
