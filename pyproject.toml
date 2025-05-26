@@ -47,7 +47,7 @@ dependencies = [
   "scikit-image >=0.21.0",
   "xarray >=2023.11.0",
   "xclim >=0.52.2",
-  "xsdba",
+  "xsdba"
 ]
 
 [project.optional-dependencies]
