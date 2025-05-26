@@ -55,7 +55,7 @@ dependencies:
   - sphinx-codeautolink
   - sphinx-copybutton
   - sphinx-intl
-  
+
   #notebooks (pip)
   - pip:
       - xsdba
