@@ -18,6 +18,7 @@ dependencies:
   - scikit-image >=0.21.0
   - xarray >=2023.11.0
   - xclim >=0.52.2
+  - xsdba
   # Development
   - pip >=25.1
   - black ==25.1.0
