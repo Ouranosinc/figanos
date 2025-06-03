@@ -6,15 +6,16 @@ Changelog
     `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
     --------------------------------------------------------------
 
-    Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`)
+    Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user: `juliettelavoie`)
 
     Changes
     ^^^^^^^
-    * No change.
+    * Add possibility to trace the boundary of ``gdfmap`` (:pull:``).
 
     Fixes
     ^^^^^
     * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
+    * Fix cbar argument of ``gdfmap`` (:pull:``, :issue:`332`)
 
 .. _changes_0.5.0:
 
