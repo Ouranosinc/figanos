@@ -10,12 +10,12 @@ Changelog
 
     Changes
     ^^^^^^^
-    * Add possibility to trace the boundary of ``gdfmap`` (:pull:``).
+    * Add possibility to trace the boundary of ``gdfmap`` (:pull:`332`).
 
     Fixes
     ^^^^^
     * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
-    * Fix cbar argument of ``gdfmap`` (:pull:``, :issue:`332`)
+    * Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
 
 .. _changes_0.5.0:
 
