@@ -2,7 +2,6 @@
 Changelog
 =========
 
-..
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
 
