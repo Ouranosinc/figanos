@@ -6,7 +6,7 @@ Changelog
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
 
-Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user: `juliettelavoie`)
+Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`)
 
 Changes
 ^^^^^^^
