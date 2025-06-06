@@ -878,6 +878,7 @@ def gdfmap(
         Dataframe containing the geometries and the data to plot. Must have a column named 'geometry'.
     df_col : str
         Name of the column of 'df' containing the data to plot using the colorscale.
+        If `boundary`, only the boundary of the geometries is plotted, without colorscale.
     ax : cartopy.mpl.geoaxes.GeoAxes or cartopy.mpl.geoaxes.GeoaxesSubplot, optional
         Matplotlib axis built with a projection, on which to plot.
     fig_kw : dict, optional
@@ -934,53 +935,60 @@ def gdfmap(
     if features:
         add_cartopy_features(ax, features)
 
-    # colormap
-    if isinstance(cmap, str):
-        if cmap in plt.colormaps():
-            cmap = matplotlib.colormaps[cmap]
-        else:
-            try:
-                cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
-                warnings.warn("invalid cmap, using default")
-                cmap = create_cmap(filename="slev_seq")
+    if df_col == "boundary":
+        plot = df.boundary.plot(ax=ax, **plot_kw)
+        if cmap is not None or levels is not None or divergent is not False:
+            warnings.warn("Colomap arguments are ignored when plotting 'boundary'.")
+    else:
 
-    elif cmap is None:
-        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
-        cmap = create_cmap(
-            get_var_group(unique_str=df_col, path_to_json=cdata),
-            divergent=divergent,
-        )
+        # colormap
+        if isinstance(cmap, str):
+            if cmap in plt.colormaps():
+                cmap = matplotlib.colormaps[cmap]
+            else:
+                try:
+                    cmap = create_cmap(filename=cmap)
+                except FileNotFoundError:
+                    warnings.warn("invalid cmap, using default")
+                    cmap = create_cmap(filename="slev_seq")
 
-    # create normalization for colormap
-    plot_kw.setdefault("vmin", df[df_col].min())
-    plot_kw.setdefault("vmax", df[df_col].max())
+        elif cmap is None:
+            cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+            cmap = create_cmap(
+                get_var_group(unique_str=df_col, path_to_json=cdata),
+                divergent=divergent,
+            )
 
-    if (levels is not None) or (divergent is not False):
-        norm = custom_cmap_norm(
-            cmap,
-            plot_kw["vmin"],
-            plot_kw["vmax"],
-            levels=levels,
-            divergent=divergent,
-        )
-        plot_kw.setdefault("norm", norm)
+        # create normalization for colormap
+        plot_kw.setdefault("vmin", df[df_col].min())
+        plot_kw.setdefault("vmax", df[df_col].max())
 
-    # colorbar
-    if cbar:
-        plot_kw.setdefault("legend", True)
-        plot_kw.setdefault("legend_kwds", {})
-        plot_kw["legend_kwds"].setdefault("label", df_col)
-        plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
-        plot_kw["legend_kwds"].setdefault("pad", 0.02)
+        if (levels is not None) or (divergent is not False):
+            norm = custom_cmap_norm(
+                cmap,
+                plot_kw["vmin"],
+                plot_kw["vmax"],
+                levels=levels,
+                divergent=divergent,
+            )
+            plot_kw.setdefault("norm", norm)
 
-    # plot
-    plot = df.plot(column=df_col, ax=ax, cmap=cmap, **plot_kw)
+        # colorbar
+        if cbar:
+            plot_kw.setdefault("legend", True)
+            plot_kw.setdefault("legend_kwds", {})
+            plot_kw["legend_kwds"].setdefault("label", df_col)
+            plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
+            plot_kw["legend_kwds"].setdefault("pad", 0.02)
+
+        # plot
+        plot = df.plot(column=df_col, ax=ax, cmap=cmap, **plot_kw)
 
     if frame is False:
         # cbar
-        plot.figure.axes[1].spines["outline"].set_visible(False)
-        plot.figure.axes[1].tick_params(size=0)
+        if len(plot.figure.axes) > 1:  # only if it exists
+            plot.figure.axes[1].spines["outline"].set_visible(False)
+            plot.figure.axes[1].tick_params(size=0)
         # main axes
         ax.spines["geo"].set_visible(False)
 
