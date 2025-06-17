@@ -33,6 +33,20 @@ Features
 * heatmap(): Create seaborn heatmaps with extra options.
 * taylordiagram(): Create Taylor diagram.
 
+Quick Install
+-------------
+`figanos` can be installed from PyPI:
+
+.. code-block:: shell
+
+    $ pip install figanos
+
+or from Anaconda (conda-forge):
+
+.. code-block:: shell
+
+    $ conda install -c conda-forge figanos
+
 Credits
 -------
 

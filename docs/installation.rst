@@ -25,8 +25,13 @@ To install `figanos`, run these commands in your terminal:
 
 .. code-block:: console
 
-    mamba install -c conda-forge gdal
     python -m pip install figanos
+
+or if you prefer using `conda`:
+
+.. code-block:: console
+
+    conda install -c conda-forge figanos
 
 Development Installation (conda + pip)
 --------------------------------------
