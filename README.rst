@@ -3,9 +3,9 @@ figanos
 =======
 
 +----------------------------+-----------------------------------------------------+
-| Versions                   | |pypi| |versions|                                   |
+| Versions                   | |pypi| |conda|                                      |
 +----------------------------+-----------------------------------------------------+
-| Documentation and Support  | |docs|                                              |
+| Documentation and Support  | |docs| |versions|                                   |
 +----------------------------+-----------------------------------------------------+
 | Open Source                | |license| |ossf-score|                              |
 +----------------------------+-----------------------------------------------------+
@@ -48,6 +48,10 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
 .. |build| image:: https://github.com/Ouranosinc/figanos/actions/workflows/main.yml/badge.svg
         :target: https://github.com/Ouranosinc/figanos/actions
         :alt: Build Status
+
+.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/figanos.svg
+        :target: https://anaconda.org/conda-forge/figanos
+        :alt: Conda-forge Build Version
 
 .. |coveralls| image:: https://coveralls.io/repos/github/Ouranosinc/figanos/badge.svg
         :target: https://coveralls.io/github/Ouranosinc/figanos
