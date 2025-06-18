@@ -35,17 +35,19 @@ Features
 
 Quick Install
 -------------
-`figanos` can be installed from PyPI:
 
-.. code-block:: shell
-
-    $ pip install figanos
-
-or from Anaconda (conda-forge):
+`figanos` requires GDAL, which can be a bit tricky depending on your operating system.
+We recommend using `conda` to manage your Python environment and dependencies, as it simplifies the installation process for these packages.
 
 .. code-block:: shell
 
     $ conda install -c conda-forge figanos
+
+or if you prefer using `pip` with a system-provided `gdal`, you can install `figanos` from PyPI:
+
+.. code-block:: shell
+
+    $ python -m pip install figanos
 
 Credits
 -------
