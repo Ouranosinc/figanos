@@ -21,11 +21,17 @@ If you don't have `pip`_ installed, this `Python installation guide`_ can guide 
 Official Source
 ---------------
 
-To install `figanos`, run these commands in your terminal:
+`figanos` requires GDAL, which can be a bit tricky depending on your operating system.
+We recommend using `conda` to manage your Python environment and dependencies, as it simplifies the installation process for these packages.
 
 .. code-block:: console
 
-    mamba install -c conda-forge gdal
+    conda install -c conda-forge figanos
+
+or if you prefer using `pip` with a system-provided `gdal`, you can install `figanos` from PyPI:
+
+.. code-block:: console
+
     python -m pip install figanos
 
 Development Installation (conda + pip)

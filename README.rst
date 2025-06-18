@@ -3,9 +3,9 @@ figanos
 =======
 
 +----------------------------+-----------------------------------------------------+
-| Versions                   | |pypi| |versions|                                   |
+| Versions                   | |pypi| |conda|                                      |
 +----------------------------+-----------------------------------------------------+
-| Documentation and Support  | |docs|                                              |
+| Documentation and Support  | |docs| |versions|                                   |
 +----------------------------+-----------------------------------------------------+
 | Open Source                | |license| |ossf-score|                              |
 +----------------------------+-----------------------------------------------------+
@@ -33,6 +33,22 @@ Features
 * heatmap(): Create seaborn heatmaps with extra options.
 * taylordiagram(): Create Taylor diagram.
 
+Quick Install
+-------------
+
+`figanos` requires GDAL, which can be a bit tricky depending on your operating system.
+We recommend using `conda` to manage your Python environment and dependencies, as it simplifies the installation process for these packages.
+
+.. code-block:: shell
+
+    $ conda install -c conda-forge figanos
+
+or if you prefer using `pip` with a system-provided `gdal`, you can install `figanos` from PyPI:
+
+.. code-block:: shell
+
+    $ python -m pip install figanos
+
 Credits
 -------
 
@@ -48,6 +64,10 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
 .. |build| image:: https://github.com/Ouranosinc/figanos/actions/workflows/main.yml/badge.svg
         :target: https://github.com/Ouranosinc/figanos/actions
         :alt: Build Status
+
+.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/figanos.svg
+        :target: https://anaconda.org/conda-forge/figanos
+        :alt: Conda-forge Build Version
 
 .. |coveralls| image:: https://coveralls.io/repos/github/Ouranosinc/figanos/badge.svg
         :target: https://coveralls.io/github/Ouranosinc/figanos
