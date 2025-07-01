@@ -276,7 +276,8 @@ def set_plot_attrs(
 
     if "title" in attr_dict:
         title = get_attributes(attr_dict["title"], xr_obj)
-        ax.set_title(wrap_text(title, **wrap_kw), loc=title_loc)
+        if title:
+            ax.set_title(wrap_text(title, **wrap_kw), loc=title_loc)
 
     if "ylabel" in attr_dict:
         if (
