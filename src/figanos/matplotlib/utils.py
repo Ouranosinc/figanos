@@ -274,10 +274,9 @@ def set_plot_attrs(
         ]:
             warnings.warn(f'Use_attrs element "{key}" not supported')
 
-    if "title" in attr_dict:
+    if "title" in attr_dict and attr_dict["title"] is not None:
         title = get_attributes(attr_dict["title"], xr_obj)
-        if title:
-            ax.set_title(wrap_text(title, **wrap_kw), loc=title_loc)
+        ax.set_title(wrap_text(title, **wrap_kw), loc=title_loc)
 
     if "ylabel" in attr_dict:
         if (
