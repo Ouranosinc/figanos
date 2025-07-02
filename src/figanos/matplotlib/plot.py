@@ -715,10 +715,12 @@ def gridmap(
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
+        vmin = plot_kw.pop("vmin", np.nanmin(plot_data.values))
+        vmax = plot_kw.pop("vmax", np.nanmax(plot_data.values))
         norm = custom_cmap_norm(
             cmap,
-            np.nanmin(plot_data.values),
-            np.nanmax(plot_data.values),
+            vmin,
+            vmax,
             levels=levels,
             divergent=divergent,
         )
@@ -765,6 +767,7 @@ def gridmap(
         plot_kw.setdefault("transform", transform)
 
     if contourf is False:
+        print(plot_kw)
         im = plot_data.plot.pcolormesh(**plot_kw)
     else:
         im = plot_data.plot.contourf(**plot_kw)
@@ -1806,10 +1809,12 @@ def scattermap(
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
+        vmin = plot_kw.pop("vmin", np.nanmin(plot_data.values[mask]))
+        vmax = plot_kw.pop("vmax", np.nanmax(plot_data.values[mask]))
         norm = custom_cmap_norm(
             cmap,
-            np.nanmin(plot_data.values[mask]),
-            np.nanmax(plot_data.values[mask]),
+            vmin,
+            vmax,
             levels=levels,
             divergent=divergent,
         )
