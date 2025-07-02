@@ -767,7 +767,6 @@ def gridmap(
         plot_kw.setdefault("transform", transform)
 
     if contourf is False:
-        print(plot_kw)
         im = plot_data.plot.pcolormesh(**plot_kw)
     else:
         im = plot_data.plot.contourf(**plot_kw)
