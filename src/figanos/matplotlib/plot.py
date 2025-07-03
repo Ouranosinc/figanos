@@ -1853,7 +1853,7 @@ def scattermap(
         plot_kw.setdefault("edgecolors", "none")
 
     for key in ["vmin", "vmax"]:
-        plot_kw.pop(key)
+        plot_kw.pop(key, None)
     # plot
     plot_kw = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw
     if ax:
