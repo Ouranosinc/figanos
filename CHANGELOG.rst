@@ -15,6 +15,7 @@ Fixes
 ^^^^^
 * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
 * Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
+* Allow vmin and vmax to be used with divergent (:pull:`342`).
 
 .. _changes_0.5.0:
 

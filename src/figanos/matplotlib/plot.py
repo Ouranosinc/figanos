@@ -715,10 +715,12 @@ def gridmap(
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
+        vmin = plot_kw.pop("vmin", np.nanmin(plot_data.values))
+        vmax = plot_kw.pop("vmax", np.nanmax(plot_data.values))
         norm = custom_cmap_norm(
             cmap,
-            np.nanmin(plot_data.values),
-            np.nanmax(plot_data.values),
+            vmin,
+            vmax,
             levels=levels,
             divergent=divergent,
         )
@@ -1806,10 +1808,12 @@ def scattermap(
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
+        vmin = plot_kw.pop("vmin", np.nanmin(plot_data.values[mask]))
+        vmax = plot_kw.pop("vmax", np.nanmax(plot_data.values[mask]))
         norm = custom_cmap_norm(
             cmap,
-            np.nanmin(plot_data.values[mask]),
-            np.nanmax(plot_data.values[mask]),
+            vmin,
+            vmax,
             levels=levels,
             divergent=divergent,
         )
@@ -1849,7 +1853,7 @@ def scattermap(
         plot_kw.setdefault("edgecolors", "none")
 
     for key in ["vmin", "vmax"]:
-        plot_kw.pop(key)
+        plot_kw.pop(key, None)
     # plot
     plot_kw = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw
     if ax:
