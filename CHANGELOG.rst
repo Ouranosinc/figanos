@@ -16,6 +16,7 @@ Fixes
 * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
 * Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
 * Allow vmin and vmax to be used with divergent (:pull:`342`).
+* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with xarray v2025.9.0 (:pull:`360`, :issue:`358`).
 
 .. _changes_0.5.0:
 

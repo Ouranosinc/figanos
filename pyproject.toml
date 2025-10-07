@@ -53,8 +53,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   # Dev tools and testing
-  "black ==25.1.0",
-  "blackdoc ==0.4.1",
+  "black ==25.9.0",
+  "blackdoc ==0.4.3",
   "bump-my-version >=1.0.0",
   "coverage >=7.5.0",
   "flake8 >=7.1.1",
@@ -112,7 +112,7 @@ target-version = [
 ]
 
 [tool.bumpversion]
-current_version = "0.5.1-dev.2"
+current_version = "0.5.1-dev.3"
 commit = true
 commit_args = "--no-verify"
 tag = false
