@@ -53,7 +53,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   # Dev tools and testing
-  "black ==25.1.0",
+  "black ==25.9.0",
   "blackdoc ==0.4.3",
   "bump-my-version >=1.0.0",
   "coverage >=7.5.0",
