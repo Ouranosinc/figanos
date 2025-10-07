@@ -2594,13 +2594,16 @@ def hatchmap(
             if not ax:
                 if k == list(plot_data.keys())[0]:
                     c_pkw = plot_kw[k].copy()
-                    if "col" in plot_kw[k].keys() or "row" in plot_kw[k].keys() :
+                    if "col" in plot_kw[k].keys() or "row" in plot_kw[k].keys():
                         if c_pkw["colors"] == "none":
                             c_pkw.pop("colors")
                         im = v.plot.contourf(**c_pkw)
 
                 for i, fax in enumerate(im.axs.flat):
-                    if k == list(plot_data.keys())[0] and plot_kw[k]["colors"] == "none":
+                    if (
+                        k == list(plot_data.keys())[0]
+                        and plot_kw[k]["colors"] == "none"
+                    ):
                         fax.clear()
                     if len(plot_data) > 1:
                         # select data to plot from DataSet in loop to plot on facetgrids axis
@@ -2614,7 +2617,7 @@ def hatchmap(
                             sel[c_pkw["col"]] = i
                             c_pkw.pop("col")
                         v.isel(sel).plot.contourf(ax=fax, **c_pkw)
-                    
+
                     if k == list(plot_data.keys())[-1]:
                         add_features_map(
                             dattrs,
