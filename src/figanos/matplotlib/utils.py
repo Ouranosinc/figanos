@@ -1,7 +1,6 @@
 """Utility functions for figanos figure-creation."""
 
 from __future__ import annotations
-
 import json
 import math
 import pathlib
@@ -32,6 +31,7 @@ from xclim.core.options import OPTIONS as XC_OPTIONS
 
 from .._logo import Logos
 
+
 TERMS: dict = {}
 """
 A translation directory for special terms to appear on the plots.
@@ -47,7 +47,8 @@ with (pathlib.Path(__file__).resolve().parents[1] / "data" / "terms.yml").open()
 
 
 def get_localized_term(term, locale=None):
-    """Get `term` translated into `locale`.
+    """
+    Get `term` translated into `locale`.
 
     Terms are pulled from the :py:data:`TERMS` dictionary.
 
@@ -89,7 +90,8 @@ def empty_dict(param) -> dict:
 def check_timeindex(
     xr_objs: xr.DataArray | xr.Dataset | dict[str, Any],
 ) -> xr.DataArray | xr.Dataset | dict[str, Any]:
-    """Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
+    """
+    Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
 
     Parameters
     ----------
@@ -128,7 +130,8 @@ def check_timeindex(
 
 
 def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
-    """Get an array category, which determines how to plot the array.
+    """
+    Get an array category, which determines how to plot the array.
 
     Parameters
     ----------
@@ -185,7 +188,8 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
 def get_attributes(
     string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str | None = None
 ) -> str:
-    """Fetch attributes or dims corresponding to keys from Xarray objects.
+    """
+    Fetch attributes or dims corresponding to keys from Xarray objects.
 
     Searches DataArray attributes first, then the first variable (DataArray) of the Dataset, then Dataset attributes.
     If a locale is activated in xclim's options or a locale is passed, a localized version is given if available.
@@ -237,7 +241,8 @@ def set_plot_attrs(
     facetgrid: seaborn.axisgrid.FacetGrid | None = None,
     wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Set plot elements according to Dataset or DataArray attributes.
+    """
+    Set plot elements according to Dataset or DataArray attributes.
 
     Uses get_attributes() to check for and get the string.
 
@@ -338,7 +343,8 @@ def get_suffix(string: str) -> str:
 
 
 def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
-    """Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
+    """
+    Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
 
     Parameters
     ----------
@@ -380,7 +386,8 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 def loc_mpl(
     loc: str | tuple[int | float, int | float] | int,
 ) -> tuple[tuple[float, float], tuple[int | float, int | float], str, str]:
-    """Find coordinates and alignment associated to loc string.
+    """
+    Find coordinates and alignment associated to loc string.
 
     Parameters
     ----------
@@ -491,7 +498,8 @@ def plot_coords(
     param: str | None = None,
     backgroundalpha: float = 1,
 ) -> matplotlib.axes.Axes:
-    """Place coordinates on plot area.
+    """
+    Place coordinates on plot area.
 
     Parameters
     ----------
@@ -602,7 +610,8 @@ def load_image(
     width: float | None,
     keep_ratio: bool = True,
 ) -> np.ndarray:
-    """Scale an image to a specified height and width.
+    """
+    Scale an image to a specified height and width.
 
     Parameters
     ----------
@@ -672,7 +681,8 @@ def plot_logo(
     keep_ratio: bool = True,
     **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
-    r"""Place logo of plot area.
+    r"""
+    Place logo of plot area.
 
     Parameters
     ----------
@@ -730,7 +740,8 @@ def split_legend(
     label_gap: float = 0.02,
 ) -> matplotlib.axes.Axes:
     #  TODO: check for and fix overlapping labels
-    """Draw line labels at the end of each line, or outside the plot.
+    """
+    Draw line labels at the end of each line, or outside the plot.
 
     Parameters
     ----------
@@ -759,7 +770,7 @@ def split_legend(
     # get legend and plot
 
     handles, labels = ax.get_legend_handles_labels()
-    for handle, label in zip(handles, labels):
+    for handle, label in zip(handles, labels, strict=False):
         last_x = handle.get_xdata()[-1]
         last_y = handle.get_ydata()[-1]
 
@@ -799,7 +810,8 @@ def fill_between_label(
     array_categ: dict[str, Any],
     legend: str,
 ) -> str:
-    """Create a label for the shading around a line in line plots.
+    """
+    Create a label for the shading around a line in line plots.
 
     Parameters
     ----------
@@ -840,7 +852,8 @@ def get_var_group(
     da: xr.DataArray | None = None,
     unique_str: str | None = None,
 ) -> str:
-    """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
+    """
+    Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
 
     If `da` is a Dataset, look in the DataArray of the first variable.
     """
@@ -894,7 +907,8 @@ def create_cmap(
     divergent: bool | int = False,
     filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
-    """Create colormap according to variable group.
+    """
+    Create colormap according to variable group.
 
     Parameters
     ----------
@@ -957,7 +971,8 @@ def create_cmap(
 
 
 def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
-    """Create a Cartopy crs rotated pole projection/transform from DataArray or Dataset attributes.
+    """
+    Create a Cartopy crs rotated pole projection/transform from DataArray or Dataset attributes.
 
     Parameters
     ----------
@@ -996,7 +1011,8 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
 
 
 def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
-    """Wrap text.
+    """
+    Wrap text.
 
     Parameters
     ----------
@@ -1039,7 +1055,8 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
 
 
 def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
-    """Open shapefile with geopandas and convert to cartopy projection.
+    """
+    Open shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
@@ -1124,7 +1141,8 @@ def get_mpl_styles() -> dict[str, pathlib.Path]:
 
 
 def set_mpl_style(*args: str, reset: bool = False) -> None:
-    """Set the matplotlib style using one or more stylesheets.
+    """
+    Set the matplotlib style using one or more stylesheets.
 
     Parameters
     ----------
@@ -1151,7 +1169,8 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
 def add_cartopy_features(
     ax: matplotlib.axes.Axes, features: list[str] | dict[str, dict[str, Any]]
 ) -> matplotlib.axes.Axes:
-    """Add cartopy features to matplotlib axes.
+    """
+    Add cartopy features to matplotlib axes.
 
     Parameters
     ----------
@@ -1189,7 +1208,8 @@ def custom_cmap_norm(
     divergent: bool | int | float = False,
     linspace_out: bool = False,
 ) -> matplotlib.colors.Normalize | np.ndarray:
-    """Get matplotlib normalization according to main function arguments.
+    """
+    Get matplotlib normalization according to main function arguments.
 
     Parameters
     ----------
@@ -1299,7 +1319,8 @@ def norm2range(
 def size_legend_elements(
     data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
 ) -> list[matplotlib.lines.Line2D]:
-    """Create handles to use in a point-size legend.
+    """
+    Create handles to use in a point-size legend.
 
     Parameters
     ----------
@@ -1353,7 +1374,7 @@ def size_legend_elements(
 
     legend_elements = []
 
-    for s, d in zip(lgd_sizes, lgd_data):
+    for s, d in zip(lgd_sizes, lgd_data, strict=False):
         if isinstance(d, float) and d.is_integer():
             label = str(int(d))
         else:
@@ -1387,7 +1408,8 @@ def add_features_map(
     geometries_kw,
     frame,
 ) -> matplotlib.axes.Axes:
-    """Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
+    """
+    Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
 
     Parameters
     ----------
@@ -1445,7 +1467,8 @@ def add_features_map(
 
 
 def masknan_sizes_key(data, sizes) -> xr.Dataset:
-    """Mask the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
+    """
+    Mask the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
 
     Parameters
     ----------

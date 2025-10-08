@@ -1,6 +1,5 @@
 # noqa: D100
 from __future__ import annotations
-
 import copy
 import logging
 import math
@@ -15,7 +14,6 @@ import cartopy.mpl.geoaxes
 import geopandas as gpd
 import matplotlib
 import matplotlib.axes
-import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import mpl_toolkits.axisartist.grid_finder as gf
@@ -56,6 +54,7 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     wrap_text,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +65,8 @@ def _plot_realizations(
     plot_kw: dict[str, Any],
     non_dict_data: dict[str, Any],
 ) -> matplotlib.axes.Axes:
-    """Plot realizations from a DataArray, inside or outside a Dataset.
+    """
+    Plot realizations from a DataArray, inside or outside a Dataset.
 
     Parameters
     ----------
@@ -117,7 +117,8 @@ def _plot_timeseries(
     array_categ: dict[str, Any],
     legend: str,
 ) -> matplotlib.axes.Axes:
-    """Plot figanos timeseries.
+    """
+    Plot figanos timeseries.
 
     Parameters
     ----------
@@ -271,7 +272,8 @@ def timeseries(
     show_lat_lon: bool | str | int | tuple[float, float] = True,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
+    """
+    Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
     ----------
@@ -545,7 +547,8 @@ def gridmap(
     frame: bool = False,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Create map from 2D data.
+    """
+    Create map from 2D data.
 
     Parameters
     ----------
@@ -872,7 +875,8 @@ def gdfmap(
     cbar: bool = True,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Create a map plot from geometries.
+    """
+    Create a map plot from geometries.
 
     Parameters
     ----------
@@ -1005,7 +1009,8 @@ def violin(
     plot_kw: dict[str, Any] | None = None,
     color: str | int | list[str | int] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Make violin plot using seaborn.
+    """
+    Make violin plot using seaborn.
 
     Parameters
     ----------
@@ -1109,7 +1114,7 @@ def violin(
             except IndexError:
                 raise IndexError("Index out of range of stylesheet colors")
         elif isinstance(color, list):
-            for c, i in zip(color, np.arange(len(color))):
+            for c, i in zip(color, np.arange(len(color)), strict=False):
                 if isinstance(c, int):
                     try:
                         color[i] = style_colors[c]
@@ -1137,7 +1142,8 @@ def stripes(
     cbar: bool = True,
     cbar_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Create stripes plot with or without multiple scenarios.
+    """
+    Create stripes plot with or without multiple scenarios.
 
     Parameters
     ----------
@@ -1296,7 +1302,7 @@ def stripes(
         norm = matplotlib.colors.Normalize(data_min, data_max)
 
     # plot
-    for (name, subax), (key, da) in zip(subaxes.items(), data.items()):
+    for (name, subax), (key, da) in zip(subaxes.items(), data.items(), strict=False):
         subax.bar(da.time.dt.year, height=1, width=dtime, color=cmap(norm(da.values)))
         if divide:
             if key != "_no_label":
@@ -1349,7 +1355,8 @@ def heatmap(
     cmap: str | matplotlib.colors.Colormap | None = "RdBu",
     divergent: bool | int | float = False,
 ) -> matplotlib.axes.Axes:
-    """Create heatmap from a DataArray.
+    """
+    Create heatmap from a DataArray.
 
     Parameters
     ----------
@@ -1570,7 +1577,8 @@ def scattermap(
     frame: bool = False,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Make a scatter plot of georeferenced data on a map.
+    """
+    Make a scatter plot of georeferenced data on a map.
 
     Parameters
     ----------
@@ -1762,7 +1770,7 @@ def scattermap(
         if sizes is True:
             sdata = plot_data
         elif isinstance(sizes, str):
-            if hasattr(data, "name") and getattr(data, "name") == sizes:
+            if hasattr(data, "name") and data.name == sizes:
                 sdata = plot_data
             elif sizes in list(data.coords.keys()):
                 sdata = plot_data[sizes]
@@ -1960,10 +1968,10 @@ def scattermap(
         if "title" not in legend_kw:
             if hasattr(sdata, "long_name"):
                 lgd_title = wrap_text(
-                    getattr(sdata, "long_name"), min_line_len=1, max_line_len=15
+                    sdata.long_name, min_line_len=1, max_line_len=15
                 )
                 if hasattr(sdata, "units"):
-                    lgd_title += f" ({getattr(sdata, 'units')})"
+                    lgd_title += f" ({sdata.units})"
             else:
                 lgd_title = sizes
             legend_kw.setdefault("title", lgd_title)
@@ -2001,7 +2009,8 @@ def taylordiagram(
     colors_key: str | None = None,
     markers_key: str | None = None,
 ):
-    """Build a Taylor diagram.
+    """
+    Build a Taylor diagram.
 
     Based on the following code: https://gist.github.com/ycopin/3342888.
 
@@ -2165,7 +2174,7 @@ def taylordiagram(
     rlocs = np.array([0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1])
     tlocs = np.arccos(rlocs)  # Conversion to polar angles
     gl1 = gf.FixedLocator(tlocs)  # Positions
-    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs))))
+    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs), strict=False)))
     # Standard deviation axis extent
     radius_min = std_range[0] * max(max_std)
     radius_max = std_range[1] * max(max_std)
@@ -2295,7 +2304,7 @@ def taylordiagram(
                 plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # plot scatter
-    for (key, da), i in zip(data.items(), range(len(data))):
+    for (key, da), i in zip(data.items(), range(len(data)), strict=False):
         # look for SSP, RCP, CMIP model color
         if colors_key is None:
             plot_kw[key].setdefault(
@@ -2351,7 +2360,8 @@ def hatchmap(
     frame: bool = False,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Create map of hatches from 2D data.
+    """
+    Create map of hatches from 2D data.
 
     Parameters
     ----------
@@ -2744,7 +2754,8 @@ def partition(
     fig_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Figure of the partition of total uncertainty by components.
+    """
+    Figure of the partition of total uncertainty by components.
 
     Uncertainty fractions can be computed with xclim (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
     Make sure the use `fraction=True` in the xclim function call.
@@ -2878,7 +2889,8 @@ def triheatmap(
     cbar: bool | str = "unique",
     cbar_kw: dict[str, Any] | None | list = None,
 ) -> matplotlib.axes.Axes:
-    """Create a triangle heatmap from a DataArray.
+    """
+    Create a triangle heatmap from a DataArray.
 
     Note that most of the code comes from:
     https://stackoverflow.com/questions/66048529/how-to-create-a-heatmap-where-each-cell-is-divided-into-4-triangles
@@ -3013,7 +3025,7 @@ def triheatmap(
 
         imgs = [
             ax.tripcolor(t, np.ravel(val), **plotkw)
-            for t, val, plotkw in zip(triangul, d, plot_kw)
+            for t, val, plotkw in zip(triangul, d, plot_kw, strict=False)
         ]
 
         ax.set_xticks(np.array(range(m)) + 0.5, labels=labels_x, rotation=45)
@@ -3066,7 +3078,7 @@ def triheatmap(
 
         imgs = [
             ax.tripcolor(t, np.ravel(val), **plotkw)
-            for t, val, plotkw in zip(triangul, d, plot_kw)
+            for t, val, plotkw in zip(triangul, d, plot_kw, strict=False)
         ]
         ax.set_xticks(np.array(range(m)), labels=labels_x, rotation=45)
         ax.set_yticks(np.array(range(n)), labels=labels_y, rotation=90)

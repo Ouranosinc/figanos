@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import logging
 import shutil
 import urllib.parse
@@ -11,6 +10,7 @@ from urllib.error import URLError
 import platformdirs
 import yaml
 
+
 __all__ = ["Logos"]
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,8 @@ _figanos_logo = Path(__file__).parent / "data" / "figanos_logo.png"
 
 
 class Logos:
-    r"""Class for managing logos to be used in graphics.
+    r"""
+    Class for managing logos to be used in graphics.
 
     Methods
     -------
@@ -108,7 +109,8 @@ class Logos:
         return f"{self._default}"
 
     def __getitem__(self, args) -> str | None:
-        """Retrieve a logo filepath by its name.
+        """
+        Retrieve a logo filepath by its name.
 
         If it does not exist, it will be installed, with the filepath returned.
         """
@@ -162,7 +164,8 @@ class Logos:
         return None
 
     def install_ouranos_logos(self, *, permitted: bool = False) -> None:
-        """Fetch and install the Ouranos logo.
+        """
+        Fetch and install the Ouranos logo.
 
         The Ouranos logo is reserved for use by employees and project partners of Ouranos.
 
@@ -204,7 +207,8 @@ class Logos:
 
 
 def audit_url(url: str, context: str | None = None) -> str:
-    """Check if the URL is well-formed.
+    """
+    Check if the URL is well-formed.
 
     Raises
     ------
