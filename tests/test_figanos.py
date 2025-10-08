@@ -6,6 +6,7 @@ from importlib.util import find_spec
 
 import figanos  # noqa: F401
 
+
 # import pytest
 
 
