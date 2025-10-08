@@ -68,7 +68,7 @@ class Logos:
         self.reload_config()
 
         if not self._logos.get("default"):
-            warnings.warn(f"Setting default logo to {_figanos_logo}")
+            warnings.warn(f"Setting default logo to {_figanos_logo}", stacklevel=2)
             self.set_logo(_figanos_logo)
             self.set_logo(_figanos_logo, name="default")
 
@@ -94,7 +94,7 @@ class Logos:
         ):
             if not self.catalogue.exists():
                 warnings.warn(
-                    f"No logo configuration file found. Creating one at {self.catalogue}."
+                    f"No logo configuration file found. Creating one at {self.catalogue}.", stacklevel=2
                 )
             self._config.mkdir(parents=True, exist_ok=True)
             with self.catalogue.open("w", encoding="utf-8") as f:
@@ -128,7 +128,7 @@ class Logos:
         self._logos = yaml.safe_load(self.catalogue.read_text())["logos"]
         for logo_name, logo_path in self._logos.items():
             if not Path(logo_path).exists():
-                warnings.warn(f"Logo file {logo_name} not found at {logo_path}.")
+                warnings.warn(f"Logo file {logo_name} not found at {logo_path}.", stacklevel=2)
             setattr(self, logo_name, logo_path)
 
     def installed(self) -> list:
@@ -158,9 +158,9 @@ class Logos:
                 return str(self._default)
 
         elif not logo_path.exists():
-            warnings.warn(f"Logo file `{logo_path}` not found. Not setting logo.")
+            warnings.warn(f"Logo file `{logo_path}` not found. Not setting logo.", stacklevel=2)
         elif not logo_path.is_file():
-            warnings.warn(f"Logo path `{logo_path}` is a folder. Not setting logo.")
+            warnings.warn(f"Logo path `{logo_path}` is a folder. Not setting logo.", stacklevel=2)
         return None
 
     def install_ouranos_logos(self, *, permitted: bool = False) -> None:
@@ -195,14 +195,14 @@ class Logos:
                 _default_ouranos_logo = (
                     self._config / "logo-ouranos-horizontal-couleur.svg"
                 )
-                warnings.warn(f"Setting default logo to {_default_ouranos_logo}.")
+                warnings.warn(f"Setting default logo to {_default_ouranos_logo}.", stacklevel=2)
                 self.set_logo(_default_ouranos_logo, name="default")
             self.reload_config()
             print(f"Ouranos logos installed at: {self._config}.")
         else:
             warnings.warn(
                 "You have not indicated that you have permission to use the Ouranos logo. "
-                "If you do, please set the `permitted` argument to `True`."
+                "If you do, please set the `permitted` argument to `True`.", stacklevel=2
             )
 
 

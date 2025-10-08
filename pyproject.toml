@@ -328,6 +328,7 @@ extend-select = [
   "RUF022" # unsorted-dunder-all
 ]
 ignore = [
+  "B008", # function-call-in-default-argument  # FIXME: should be fixed ASAP
   "COM", # commas
   "D205", # blank-line-after-summary
   "D400", # ends-in-period
