@@ -9,7 +9,7 @@ figanos
 +----------------------------+-----------------------------------------------------+
 | Open Source                | |license| |ossf-score|                              |
 +----------------------------+-----------------------------------------------------+
-| Coding Standards           | |black| |isort| |ruff| |ossf-bp| |pre-commit|       |
+| Coding Standards           | |ruff| |ossf-bp| |pre-commit|                       |
 +----------------------------+-----------------------------------------------------+
 | Development Status         | |status| |build| |coveralls|                        |
 +----------------------------+-----------------------------------------------------+
@@ -57,10 +57,6 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
 .. _Cookiecutter: https://github.com/cookiecutter/cookiecutter
 .. _`Ouranosinc/cookiecutter-pypackage`: https://github.com/Ouranosinc/cookiecutter-pypackage
 
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-        :target: https://github.com/psf/black
-        :alt: Python Black
-
 .. |build| image:: https://github.com/Ouranosinc/figanos/actions/workflows/main.yml/badge.svg
         :target: https://github.com/Ouranosinc/figanos/actions
         :alt: Build Status
@@ -76,10 +72,6 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
 .. |docs| image:: https://readthedocs.org/projects/figanos/badge/?version=latest
         :target: https://figanos.readthedocs.io/en/latest/
         :alt: Documentation Status
-
-.. |isort| image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
-        :target: https://pycqa.github.io/isort/
-        :alt: Isort
 
 .. |license| image:: https://img.shields.io/pypi/l/figanos
         :target: https://github.com/Ouranosinc/figanos/blob/main/LICENSE

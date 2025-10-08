@@ -99,7 +99,7 @@ Ready to contribute? Here's how to set up ``figanos`` for local development for 
 
     This installs ``figanos`` in an "editable" state, meaning that changes to the code are immediately seen by the environment. To ensure a consistent coding style, `make dev` also installs the ``pre-commit`` hooks to your local clone.
 
-    On commit, ``pre-commit`` will check that ``black``, ``blackdoc``, ``isort``, ``flake8``, and ``ruff`` checks are passing, perform automatic fixes if possible, and warn of violations that require intervention. If your commit fails the checks initially, simply fix the errors, re-add the files, and re-commit.
+    On commit, ``pre-commit`` will check that ``flake8``, and ``ruff`` checks are passing, perform automatic fixes if possible, and warn of violations that require intervention. If your commit fails the checks initially, simply fix the errors, re-add the files, and re-commit.
 
     You can also run the hooks manually with:
 
@@ -212,14 +212,11 @@ For more information on running tests, see the `pytest documentation <https://do
 
 .. code-block:: console
 
-    python -m black --check src/figanos tests
-    python -m isort --check src/figanos tests
-    python -m blackdoc --check src/figanos docs
     python -m ruff check src/figanos tests
     python -m flake8 src/figanos tests
     validate-docstrings src/figanos/**.py
 
-To get ``black``, ``isort``, ``blackdoc``, ``ruff``, ``flake8`` (with the ``flake8-rst-docstrings`` plugin), and ``numpydoc`` (for ``validate-docstrings``), simply install them with ``pip`` (or ``conda``) into your environment.
+To get ``ruff``, ``flake8`` (with the ``flake8-rst-docstrings`` plugin), and ``numpydoc`` (for ``validate-docstrings``), simply install them with ``pip`` (or ``conda``) into your environment.
 
 Translations
 ------------
