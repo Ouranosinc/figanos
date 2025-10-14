@@ -2,6 +2,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import IO
 
+
 __all__ = ["pitou"]
 
 
@@ -11,11 +12,11 @@ def pitou():
 
     try:
         import pooch
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "The 'pooch' package is required to fetch the figanos testing data. "
             "You can install it using 'pip install pooch' or 'pip install \"figanos[docs]\"'."
-        )
+        ) from err
 
     _pitou = pooch.Pooch(
         path=pooch.os_cache("figanos"),

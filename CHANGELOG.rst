@@ -5,17 +5,24 @@ Changelog
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
 
-Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`)
+Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
 ^^^^^^^
 * Add possibility to trace the boundary of ``gdfmap`` (:pull:`332`).
+* Updated cookiecutter template to latest version (:pull:`362`):
+    * `ruff` has been configured to provide more linting checks and `black`-like formatting.
+    * Removed dependencies and `pre-commit` hooks for `black`, `isort` and `blackdocs`.
+    * Added `CITATION.cff` file for better citation metadata.
+    * `pyproject.toml` is now `PEP 639 <https://peps.python.org/pep-0639/>`_ compliant.
+    * Contributor Covenant agreement is now version 3.0.
 
 Fixes
 ^^^^^
 * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
 * Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
 * Allow vmin and vmax to be used with divergent (:pull:`342`).
+* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with xarray v2025.9.0 (:pull:`360`, :issue:`358`).
 
 .. _changes_0.5.0:
 

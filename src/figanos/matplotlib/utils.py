@@ -1,7 +1,6 @@
 """Utility functions for figanos figure-creation."""
 
 from __future__ import annotations
-
 import json
 import math
 import pathlib
@@ -33,6 +32,7 @@ from xclim.core.options import OPTIONS as XC_OPTIONS
 
 from .._logo import Logos
 
+
 TERMS: dict = {}
 """
 A translation directory for special terms to appear on the plots.
@@ -48,7 +48,8 @@ with (pathlib.Path(__file__).resolve().parents[1] / "data" / "terms.yml").open()
 
 
 def get_localized_term(term, locale=None):
-    """Get `term` translated into `locale`.
+    """
+    Get `term` translated into `locale`.
 
     Terms are pulled from the :py:data:`TERMS` dictionary.
 
@@ -70,11 +71,11 @@ def get_localized_term(term, locale=None):
         return term
 
     if term not in TERMS:
-        warnings.warn(f"No translation known for term '{term}'.")
+        warnings.warn(f"No translation known for term '{term}'.", stacklevel=2)
         return term
 
     if locale not in TERMS[term]:
-        warnings.warn(f"No {locale} translation known for term '{term}'.")
+        warnings.warn(f"No {locale} translation known for term '{term}'.", stacklevel=2)
         return term
 
     return TERMS[term][locale]
@@ -90,7 +91,8 @@ def empty_dict(param) -> dict:
 def check_timeindex(
     xr_objs: xr.DataArray | xr.Dataset | dict[str, Any],
 ) -> xr.DataArray | xr.Dataset | dict[str, Any]:
-    """Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
+    """
+    Check if the time index of Xarray objects in a dict is CFtime and convert to pd.DatetimeIndex if True.
 
     Parameters
     ----------
@@ -111,7 +113,7 @@ def check_timeindex(
                     )
                     xr_objs[name] = conv_obj
                     warnings.warn(
-                        "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar."
+                        "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar.", stacklevel=2
                     )
 
     else:
@@ -122,14 +124,15 @@ def check_timeindex(
                 )
                 xr_objs = conv_obj
                 warnings.warn(
-                    "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar."
+                    "CFTimeIndex converted to pandas DatetimeIndex with a 'standard' calendar.", stacklevel=2
                 )
 
     return xr_objs
 
 
 def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
-    """Get an array category, which determines how to plot the array.
+    """
+    Get an array category, which determines how to plot the array.
 
     Parameters
     ----------
@@ -186,7 +189,8 @@ def get_array_categ(array: xr.DataArray | xr.Dataset) -> str:
 def get_attributes(
     string: str, xr_obj: xr.DataArray | xr.Dataset, locale: str | None = None
 ) -> str:
-    """Fetch attributes or dims corresponding to keys from Xarray objects.
+    """
+    Fetch attributes or dims corresponding to keys from Xarray objects.
 
     Searches DataArray attributes first, then the first variable (DataArray) of the Dataset, then Dataset attributes.
     If a locale is activated in xclim's options or a locale is passed, a localized version is given if available.
@@ -226,7 +230,7 @@ def get_attributes(
         if isinstance(xr_obj, xr.Dataset) and name in xr_obj.attrs:
             return xr_obj.attrs[name]
 
-    warnings.warn(f'Attribute "{string}" not found.')
+    warnings.warn(f'Attribute "{string}" not found.', stacklevel=2)
     return ""
 
 
@@ -238,7 +242,8 @@ def set_plot_attrs(
     facetgrid: seaborn.axisgrid.FacetGrid | None = None,
     wrap_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Set plot elements according to Dataset or DataArray attributes.
+    """
+    Set plot elements according to Dataset or DataArray attributes.
 
     Uses get_attributes() to check for and get the string.
 
@@ -273,7 +278,7 @@ def set_plot_attrs(
             "cbar_units",
             "suptitle",
         ]:
-            warnings.warn(f'Use_attrs element "{key}" not supported')
+            warnings.warn(f'Use_attrs element "{key}" not supported', stacklevel=2)
 
     if "title" in attr_dict:
         title = get_attributes(attr_dict["title"], xr_obj)
@@ -339,7 +344,8 @@ def get_suffix(string: str) -> str:
 
 
 def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
-    """Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
+    """
+    Label arrays as 'middle', 'upper' and 'lower' for ensemble plotting.
 
     Parameters
     ----------
@@ -381,7 +387,8 @@ def sort_lines(array_dict: dict[str, Any]) -> dict[str, str]:
 def loc_mpl(
     loc: str | tuple[int | float, int | float] | int,
 ) -> tuple[tuple[float, float], tuple[int | float, int | float], str, str]:
-    """Find coordinates and alignment associated to loc string.
+    """
+    Find coordinates and alignment associated to loc string.
 
     Parameters
     ----------
@@ -412,8 +419,8 @@ def loc_mpl(
     if isinstance(loc, int):
         try:
             loc = loc_strings[loc - 1]
-        except IndexError:
-            raise ValueError("loc must be between 1 and 10, inclusively")
+        except IndexError as err:
+            raise ValueError("loc must be between 1 and 10, inclusively") from err
 
     if loc in loc_strings:
         # ha
@@ -492,7 +499,8 @@ def plot_coords(
     param: str | None = None,
     backgroundalpha: float = 1,
 ) -> matplotlib.axes.Axes:
-    """Place coordinates on plot area.
+    """
+    Place coordinates on plot area.
 
     Parameters
     ----------
@@ -521,14 +529,14 @@ def plot_coords(
             )
         else:
             warnings.warn(
-                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords'
+                'show_lat_lon set to True, but "lat" and/or "lon" not found in coords', stacklevel=2
             )
     if param == "time":
         if "time" in xr_obj.coords:
             text = str(xr_obj.time.dt.strftime("%Y-%m-%d").values)
 
         else:
-            warnings.warn('show_time set to True, but "time" not found in coords')
+            warnings.warn('show_time set to True, but "time" not found in coords', stacklevel=2)
 
     loc, box_a, ha, va = loc_mpl(loc)
 
@@ -603,7 +611,8 @@ def load_image(
     width: float | None,
     keep_ratio: bool = True,
 ) -> np.ndarray:
-    """Scale an image to a specified height and width.
+    """
+    Scale an image to a specified height and width.
 
     Parameters
     ----------
@@ -629,7 +638,7 @@ def load_image(
             return image
 
         warnings.warn(
-            "The scikit-image library is used to resize PNG images. This may affect logo image quality."
+            "The scikit-image library is used to resize PNG images. This may affect logo image quality.", stacklevel=2
         )
         if not keep_ratio:
             height = original_height or height
@@ -637,7 +646,7 @@ def load_image(
         else:
             if width is not None:
                 if height is not None:
-                    warnings.warn("Both height and width provided, using height.")
+                    warnings.warn("Both height and width provided, using height.", stacklevel=2)
                 # Only width is provided, derive zoom factor for height based on aspect ratio
                 height = (width / original_width) * original_height
             elif height is not None:
@@ -653,7 +662,7 @@ def load_image(
                 cairo_kwargs.update(output_height=height, output_width=width)
         elif width is not None:
             if height is not None:
-                warnings.warn("Both height and width provided, using height.")
+                warnings.warn("Both height and width provided, using height.", stacklevel=2)
             cairo_kwargs.update(output_width=width)
         elif height is not None:
             cairo_kwargs.update(output_height=height)
@@ -673,7 +682,8 @@ def plot_logo(
     keep_ratio: bool = True,
     **offset_image_kwargs,
 ) -> matplotlib.axes.Axes:
-    r"""Place logo of plot area.
+    r"""
+    Place logo of plot area.
 
     Parameters
     ----------
@@ -731,7 +741,8 @@ def split_legend(
     label_gap: float = 0.02,
 ) -> matplotlib.axes.Axes:
     #  TODO: check for and fix overlapping labels
-    """Draw line labels at the end of each line, or outside the plot.
+    """
+    Draw line labels at the end of each line, or outside the plot.
 
     Parameters
     ----------
@@ -760,7 +771,7 @@ def split_legend(
     # get legend and plot
 
     handles, labels = ax.get_legend_handles_labels()
-    for handle, label in zip(handles, labels):
+    for handle, label in zip(handles, labels, strict=False):
         last_x = handle.get_xdata()[-1]
         last_y = handle.get_ydata()[-1]
 
@@ -800,7 +811,8 @@ def fill_between_label(
     array_categ: dict[str, Any],
     legend: str,
 ) -> str:
-    """Create a label for the shading around a line in line plots.
+    """
+    Create a label for the shading around a line in line plots.
 
     Parameters
     ----------
@@ -842,7 +854,8 @@ def get_var_group(
     path_to_json: str | pathlib.Path = Path(__file__).parents[1]
     / "data/ipcc_colors/variable_groups.json",
 ) -> str:
-    """Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
+    """
+    Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
 
     If `da` is a Dataset, look in the DataArray of the first variable.
     """
@@ -879,12 +892,12 @@ def get_var_group(
 
     if len(matches) == 0:
         warnings.warn(
-            "Colormap warning: Variable group not found. Use the cmap argument."
+            "Colormap warning: Variable group not found. Use the cmap argument.", stacklevel=2
         )
         return "misc"
     elif len(matches) >= 2:
         warnings.warn(
-            "Colormap warning: More than one variable group found. Use the cmap argument."
+            "Colormap warning: More than one variable group found. Use the cmap argument.", stacklevel=2
         )
         return "misc"
     else:
@@ -896,7 +909,8 @@ def create_cmap(
     divergent: bool | int = False,
     filename: str | None = None,
 ) -> matplotlib.colors.Colormap:
-    """Create colormap according to variable group.
+    """
+    Create colormap according to variable group.
 
     Parameters
     ----------
@@ -959,7 +973,8 @@ def create_cmap(
 
 
 def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
-    """Create a Cartopy crs rotated pole projection/transform from DataArray or Dataset attributes.
+    """
+    Create a Cartopy crs rotated pole projection/transform from DataArray or Dataset attributes.
 
     Parameters
     ----------
@@ -977,7 +992,7 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
 
             if len(gridmap) > 1:
                 warnings.warn(
-                    f"There are conflicting grid_mapping attributes in the dataset. Assuming {gridmap[0]}."
+                    f"There are conflicting grid_mapping attributes in the dataset. Assuming {gridmap[0]}.", stacklevel=2
                 )
 
             coord_name = gridmap[0] if gridmap else "rotated_pole"
@@ -993,12 +1008,13 @@ def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:
         return rotpole
 
     except AttributeError:
-        warnings.warn("Rotated pole not found. Specify a transform if necessary.")
+        warnings.warn("Rotated pole not found. Specify a transform if necessary.", stacklevel=2)
         return None
 
 
 def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
-    """Wrap text.
+    """
+    Wrap text.
 
     Parameters
     ----------
@@ -1028,7 +1044,7 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
             elif " " in text[start:stop]:
                 pos = text.rfind(" ", start, stop)
             else:
-                warnings.warn("No spaces, points or colons to break line at.")
+                warnings.warn("No spaces, points or colons to break line at.", stacklevel=2)
                 break
 
             text = sep.join([text[:pos], text[pos + 1 :]])
@@ -1041,7 +1057,8 @@ def wrap_text(text: str, min_line_len: int = 18, max_line_len: int = 30) -> str:
 
 
 def gpd_to_ccrs(df: gpd.GeoDataFrame, proj: ccrs.CRS) -> gpd.GeoDataFrame:
-    """Open shapefile with geopandas and convert to cartopy projection.
+    """
+    Open shapefile with geopandas and convert to cartopy projection.
 
     Parameters
     ----------
@@ -1126,7 +1143,8 @@ def get_mpl_styles() -> dict[str, pathlib.Path]:
 
 
 def set_mpl_style(*args: str, reset: bool = False) -> None:
-    """Set the matplotlib style using one or more stylesheets.
+    """
+    Set the matplotlib style using one or more stylesheets.
 
     Parameters
     ----------
@@ -1147,13 +1165,14 @@ def set_mpl_style(*args: str, reset: bool = False) -> None:
         elif s in get_mpl_styles():
             mpl.style.use(get_mpl_styles()[s])
         else:
-            warnings.warn(f"Style {s} not found.")
+            warnings.warn(f"Style {s} not found.", stacklevel=2)
 
 
 def add_cartopy_features(
     ax: matplotlib.axes.Axes, features: list[str] | dict[str, dict[str, Any]]
 ) -> matplotlib.axes.Axes:
-    """Add cartopy features to matplotlib axes.
+    """
+    Add cartopy features to matplotlib axes.
 
     Parameters
     ----------
@@ -1191,7 +1210,8 @@ def custom_cmap_norm(
     divergent: bool | int | float = False,
     linspace_out: bool = False,
 ) -> matplotlib.colors.Normalize | np.ndarray:
-    """Get matplotlib normalization according to main function arguments.
+    """
+    Get matplotlib normalization according to main function arguments.
 
     Parameters
     ----------
@@ -1238,7 +1258,7 @@ def custom_cmap_norm(
     if divergent is not False:
         if divergent is True:
             center = 0
-        elif isinstance(divergent, (int, float)):
+        elif isinstance(divergent, int | float):
             center = divergent
 
     # build norm with options
@@ -1265,7 +1285,7 @@ def custom_cmap_norm(
         if isinstance(levels, list):
             if center is not None:
                 warnings.warn(
-                    "Divergent argument ignored when levels is a list. Use levels as a number instead."
+                    "Divergent argument ignored when levels is a list. Use levels as a number instead.", stacklevel=2
                 )
             norm = matplotlib.colors.BoundaryNorm(boundaries=levels, ncolors=cmap.N)
         else:
@@ -1301,7 +1321,8 @@ def norm2range(
 def size_legend_elements(
     data: np.ndarray, sizes: np.ndarray, marker: str, max_entries: int = 6
 ) -> list[matplotlib.lines.Line2D]:
-    """Create handles to use in a point-size legend.
+    """
+    Create handles to use in a point-size legend.
 
     Parameters
     ----------
@@ -1355,7 +1376,7 @@ def size_legend_elements(
 
     legend_elements = []
 
-    for s, d in zip(lgd_sizes, lgd_data):
+    for s, d in zip(lgd_sizes, lgd_data, strict=False):
         if isinstance(d, float) and d.is_integer():
             label = str(int(d))
         else:
@@ -1389,7 +1410,8 @@ def add_features_map(
     geometries_kw,
     frame,
 ) -> matplotlib.axes.Axes:
-    """Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
+    """
+    Add features such as cartopy, time label, and geometries to a map on a given matplotlib axis.
 
     Parameters
     ----------
@@ -1428,7 +1450,7 @@ def add_features_map(
     if geometries_kw:
         if "geoms" not in geometries_kw.keys():
             warnings.warn(
-                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})'
+                'geoms missing from geometries_kw (ex: {"geoms": df["geometry"]})', stacklevel=2
             )
         if "crs" in geometries_kw.keys():
             geometries_kw["geoms"] = gpd_to_ccrs(
@@ -1447,7 +1469,8 @@ def add_features_map(
 
 
 def masknan_sizes_key(data, sizes) -> xr.Dataset:
-    """Mask the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
+    """
+    Mask the np.Nan values between variables used to plot hue and markersize in xr.plot.scatter().
 
     Parameters
     ----------

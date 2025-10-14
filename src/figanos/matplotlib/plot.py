@@ -1,6 +1,5 @@
 # noqa: D100
 from __future__ import annotations
-
 import copy
 import logging
 import math
@@ -15,7 +14,6 @@ import cartopy.mpl.geoaxes
 import geopandas as gpd
 import matplotlib
 import matplotlib.axes
-import matplotlib.cm
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import mpl_toolkits.axisartist.grid_finder as gf
@@ -56,6 +54,7 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     wrap_text,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +65,8 @@ def _plot_realizations(
     plot_kw: dict[str, Any],
     non_dict_data: dict[str, Any],
 ) -> matplotlib.axes.Axes:
-    """Plot realizations from a DataArray, inside or outside a Dataset.
+    """
+    Plot realizations from a DataArray, inside or outside a Dataset.
 
     Parameters
     ----------
@@ -117,7 +117,8 @@ def _plot_timeseries(
     array_categ: dict[str, Any],
     legend: str,
 ) -> matplotlib.axes.Axes:
-    """Plot figanos timeseries.
+    """
+    Plot figanos timeseries.
 
     Parameters
     ----------
@@ -149,7 +150,7 @@ def _plot_timeseries(
     #  remove 'label' to avoid error due to double 'label' args
     if "label" in plot_kw[name]:
         del plot_kw[name]["label"]
-        warnings.warn(f'"label" entry in plot_kw[{name}] will be ignored.')
+        warnings.warn(f'"label" entry in plot_kw[{name}] will be ignored.', stacklevel=2)
 
     if array_categ[name] == "ENS_REALS_DA":
         _plot_realizations(ax, arr, name, plot_kw, non_dict_data)
@@ -159,11 +160,11 @@ def _plot_timeseries(
             raise TypeError(
                 "To plot multiple ensembles containing realizations, use DataArrays outside a Dataset"
             )
-        for k, sub_arr in arr.data_vars.items():
+        for sub_arr in arr.data_vars.values():
             _plot_realizations(ax, sub_arr, name, plot_kw, non_dict_data)
 
     elif array_categ[name] == "ENS_PCT_DIM_DS":
-        for k, sub_arr in arr.data_vars.items():
+        for sub_arr in arr.data_vars.values():
             sub_name = (
                 sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
             )
@@ -233,7 +234,7 @@ def _plot_timeseries(
     #  non-ensemble Datasets
     elif array_categ[name] == "DS":
         ignore_label = False
-        for k, sub_arr in arr.data_vars.items():
+        for sub_arr in arr.data_vars.values():
             sub_name = (
                 sub_arr.name if non_dict_data is True else (name + "_" + sub_arr.name)
             )
@@ -271,7 +272,8 @@ def timeseries(
     show_lat_lon: bool | str | int | tuple[float, float] = True,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Plot time series from 1D Xarray Datasets or DataArrays as line plots.
+    """
+    Plot time series from 1D Xarray Datasets or DataArrays as line plots.
 
     Parameters
     ----------
@@ -349,8 +351,8 @@ def timeseries(
                 )
 
     # check: type
-    for name, arr in data.items():
-        if not isinstance(arr, (xr.Dataset, xr.DataArray)):
+    for arr in data.values():
+        if not isinstance(arr, xr.Dataset | xr.DataArray):
             raise TypeError(
                 '"data" must be a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
             )
@@ -378,7 +380,7 @@ def timeseries(
             for v in plot_kw.values():
                 {"subplots_kws": cfig_kw} | v
             warnings.warn(
-                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
 
     # set default use_attrs values
@@ -455,7 +457,7 @@ def timeseries(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_lat_lon, (str, tuple, int)):
+            elif isinstance(show_lat_lon, str | tuple | int):
                 plot_coords(
                     ax,
                     list(data.values())[0],
@@ -512,7 +514,7 @@ def timeseries(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_lat_lon, (str, tuple, int)):
+            elif isinstance(show_lat_lon, str | tuple | int):
                 plot_coords(
                     None,
                     list(data.values())[0].isel(lat=0, lon=0),
@@ -545,7 +547,8 @@ def gridmap(
     frame: bool = False,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Create map from 2D data.
+    """
+    Create map from 2D data.
 
     Parameters
     ----------
@@ -639,7 +642,7 @@ def gridmap(
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
-                "data is xr.Dataset; only the first variable will be used in plot"
+                "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
             )
         plot_data = data[list(data.keys())[0]].squeeze()
     else:
@@ -666,7 +669,7 @@ def gridmap(
         if len(cfig_kw) >= 1:
             plot_kw = {"subplot_kws": {"projection": cfig_kw}} | plot_kw
             warnings.warn(
-                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
 
     # create cbar label
@@ -727,7 +730,7 @@ def gridmap(
 
     # set defaults
     if divergent is not False:
-        if isinstance(divergent, (int, float)):
+        if isinstance(divergent, int | float):
             plot_kw.setdefault("center", divergent)
         else:
             plot_kw.setdefault("center", 0)
@@ -750,7 +753,7 @@ def gridmap(
     elif transform and ("xlim" in plot_kw or "ylim" in plot_kw):
         extent = None
         warnings.warn(
-            "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
+            "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped", stacklevel=2
         )
         if "xlim" in plot_kw.keys():
             plot_kw.pop("xlim")
@@ -792,7 +795,7 @@ def gridmap(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_time, (str, tuple, int)):
+            elif isinstance(show_time, str | tuple | int):
                 plot_coords(
                     ax,
                     plot_data,
@@ -810,7 +813,7 @@ def gridmap(
         return ax
 
     else:
-        for i, fax in enumerate(im.axs.flat):
+        for _i, fax in enumerate(im.axs.flat):
             add_features_map(
                 data,
                 fax,
@@ -839,7 +842,7 @@ def gridmap(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_time, (str, tuple, int)):
+            elif isinstance(show_time, str | tuple | int):
                 plot_coords(
                     None,
                     plot_data,
@@ -871,7 +874,8 @@ def gdfmap(
     cbar: bool = True,
     frame: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Create a map plot from geometries.
+    """
+    Create a map plot from geometries.
 
     Parameters
     ----------
@@ -939,7 +943,7 @@ def gdfmap(
     if df_col == "boundary":
         plot = df.boundary.plot(ax=ax, **plot_kw)
         if cmap is not None or levels is not None or divergent is not False:
-            warnings.warn("Colomap arguments are ignored when plotting 'boundary'.")
+            warnings.warn("Colomap arguments are ignored when plotting 'boundary'.", stacklevel=2)
     else:
 
         # colormap
@@ -950,7 +954,7 @@ def gdfmap(
                 try:
                     cmap = create_cmap(filename=cmap)
                 except FileNotFoundError:
-                    warnings.warn("invalid cmap, using default")
+                    warnings.warn("invalid cmap, using default", stacklevel=2)
                     cmap = create_cmap(filename="slev_seq")
 
         elif cmap is None:
@@ -1003,7 +1007,8 @@ def violin(
     plot_kw: dict[str, Any] | None = None,
     color: str | int | list[str | int] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Make violin plot using seaborn.
+    """
+    Make violin plot using seaborn.
 
     Parameters
     ----------
@@ -1104,15 +1109,15 @@ def violin(
         elif isinstance(color, int):
             try:
                 plot_kw.setdefault("color", style_colors[color])
-            except IndexError:
-                raise IndexError("Index out of range of stylesheet colors")
+            except IndexError as err:
+                raise IndexError("Index out of range of stylesheet colors") from err
         elif isinstance(color, list):
-            for c, i in zip(color, np.arange(len(color))):
+            for c, i in zip(color, np.arange(len(color)), strict=False):
                 if isinstance(c, int):
                     try:
                         color[i] = style_colors[c]
-                    except IndexError:
-                        raise IndexError("Index out of range of stylesheet colors")
+                    except IndexError as err:
+                        raise IndexError("Index out of range of stylesheet colors") from err
             plot_kw.setdefault("palette", color)
 
     # plot
@@ -1135,7 +1140,8 @@ def stripes(
     cbar: bool = True,
     cbar_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Create stripes plot with or without multiple scenarios.
+    """
+    Create stripes plot with or without multiple scenarios.
 
     Parameters
     ----------
@@ -1293,7 +1299,7 @@ def stripes(
         norm = matplotlib.colors.Normalize(data_min, data_max)
 
     # plot
-    for (name, subax), (key, da) in zip(subaxes.items(), data.items()):
+    for (_name, subax), (key, da) in zip(subaxes.items(), data.items(), strict=False):
         subax.bar(da.time.dt.year, height=1, width=dtime, color=cmap(norm(da.values)))
         if divide:
             if key != "_no_label":
@@ -1346,7 +1352,8 @@ def heatmap(
     cmap: str | matplotlib.colors.Colormap | None = "RdBu",
     divergent: bool | int | float = False,
 ) -> matplotlib.axes.Axes:
-    """Create heatmap from a DataArray.
+    """
+    Create heatmap from a DataArray.
 
     Parameters
     ----------
@@ -1400,7 +1407,7 @@ def heatmap(
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
-                "data is xr.Dataset; only the first variable will be used in plot"
+                "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
             )
         da = list(data.values())[0]
     else:
@@ -1414,7 +1421,7 @@ def heatmap(
     elif ax is None:
         if any([k != "figsize" for k in fig_kw.keys()]):
             warnings.warn(
-                "Only figsize arguments can be passed to fig_kw when using facetgrid."
+                "Only figsize arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
         plot_kw.setdefault("col", None)
         plot_kw.setdefault("row", None)
@@ -1470,7 +1477,7 @@ def heatmap(
 
     # set defaults
     if divergent is not False:
-        if isinstance(divergent, (int, float)):
+        if isinstance(divergent, int | float):
             plot_kw.setdefault("center", divergent)
         else:
             plot_kw.setdefault("center", 0)
@@ -1566,7 +1573,8 @@ def scattermap(
     frame: bool = False,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Make a scatter plot of georeferenced data on a map.
+    """
+    Make a scatter plot of georeferenced data on a map.
 
     Parameters
     ----------
@@ -1666,7 +1674,7 @@ def scattermap(
             data = list(data.values())[0].squeeze()
             if len(data.data_vars) > 1:
                 warnings.warn(
-                    "data is xr.Dataset; only the first variable will be used in plot"
+                    "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
                 )
         else:
             raise ValueError("If `data` is a dict, it must be of length 1.")
@@ -1678,7 +1686,7 @@ def scattermap(
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
-                "data is xr.Dataset; only the first variable will be used in plot"
+                "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
             )
         plot_data = data[list(data.keys())[0]]
     else:
@@ -1707,7 +1715,7 @@ def scattermap(
         if len(cfig_kw) >= 1:
             plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
             warnings.warn(
-                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
 
     # create cbar label
@@ -1749,7 +1757,7 @@ def scattermap(
     mask = ~np.isnan(plot_data.values)
     if np.sum(mask) < len(mask):
         warnings.warn(
-            f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the color values"
+            f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the color values", stacklevel=2
         )
 
     # point sizes
@@ -1757,7 +1765,7 @@ def scattermap(
         if sizes is True:
             sdata = plot_data
         elif isinstance(sizes, str):
-            if hasattr(data, "name") and getattr(data, "name") == sizes:
+            if hasattr(data, "name") and data.name == sizes:
                 sdata = plot_data
             elif sizes in list(data.coords.keys()):
                 sdata = plot_data[sizes]
@@ -1770,7 +1778,7 @@ def scattermap(
         smask = ~np.isnan(sdata.values) & mask
         if np.sum(smask) < np.sum(mask):
             warnings.warn(
-                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size"
+                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size", stacklevel=2
             )
             mask = smask
 
@@ -1838,7 +1846,7 @@ def scattermap(
                 plot_kw["edgecolors"][0], len(plot_data.where(mask).values)
             )
             warnings.warn(
-                "Length of edgecolors does not match length of data. Only first edgecolor is used for plotting."
+                "Length of edgecolors does not match length of data. Only first edgecolor is used for plotting.", stacklevel=2
             )
         else:
             if isinstance(plot_kw["edgecolors"], list):
@@ -1878,7 +1886,7 @@ def scattermap(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_time, (str, tuple, int)):
+            elif isinstance(show_time, str | tuple | int):
                 plot_coords(
                     ax,
                     plot_data,
@@ -1919,7 +1927,7 @@ def scattermap(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_time, (str, tuple, int)):
+            elif isinstance(show_time, str | tuple | int):
                 plot_coords(
                     None,
                     plot_data,
@@ -1955,10 +1963,10 @@ def scattermap(
         if "title" not in legend_kw:
             if hasattr(sdata, "long_name"):
                 lgd_title = wrap_text(
-                    getattr(sdata, "long_name"), min_line_len=1, max_line_len=15
+                    sdata.long_name, min_line_len=1, max_line_len=15
                 )
                 if hasattr(sdata, "units"):
-                    lgd_title += f" ({getattr(sdata, 'units')})"
+                    lgd_title += f" ({sdata.units})"
             else:
                 lgd_title = sizes
             legend_kw.setdefault("title", lgd_title)
@@ -1996,7 +2004,8 @@ def taylordiagram(
     colors_key: str | None = None,
     markers_key: str | None = None,
 ):
-    """Build a Taylor diagram.
+    """
+    Build a Taylor diagram.
 
     Based on the following code: https://gist.github.com/ycopin/3342888.
 
@@ -2104,7 +2113,7 @@ def taylordiagram(
     }
     if len(data) != initial_len:
         warnings.warn(
-            f"{initial_len - len(data)} points with negative correlations will not be plotted: {', '.join(removed)}"
+            f"{initial_len - len(data)} points with negative correlations will not be plotted: {', '.join(removed)}", stacklevel=2
         )
 
     # add missing keys to plot_kw
@@ -2116,7 +2125,7 @@ def taylordiagram(
     ref_std = list(data.values())[0].sel(taylor_param="ref_std").values
     # check if ref is the same in all DataArrays and get the highest std (for ax limits)
     if len(data) > 1:
-        for key, da in data.items():
+        for da in data.values():
             if da.sel(taylor_param="ref_std").values != ref_std:
                 raise ValueError(
                     "All reference standard deviation values must be identical"
@@ -2124,14 +2133,14 @@ def taylordiagram(
 
     # get highest std for axis limits
     max_std = [ref_std]
-    for key, da in data.items():
-        max_std.append(
-            float(
+    for da in data.values():
+        max_std.extend(
+            [
                 max(
                     da.sel(taylor_param="ref_std").values,
                     da.sel(taylor_param="sim_std").values,
-                )
-            )
+                ).astype(float)
+            ]
         )
 
     # make labels
@@ -2160,7 +2169,7 @@ def taylordiagram(
     rlocs = np.array([0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1])
     tlocs = np.arccos(rlocs)  # Conversion to polar angles
     gl1 = gf.FixedLocator(tlocs)  # Positions
-    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs))))
+    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs), strict=False)))
     # Standard deviation axis extent
     radius_min = std_range[0] * max(max_std)
     radius_max = std_range[1] * max(max_std)
@@ -2290,7 +2299,7 @@ def taylordiagram(
                 plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # plot scatter
-    for (key, da), i in zip(data.items(), range(len(data))):
+    for (key, da), i in zip(data.items(), range(len(data)), strict=False):
         # look for SSP, RCP, CMIP model color
         if colors_key is None:
             plot_kw[key].setdefault(
@@ -2346,7 +2355,8 @@ def hatchmap(
     frame: bool = False,
     enumerate_subplots: bool = False,
 ) -> matplotlib.axes.Axes:
-    """Create map of hatches from 2D data.
+    """
+    Create map of hatches from 2D data.
 
     Parameters
     ----------
@@ -2457,7 +2467,7 @@ def hatchmap(
             if isinstance(v, xr.Dataset):
                 dattrs = k
                 plot_data[k] = v[list(v.data_vars)[0]]
-                warnings.warn("Only first variable of Dataset is plotted.")
+                warnings.warn("Only first variable of Dataset is plotted.", stacklevel=2)
             else:
                 plot_data[k] = v
 
@@ -2487,7 +2497,7 @@ def hatchmap(
     ):
         extent = None
         warnings.warn(
-            "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped"
+            "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped", stacklevel=2
         )
         [v.pop(lim) for lim in ["xlim", "ylim"] for v in plot_kw.values() if lim in v]
 
@@ -2518,7 +2528,7 @@ def hatchmap(
             for v in plot_kw.values():
                 {"subplots_kws": cfig_kw} | v
             warnings.warn(
-                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid."
+                "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
 
     pat_leg = []
@@ -2530,12 +2540,12 @@ def hatchmap(
             mask = ~np.isnan(v.values)
             if np.sum(mask) < len(mask):
                 warnings.warn(
-                    f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the pattern values"
+                    f"{len(mask) - np.sum(mask)} nan values were dropped when plotting the pattern values", stacklevel=2
                 )
             if "hatches" in plot_kw[k] and plot_kw[k]["levels"] != len(
                 plot_kw[k]["hatches"]
             ):
-                warnings.warn("Hatches number is not equivalent to number of levels")
+                warnings.warn("Hatches number is not equivalent to number of levels", stacklevel=2)
                 hatches = dfh[0:levels]
             if "hatches" not in plot_kw[k]:
                 hatches = dfh[0:levels]
@@ -2578,7 +2588,7 @@ def hatchmap(
                 plot_kw[k]["hatches"], str
             ):  # make sure the hatches are in a list
                 warnings.warn(
-                    "Hatches argument must be of type 'list'. Wrapping string argument as list."
+                    "Hatches argument must be of type 'list'. Wrapping string argument as list.", stacklevel=2
                 )
                 plot_kw[k]["hatches"] = [plot_kw[k]["hatches"]]
 
@@ -2588,10 +2598,19 @@ def hatchmap(
 
             if not ax:
                 if k == list(plot_data.keys())[0]:
-                    im = v.plot.contourf(**plot_kw[k])
+                    c_pkw = plot_kw[k].copy()
+                    if "col" in plot_kw[k].keys() or "row" in plot_kw[k].keys():
+                        if c_pkw["colors"] == "none":
+                            c_pkw.pop("colors")
+                        im = v.plot.contourf(**c_pkw)
 
                 for i, fax in enumerate(im.axs.flat):
-                    if len(plot_data) > 1 and k != list(plot_data.keys())[0]:
+                    if (
+                        k == list(plot_data.keys())[0]
+                        and plot_kw[k]["colors"] == "none"
+                    ):
+                        fax.clear()
+                    if len(plot_data) > 1:
                         # select data to plot from DataSet in loop to plot on facetgrids axis
                         c_pkw = plot_kw[k].copy()
                         c_pkw.pop("subplot_kws")
@@ -2661,7 +2680,7 @@ def hatchmap(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_time, (str, tuple, int)):
+            elif isinstance(show_time, str | tuple | int):
                 plot_coords(
                     ax,
                     plot_data,
@@ -2697,7 +2716,7 @@ def hatchmap(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_time, (str, tuple, int)):
+            elif isinstance(show_time, str | tuple | int):
                 plot_coords(
                     None, dattrs, param="time", loc=show_time, backgroundalpha=1
                 )
@@ -2730,7 +2749,8 @@ def partition(
     fig_kw: dict[str, Any] | None = None,
     legend_kw: dict[str, Any] | None = None,
 ) -> matplotlib.axes.Axes:
-    """Figure of the partition of total uncertainty by components.
+    """
+    Figure of the partition of total uncertainty by components.
 
     Uncertainty fractions can be computed with xclim (https://xclim.readthedocs.io/en/stable/api.html#uncertainty-partitioning).
     Make sure the use `fraction=True` in the xclim function call.
@@ -2766,7 +2786,7 @@ def partition(
     if isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
-                "data is xr.Dataset; only the first variable will be used in plot"
+                "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
             )
         data = data[list(data.keys())[0]].squeeze()
 
@@ -2786,7 +2806,7 @@ def partition(
     elif isinstance(data, xr.Dataset):  # in case, it was saved to disk before plotting.
         if len(data.data_vars) > 1:
             warnings.warn(
-                "data is xr.Dataset; only the first variable will be used in plot"
+                "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
             )
         data = data[list(data.keys())[0]].squeeze()
     else:
@@ -2864,7 +2884,8 @@ def triheatmap(
     cbar: bool | str = "unique",
     cbar_kw: dict[str, Any] | None | list = None,
 ) -> matplotlib.axes.Axes:
-    """Create a triangle heatmap from a DataArray.
+    """
+    Create a triangle heatmap from a DataArray.
 
     Note that most of the code comes from:
     https://stackoverflow.com/questions/66048529/how-to-create-a-heatmap-where-each-cell-is-divided-into-4-triangles
@@ -2917,7 +2938,7 @@ def triheatmap(
     elif isinstance(data, xr.Dataset):
         if len(data.data_vars) > 1:
             warnings.warn(
-                "data is xr.Dataset; only the first variable will be used in plot"
+                "data is xr.Dataset; only the first variable will be used in plot", stacklevel=2
             )
         da = list(data.values())[0]
     else:
@@ -2948,7 +2969,7 @@ def triheatmap(
     other_dims = [di for di in da.dims if di != z]
     if len(other_dims) > 2:
         warnings.warn(
-            "More than 3 dimensions in data. The first two after dim will be used as the dimensions of the heatmap."
+            "More than 3 dimensions in data. The first two after dim will be used as the dimensions of the heatmap.", stacklevel=2
         )
     if len(other_dims) < 2:
         raise ValueError(
@@ -2959,7 +2980,7 @@ def triheatmap(
         warnings.warn(
             'With cbar="unique" only the colorbar of the first triangle'
             " will be shown. No `plot_kw` was passed. vmin and vmax will be set the max"
-            " and min of data."
+            " and min of data.", stacklevel=2
         )
         plot_kw = {"vmax": da.max().values, "vmin": da.min().values}
 
@@ -2977,7 +2998,7 @@ def triheatmap(
         x = np.arange(m + 1)
         y = np.arange(n + 1)
         xss, ys = np.meshgrid(x, y)
-        zs = (xss * ys) % 10
+        (xss * ys) % 10
         triangles1 = [
             (i + j * (m + 1), i + 1 + j * (m + 1), i + (j + 1) * (m + 1))
             for j in range(n)
@@ -2998,7 +3019,7 @@ def triheatmap(
 
         imgs = [
             ax.tripcolor(t, np.ravel(val), **plotkw)
-            for t, val, plotkw in zip(triangul, d, plot_kw)
+            for t, val, plotkw in zip(triangul, d, plot_kw, strict=False)
         ]
 
         ax.set_xticks(np.array(range(m)) + 0.5, labels=labels_x, rotation=45)
@@ -3051,7 +3072,7 @@ def triheatmap(
 
         imgs = [
             ax.tripcolor(t, np.ravel(val), **plotkw)
-            for t, val, plotkw in zip(triangul, d, plot_kw)
+            for t, val, plotkw in zip(triangul, d, plot_kw, strict=False)
         ]
         ax.set_xticks(np.array(range(m)), labels=labels_x, rotation=45)
         ax.set_yticks(np.array(range(n)), labels=labels_y, rotation=90)
