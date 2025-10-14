@@ -16,6 +16,8 @@ Changes
     * Added `CITATION.cff` file for better citation metadata.
     * `pyproject.toml` is now `PEP 639 <https://peps.python.org/pep-0639/>`_ compliant.
     * Contributor Covenant agreement is now version 3.0.
+* Make ``get_var_group`` usable externally (:pull:`365`).
+
 
 Fixes
 ^^^^^
