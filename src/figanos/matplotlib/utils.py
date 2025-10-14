@@ -33,6 +33,9 @@ from xclim.core.options import OPTIONS as XC_OPTIONS
 from .._logo import Logos
 
 
+# file to map variable key words to variable group for IPCC color scheme
+VARJSON = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+
 TERMS: dict = {}
 """
 A translation directory for special terms to appear on the plots.
@@ -851,14 +854,16 @@ def fill_between_label(
 def get_var_group(
     da: xr.DataArray | None = None,
     unique_str: str | None = None,
-    path_to_json: str | pathlib.Path = Path(__file__).parents[1]
-    / "data/ipcc_colors/variable_groups.json",
+    path_to_json: str | pathlib.Path | None = None,
 ) -> str:
     """
     Get IPCC variable group from DataArray or a string using a json file (figanos/data/ipcc_colors/variable_groups.json).
 
     If `da` is a Dataset, look in the DataArray of the first variable.
     """
+    if path_to_json is None:
+        path_to_json = VARJSON
+
     # create dict
     with pathlib.Path(path_to_json).open(encoding="utf-8") as _f:
         var_dict = json.load(_f)
