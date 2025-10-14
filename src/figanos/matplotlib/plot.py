@@ -693,9 +693,8 @@ def gridmap(
                 pass
 
     elif cmap is None:
-        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(path_to_json=cdata, da=plot_data),
+            get_var_group(da=plot_data),
             divergent=divergent,
         )
     plot_kw.setdefault("cmap", cmap)
@@ -955,9 +954,8 @@ def gdfmap(
                     cmap = create_cmap(filename="slev_seq")
 
         elif cmap is None:
-            cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
             cmap = create_cmap(
-                get_var_group(unique_str=df_col, path_to_json=cdata),
+                get_var_group(unique_str=df_col),
                 divergent=divergent,
             )
 
@@ -1283,9 +1281,8 @@ def stripes(
                 pass
 
     elif cmap is None:
-        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(path_to_json=cdata, da=list(data.values())[0]),
+            get_var_group(da=list(data.values())[0]),
             divergent=True,
         )
 
@@ -1454,9 +1451,8 @@ def heatmap(
                 pass
 
     elif cmap is None:
-        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(path_to_json=cdata, da=da),
+            get_var_group(da=da),
             divergent=divergent,
         )
 
@@ -1743,9 +1739,8 @@ def scattermap(
                 pass
 
     elif cmap is None:
-        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(path_to_json=cdata, da=plot_data),
+            get_var_group(da=plot_data),
             divergent=divergent,
         )
 
@@ -2942,9 +2937,8 @@ def triheatmap(
                 logging.log("Colormap not found. Using default.")
 
     elif cmap is None:
-        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
         cmap = create_cmap(
-            get_var_group(path_to_json=cdata, da=da),
+            get_var_group(da=da),
             divergent=divergent,
         )
 
