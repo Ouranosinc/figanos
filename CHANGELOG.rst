@@ -9,8 +9,8 @@ Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavo
 
 Changes
 ^^^^^^^
-* Add possibility to trace the boundary of ``gdfmap`` (:pull:`332`, :pull:`367`).
-* Updated cookiecutter template to latest version (:pull:`362`):
+* Add possibility to trace the boundary of ``gdfmap`` (:pull:`332`).
+* Updated cookiecutter template to latest version (:pull:`362`, :pull:`367`):
     * `ruff` has been configured to provide more linting checks and `black`-like formatting.
     * Removed dependencies and `pre-commit` hooks for `black`, `isort` and `blackdocs`.
     * Added `CITATION.cff` file for better citation metadata.
