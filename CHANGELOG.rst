@@ -18,6 +18,7 @@ Changes
     * Contributor Covenant agreement is now version 3.0.
     * Migrate from `tox.ini` to `tox.toml`.
     * Drop `python-coveralss` for `coverallsapp/github-action`.
+* Make ``get_var_group`` usable externally (:pull:`365`).
 
 Fixes
 ^^^^^
