@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import json
+import importlib.resources
 import math
 import pathlib
 import re
@@ -909,13 +910,14 @@ def get_var_group(
         return matches[0]
 
 
-def create_cmap(
+def get_ipcc_cmap_name(
     var_group: str | None = None,
     divergent: bool | int = False,
     filename: str | None = None,
+    reverse: bool = False
 ) -> matplotlib.colors.Colormap:
     """
-    Create colormap according to variable group.
+    Get colormap name according to variable group or filename.
 
     Parameters
     ----------
@@ -925,21 +927,15 @@ def create_cmap(
         Diverging colormap. If False, use sequential colormap.
     filename : str, optional
         Name of IPCC colormap file. If not None, 'var_group' and 'divergent' are not used.
+    reverse: bool
+        If True, the name of the reverse color order colormap is returned.
 
     Returns
     -------
-    matplotlib.colors.Colormap
+    str : Name of the colormap in `matplotlib.colormaps`.
     """
-    reverse = False
-
     if filename:
-        folder = "continuous_colormaps_rgb_0-255"
         filename = filename.replace(".txt", "")
-
-        if filename.endswith("_r"):
-            reverse = True
-            filename = filename[:-2]
-
     else:
         # filename
         if divergent is not False:
@@ -953,28 +949,35 @@ def create_cmap(
                 filename = "misc_seq_2"  # freezing rain
             else:
                 filename = var_group + "_seq"
+    return filename
 
-        folder = "continuous_colormaps_rgb_0-255"
 
-    # parent should be 'figanos/'
-    path = (
-        pathlib.Path(__file__).parents[1]
-        / "data"
-        / "ipcc_colors"
-        / folder
-        / (filename + ".txt")
-    )
+def create_ipcc_cmap(filename: str, reverse: bool = False):
+    """Create an IPCC colormap from a filename."""
+    # Ensure filename is only the stem (no ext, no parents)
+    filename = pathlib.Path(filename).stem
+    if filename.endswith("_r"):
+        reverse = True
+        filename = filename[:-2]
 
-    rgb_data = np.loadtxt(path)
+    with importlib.resources.path('figanos.data.ipcc_colors.continuous_colormaps_rgb_0-255', f'{filename}.txt') as p:
+        rgb_data = np.loadtxt(p)
 
     # convert to 0-1 RGB
     rgb_data = rgb_data / 255
-
-    cmap = mcolors.LinearSegmentedColormap.from_list("cmap", rgb_data, N=256)
+    cmap = mcolors.LinearSegmentedColormap.from_list(filename, rgb_data, N=256)
     if reverse is True:
+        # this also adds "_r" to the name
         cmap = cmap.reversed()
 
     return cmap
+
+
+# Register cmaps
+for name in importlib.resources.contents('figanos.data.ipcc_colors.continuous_colormaps_rgb_0-255'):
+    name = name.replace('.txt', '')
+    for reverse in [True, False]:
+        mpl.colormaps.register(create_ipcc_cmap(name, reverse))
 
 
 def get_rotpole(xr_obj: xr.DataArray | xr.Dataset) -> ccrs.RotatedPole | None:

@@ -33,7 +33,7 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     add_features_map,
     check_timeindex,
     convert_scen_name,
-    create_cmap,
+    get_ipcc_cmap_name,
     custom_cmap_norm,
     empty_dict,
     fill_between_label,
@@ -687,16 +687,8 @@ def gridmap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     # colormap
-    if isinstance(cmap, str):
-        if cmap not in plt.colormaps():
-            try:
-                cmap = create_cmap(filename=cmap)
-            except FileNotFoundError as e:
-                logger.error(e)
-                pass
-
-    elif cmap is None:
-        cmap = create_cmap(
+    if cmap is None:
+        cmap = get_ipcc_cmap_name(
             get_var_group(da=plot_data),
             divergent=divergent,
         )
@@ -947,21 +939,17 @@ def gdfmap(
     else:
 
         # colormap
-        if isinstance(cmap, str):
-            if cmap in plt.colormaps():
-                cmap = matplotlib.colormaps[cmap]
-            else:
-                try:
-                    cmap = create_cmap(filename=cmap)
-                except FileNotFoundError:
-                    warnings.warn("invalid cmap, using default", stacklevel=2)
-                    cmap = create_cmap(filename="slev_seq")
-
-        elif cmap is None:
-            cmap = create_cmap(
+        if cmap is None:
+            cmap = get_ipcc_cmap_name(
                 get_var_group(unique_str=df_col),
                 divergent=divergent,
             )
+        if isinstance(cmap, str):
+            try:
+                cmap = matplotlib.colormaps[cmap]
+            except KeyError:
+                warnings.warn("invalid cmap, using default", stacklevel=2)
+                cmap = matplotlib.colormaps["slev_seq"]
 
         # create normalization for colormap
         plot_kw.setdefault("vmin", df[df_col].min())
@@ -1276,21 +1264,14 @@ def stripes(
             data_max = max(da.values)
 
     # colormap
-    if isinstance(cmap, str):
-        if cmap in plt.colormaps():
-            cmap = matplotlib.colormaps[cmap]
-        else:
-            try:
-                cmap = create_cmap(filename=cmap)
-            except FileNotFoundError as e:
-                logger.error(e)
-                pass
-
-    elif cmap is None:
-        cmap = create_cmap(
+    if cmap is None:
+        cmap = get_ipcc_cmap_name(
             get_var_group(da=list(data.values())[0]),
             divergent=True,
         )
+    if isinstance(cmap, str):
+        cmap = matplotlib.colormaps[cmap]
+
 
     # create cmap norm
     if cmap_center is not None:
@@ -1449,16 +1430,8 @@ def heatmap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     # colormap
-    if isinstance(cmap, str):
-        if cmap not in plt.colormaps():
-            try:
-                cmap = create_cmap(filename=cmap)
-            except FileNotFoundError as e:
-                logger.error(e)
-                pass
-
-    elif cmap is None:
-        cmap = create_cmap(
+    if cmap is None:
+        cmap = get_ipcc_cmap_name(
             get_var_group(da=da),
             divergent=divergent,
         )
@@ -1738,16 +1711,8 @@ def scattermap(
         plot_kw["cbar_kwargs"].setdefault("pad", 0.015)
 
     # colormap
-    if isinstance(cmap, str):
-        if cmap not in plt.colormaps():
-            try:
-                cmap = create_cmap(filename=cmap)
-            except FileNotFoundError as e:
-                logger.error(e)
-                pass
-
-    elif cmap is None:
-        cmap = create_cmap(
+    if cmap is None:
+        cmap = get_ipcc_cmap_name(
             get_var_group(da=plot_data),
             divergent=divergent,
         )
@@ -2949,16 +2914,8 @@ def triheatmap(
         fig, ax = plt.subplots(**fig_kw)
 
     # colormap
-    if isinstance(cmap, str):
-        if cmap not in plt.colormaps():
-            try:
-                cmap = create_cmap(filename=cmap)
-            except FileNotFoundError:
-                pass
-                logging.log("Colormap not found. Using default.")
-
-    elif cmap is None:
-        cmap = create_cmap(
+    if cmap is None:
+        cmap = get_ipcc_cmap_name(
             get_var_group(da=da),
             divergent=divergent,
         )
