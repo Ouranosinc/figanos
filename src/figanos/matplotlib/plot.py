@@ -33,12 +33,12 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     add_features_map,
     check_timeindex,
     convert_scen_name,
-    get_ipcc_cmap_name,
     custom_cmap_norm,
     empty_dict,
     fill_between_label,
     get_array_categ,
     get_attributes,
+    get_ipcc_cmap_name,
     get_localized_term,
     get_rotpole,
     get_scen_color,
@@ -1271,7 +1271,6 @@ def stripes(
         )
     if isinstance(cmap, str):
         cmap = matplotlib.colormaps[cmap]
-
 
     # create cmap norm
     if cmap_center is not None:
