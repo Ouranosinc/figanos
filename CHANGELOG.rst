@@ -19,7 +19,7 @@ Changes
     * Migrate from `tox.ini` to `tox.toml`.
     * Drop `python-coveralss` for `coverallsapp/github-action`.
 * Make ``get_var_group`` usable externally (:pull:`365`).
-* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use.
+* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use. (:pull:`368`)
     + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
 
 Fixes
