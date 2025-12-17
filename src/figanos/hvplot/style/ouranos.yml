@@ -1,0 +1,93 @@
+#Ouranos bokeh theme
+#caliber matplotlib version: https://github.com/bokeh/bokeh/blob/8a5a35eb078e386c14b5580a51e8a6673d57d197/src/bokeh/themes/_caliber.py
+#refer to IPCC style guide
+
+attrs:
+  Plot:
+    background_fill_color: white
+    border_fill_color: white #color around plot - could be null to match behind plot
+    outline_line_color: !!null
+
+  Axis:
+    major_tick_in: 4
+    major_tick_out: 0
+    major_tick_line_alpha: 1
+    major_tick_line_color: black
+
+    minor_tick_line_alpha: 0
+    minor_tick_line_color: !!null
+
+    axis_line_alpha: 1
+    axis_line_color: black
+
+    major_label_text_color: black
+    major_label_text_font: DejaVu Sans
+    major_label_text_font_size: 10pt
+    major_label_text_font_style: normal
+
+    axis_label_standoff: 10
+    axis_label_text_color: black
+    axis_label_text_font: DejaVu Sans
+    axis_label_text_font_size: 11pt
+    axis_label_text_font_style: normal
+
+  Legend:
+    spacing: 8
+    glyph_width: 15
+
+    label_standoff: 8
+    label_text_color: black
+    label_text_font: DejaVu Sans
+    label_text_font_size: 10pt
+    label_text_font_style: normal
+
+    title_text_font: DejaVu Sans
+    title_text_font_style: normal
+    title_text_font_size: 11pt
+    title_text_color: black
+
+    border_line_alpha: 0
+    background_fill_alpha: 1
+    background_fill_color: white
+
+  BaseColorBar:
+    title_text_color: black
+    title_text_font: DejaVu Sans
+    title_text_font_size: 11pt
+    title_text_font_style: normal
+
+    major_label_text_color: black
+    major_label_text_font: DejaVu Sans
+    major_label_text_font_size: 10pt
+    major_label_text_font_style: normal
+
+    major_tick_line_alpha: 0
+    bar_line_alpha: 0
+
+  Grid:
+    grid_line_width: 0
+    grid_line_color: black
+    grid_line_alpha: 0.4
+
+  Title:
+    text_color: black
+    text_font: DejaVu Sans
+    text_font_style: normal
+    text_font_size: 14pt
+
+  Toolbar:
+    logo: !!null
+    autohide: True
+
+  figure:
+    toolbar_location: below
+
+  CategoricalColorMapper:
+    palette:
+      - '#052946'
+      - '#ce153d'
+      - '#18bbbb'
+      - '#fdc414'
+      - '#6850af'
+      - '#196a5e'
+      - '#7a5315'

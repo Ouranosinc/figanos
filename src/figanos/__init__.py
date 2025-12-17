@@ -22,7 +22,7 @@ __author__ = """Sarah-Claude Bourdeau-Goulet"""
 __email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"
 __version__ = "0.5.1-dev.6"
 
-from . import matplotlib
+from . import hvplot, matplotlib
 from ._data import data
 from ._logo import Logos
 from ._testing import pitou

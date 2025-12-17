@@ -1,4 +1,4 @@
-"""Figanos plotting module."""
+"""Figanos matplotlib plotting module."""
 
 from .plot import (
     gdfmap,

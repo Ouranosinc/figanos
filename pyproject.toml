@@ -73,14 +73,17 @@ dev = [
   "watchdog >=4.0.0"
 ]
 docs = [
-  # To make the package and notebooks usable
+  # Notebooks
   "dask",
-  "geoviews",
   "h5py",
-  "holoviews",
   "netcdf4",
   "pooch >=1.8.0", # for local and xclim-testdata
   "zarr >=2.13.0",
+  # Interactive figures
+  "hvplot",
+  "holoviews",
+  "geoviews",
+  "bokeh",
   # Documentation
   "ipykernel",
   "ipython >=8.5.0,!=9.0.0",
