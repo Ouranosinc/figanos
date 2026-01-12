@@ -1,6 +1,3 @@
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -15,6 +12,8 @@ updates:
           - patch
           - minor
           - major
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: pip
     directory: /CI
@@ -28,3 +27,5 @@ updates:
           - patch
           - minor
           - major
+    cooldown:
+      default-days: 7
