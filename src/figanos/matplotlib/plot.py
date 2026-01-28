@@ -2012,7 +2012,7 @@ def taylordiagram(
     Parameters
     ----------
     data : xr.DataArray or dict
-        DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
+        DataArray or dictionary of DataArrays created by xsdba.measures.taylordiagram, each corresponding
         to a point on the diagram. The dictionary keys will become their labels.
     plot_kw : dict, optional
         Arguments to pass to the `plot()` function. Changes how the markers look.
