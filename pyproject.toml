@@ -30,7 +30,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  # "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Typing :: Typed"
 ]
@@ -39,7 +39,7 @@ dependencies = [
   "cartopy >=0.23.0",
   "cairosvg >=2.6.0",
   "geopandas >=1.0",
-  "matplotlib >=3.6.0",
+  "matplotlib >=3.8.0",
   "numpy >=1.25.0",
   "pandas >=2.2.0",
   "pint >=0.18",
@@ -49,7 +49,7 @@ dependencies = [
   "scikit-image >=0.21.0",
   "xarray >=2023.11.0",
   "xclim >=0.52.2",
-  "xsdba"
+  "xsdba >=0.4.0"
 ]
 
 [project.optional-dependencies]
@@ -85,11 +85,11 @@ docs = [
   "ipykernel",
   "ipython >=8.5.0,!=9.0.0",
   "jupyter_client",
-  "nbsphinx >=0.9.5",
+  "nbsphinx >=0.9.8",
   "notebook",
-  "sphinx >=7.1.0,<8.2", # pinned until nbsphinx is updated to support Sphinx 8.2
+  "sphinx >=8.2",
   "sphinx-book-theme >=1.0",
-  "sphinx-codeautolink",
+  "sphinx-codeautolink >=0.16.2",
   "sphinx-copybutton",
   "sphinx-intl"
 ]
