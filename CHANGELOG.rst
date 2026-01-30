@@ -4,7 +4,7 @@ Changelog
 
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
-Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
+Contributors: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
 ^^^^^^^
@@ -27,7 +27,7 @@ Fixes
 * Allow ``vmin`` and ``vmax`` to be used with ``divergent`` (:pull:`342`).
 * ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with `xarray` v2025.9.0 (:pull:`360`, :issue:`358`).
 
-.. _changes_0.5.03:
+.. _changes_0.5.0:
 
 `v0.5.0 <https://github.com/Ouranosinc/figanos/tree/0.5.0>`_ (2025-05-06)
 -------------------------------------------------------------------------
