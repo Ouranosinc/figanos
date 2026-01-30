@@ -4,7 +4,6 @@ Changelog
 
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
-
 Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
@@ -19,15 +18,16 @@ Changes
     * Migrate from `tox.ini` to `tox.toml`.
     * Drop `python-coveralss` for `coverallsapp/github-action`.
 * Make ``get_var_group`` usable externally (:pull:`365`).
+* `figanos` now supports Python 3.14 (:pull:`383`).
 
 Fixes
 ^^^^^
 * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
 * Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
-* Allow vmin and vmax to be used with divergent (:pull:`342`).
-* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with xarray v2025.9.0 (:pull:`360`, :issue:`358`).
+* Allow ``vmin`` and ``vmax`` to be used with ``divergent`` (:pull:`342`).
+* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with `xarray` v2025.9.0 (:pull:`360`, :issue:`358`).
 
-.. _changes_0.5.0:
+.. _changes_0.5.03:
 
 `v0.5.0 <https://github.com/Ouranosinc/figanos/tree/0.5.0>`_ (2025-05-06)
 -------------------------------------------------------------------------
