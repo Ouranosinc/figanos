@@ -3,11 +3,11 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.10,<3.14
+  - python>=3.11,<3.15
   # Main
   - cartopy >=0.23.0
   - cairosvg >=2.6.0
-  - matplotlib-base >=3.6.0
+  - matplotlib-base >=3.8.0
   - seaborn >=0.13.0
   - geopandas >=1.0
   - numpy >=1.25.0
@@ -18,14 +18,14 @@ dependencies:
   - scikit-image >=0.21.0
   - xarray >=2023.11.0
   - xclim >=0.52.2
-  - xsdba
+  - xsdba >=0.4.0
   # Development
   - pip >=25.2
   - bump-my-version >=1.2.3
   - coverage >=7.5.0
   - deptry >0.23.0
   - flake8 >=7.3.0
-  - flake8-rst-docstrings >=0.3.1
+  - flake8-rst-docstrings >=0.4.0
   - flit >=3.11.0,<4.0
   - mypy >=1.18.2
   - numpydoc >=1.9.0
@@ -48,10 +48,10 @@ dependencies:
   - ipykernel
   - ipython >=8.5.0, !=9.0.0
   - jupyter_client
-  - nbsphinx >=0.9.5
+  - nbsphinx >=0.9.8
   - notebook
-  - sphinx >=7.0.0,<8.2.0  # pinned until nbsphinx is updated to support Sphinx 8.2
+  - sphinx >=8.2.0
   - sphinx-book-theme >=1.0.0
-  - sphinx-codeautolink
+  - sphinx-codeautolink >=0.16.2
   - sphinx-copybutton
   - sphinx-intl
