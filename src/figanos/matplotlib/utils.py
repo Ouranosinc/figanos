@@ -934,7 +934,7 @@ def get_ipcc_cmap_name(
     Returns
     -------
     str
-    Name of the colormap in `matplotlib.colormaps`.
+        Name of the colormap in `matplotlib.colormaps`.
     """
     if filename:
         filename = filename.replace(".txt", "")
