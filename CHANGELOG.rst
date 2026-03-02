@@ -4,8 +4,18 @@ Changelog
 
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
+Contributors:   Pascal Bourgault (:user:`aulemahal`).
 
-Contributors:  Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`), Pascal Bourgault (:user:`aulemahal`).
+Changes
+^^^^^^^
+* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use. (:pull:`368`)
+  + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
+
+.. _changes_0.6.0:
+
+`v0.6.0 <https://github.com/Ouranosinc/figanos/tree/0.6.0>`_ (2026-01-30)
+-------------------------------------------------------------------------
+Contributors: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
 ^^^^^^^
@@ -19,15 +29,14 @@ Changes
     * Migrate from `tox.ini` to `tox.toml`.
     * Drop `python-coveralss` for `coverallsapp/github-action`.
 * Make ``get_var_group`` usable externally (:pull:`365`).
-* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use. (:pull:`368`)
-    + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
+* `figanos` now supports Python 3.14 (:pull:`383`).
 
 Fixes
 ^^^^^
 * The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
 * Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
-* Allow vmin and vmax to be used with divergent (:pull:`342`).
-* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with xarray v2025.9.0 (:pull:`360`, :issue:`358`).
+* Allow ``vmin`` and ``vmax`` to be used with ``divergent`` (:pull:`342`).
+* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with `xarray` v2025.9.0 (:pull:`360`, :issue:`358`).
 
 .. _changes_0.5.0:
 
