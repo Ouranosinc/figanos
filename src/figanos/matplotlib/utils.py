@@ -17,6 +17,7 @@ import cairosvg
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import geopandas as gpd
+import matplotlib as mpl
 import matplotlib.axes
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -29,8 +30,6 @@ from matplotlib.lines import Line2D
 from skimage.transform import resize
 from xclim.core.options import METADATA_LOCALES
 from xclim.core.options import OPTIONS as XC_OPTIONS
-
-import matplotlib as mpl
 
 from .._logo import Logos
 
