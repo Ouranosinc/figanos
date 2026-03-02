@@ -340,7 +340,8 @@ ignore = [
   "COM", # commas
   "D205", # blank-line-after-summary
   "D400", # ends-in-period
-  "D401" # non-imperative-mood
+  "D401", # non-imperative-mood
+  "D420" # section order -> broken in ruff 0.15.4, see ruff#23683
 ]
 preview = true
 select = [
