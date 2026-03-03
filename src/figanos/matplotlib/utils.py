@@ -1349,7 +1349,7 @@ def size_legend_elements(
     list of matplotlib.lines.Line2D
     """
     # how many increments of 10 pts**2 are there in the sizes
-    n = int(np.round(max(sizes) - min(sizes), -1) / 10)
+    n = int(np.round(max(sizes) - min(sizes), -1).item() / 10)
 
     # divide data in those increments
     lgd_data = np.linspace(min(data), max(data), n)
