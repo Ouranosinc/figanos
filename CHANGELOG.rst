@@ -2,19 +2,14 @@
 Changelog
 =========
 
-..
-    `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
-    --------------------------------------------------------------
+`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+--------------------------------------------------------------
+Contributors:   Pascal Bourgault (:user:`aulemahal`).
 
-    Contributors:
-
-    Changes
-    ^^^^^^^
-    * No change.
-
-    Fixes
-    ^^^^^
-    * No change.
+Changes
+^^^^^^^
+* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use. (:pull:`368`)
+  + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
 
 .. _changes_0.6.0:
 

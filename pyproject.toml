@@ -67,7 +67,7 @@ dev = [
   "pre-commit >=3.5.0",
   "pytest >=8.3.2",
   "pytest-cov >=5.0.0",
-  "ruff >=0.14.3",
+  "ruff >=0.15.4",
   "tox >=4.30.3",
   "vulture >=2.14",
   "watchdog >=4.0.0"
@@ -340,7 +340,8 @@ ignore = [
   "COM", # commas
   "D205", # blank-line-after-summary
   "D400", # ends-in-period
-  "D401" # non-imperative-mood
+  "D401", # non-imperative-mood
+  "D420" # section order -> broken in ruff 0.15.4, see ruff#23683
 ]
 preview = true
 select = [
