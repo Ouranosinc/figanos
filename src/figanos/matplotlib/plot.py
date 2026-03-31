@@ -978,7 +978,7 @@ def gdfmap(
 
     if frame is False:
         # cbar
-        if len(plot.figure.axes) > 1:  # only if it exists
+        if len(plot.figure.axes) > 1 and "outline" in plot.figure.axes[1].spines:  # only if it exists
             plot.figure.axes[1].spines["outline"].set_visible(False)
             plot.figure.axes[1].tick_params(size=0)
         # main axes
