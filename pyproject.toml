@@ -107,7 +107,7 @@ dependencies = [
   "seaborn >=0.13.0",
   "scikit-image >=0.21.0",
   "xarray >=2023.11.0",
-  "xclim >=0.52.2",
+  "xclim >=0.52.2"
 ]
 
 [project.optional-dependencies]
@@ -214,7 +214,7 @@ extend_exclude = ["extras"]
 prek = "prek"
 
 [tool.deptry.per_rule_ignores]
-DEP004 =["pooch"]
+DEP004 = ["pooch"]
 
 [tool.flit.sdist]
 include = [
