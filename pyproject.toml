@@ -29,6 +29,7 @@ notebooks = [
   "holoviews",
   "netcdf4",
   "pooch >=1.8.0", # for local and xclim-testdata
+  "xsdba >=0.5.0",
   "zarr >=2.13.0"
 ]
 docs = [
@@ -101,14 +102,12 @@ dependencies = [
   "matplotlib >=3.8.0",
   "numpy >=1.25.0",
   "pandas >=2.2.0",
-  "pint >=0.18",
   "platformdirs >=4.0",
   "pyyaml >=6.0.1",
   "seaborn >=0.13.0",
   "scikit-image >=0.21.0",
   "xarray >=2023.11.0",
   "xclim >=0.52.2",
-  "xsdba >=0.4.0"
 ]
 
 [project.optional-dependencies]
@@ -197,6 +196,7 @@ values = [
 ]
 
 [tool.codespell]
+skip = "*docs/_build"
 ignore-words-list = "ans,astroid,fonction,socio-economic,thirdparty,vas,vie"
 
 [tool.coverage.paths]
@@ -209,7 +209,12 @@ source = ["figanos"]
 
 [tool.deptry]
 extend_exclude = ["extras"]
-pep621_dev_dependency_groups = ["extras"]
+
+[tool.deptry.package_module_name_map]
+prek = "prek"
+
+[tool.deptry.per_rule_ignores]
+DEP004 =["pooch"]
 
 [tool.flit.sdist]
 include = [
