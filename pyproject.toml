@@ -212,8 +212,10 @@ extend_exclude = ["extras"]
 
 [tool.deptry.package_module_name_map]
 prek = "prek"
+scikit-image = "skimage"
 
 [tool.deptry.per_rule_ignores]
+DEP001 = ["mpl_toolkits"]
 DEP004 = ["pooch"]
 
 [tool.flit.sdist]
