@@ -19,6 +19,7 @@ dependencies:
   - xarray >=2023.11.0
   - xclim >=0.52.2
   - xsdba >=0.4.0
+  - proj <9.8 #FIXME: tmp pin until cartopy fixes issue. see figanos ##386
   # Development
   - pip >=25.2
   - bump-my-version >=1.2.3
