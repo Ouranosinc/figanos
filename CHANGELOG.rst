@@ -11,6 +11,7 @@ Changes
 * Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use. (:pull:`368`)
   + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
 * Fix for ``frame=False`` to work with ``ax`` for ``fg.matplotlib.gridmap`` (:pull:`389`).
+* Pin PROJ <9.8 to avoid a change that causes issues with cartopy (:pull:`398`, :issue:`386`).
 
 .. _changes_0.6.0:
 
