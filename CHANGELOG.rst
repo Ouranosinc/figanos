@@ -4,14 +4,21 @@ Changelog
 
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
-Contributors:   Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`).
+Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
 ^^^^^^^
-* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use. (:pull:`368`)
+* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use (:pull:`368`).
   + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
 * Fix for ``frame=False`` to work with ``ax`` for ``fg.matplotlib.gridmap`` (:pull:`389`).
 * Pin PROJ <9.8 to avoid a change that causes issues with cartopy (:pull:`398`, :issue:`386`).
+* Updated the `cookiecutter-pypackage` template to the latest version using `cruft`. (:pull:``):
+    * Migrated from `optional-dependencies` to `dependency-groups`.
+    * Set privileged token-based GitHub workflows to run within an `automation` environment.
+    * Updated and synchronized several dependencies.
+    * `pre-commit` has been replaced by `prek`.
+    * `Makefile` now handles some dependency installation logic.
+    * `tox.toml` has been adjusted to use Makefile .
 
 .. _changes_0.6.0:
 
