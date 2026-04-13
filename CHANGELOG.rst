@@ -8,11 +8,11 @@ Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juli
 
 Changes
 ^^^^^^^
-* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of matplotlib-registered cmap to use (:pull:`368`).
-  + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to matplotlib.
+* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of `matplotlib`-registered cmap to use (:pull:`368`).
+    + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to `matplotlib`.
 * Fix for ``frame=False`` to work with ``ax`` for ``fg.matplotlib.gridmap`` (:pull:`389`).
 * Pin PROJ <9.8 to avoid a change that causes issues with cartopy (:pull:`398`, :issue:`386`).
-* Updated the `cookiecutter-pypackage` template to the latest version using `cruft`. (:pull:``):
+* Updated the `cookiecutter-pypackage` template to the latest version using `cruft`. (:pull:`397`):
     * Migrated from `optional-dependencies` to `dependency-groups`.
     * Set privileged token-based GitHub workflows to run within an `automation` environment.
     * Updated and synchronized several dependencies.
