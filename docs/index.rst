@@ -44,3 +44,8 @@ Need help?
    :caption: All Modules
 
    apidoc/modules
+
+.. toctree::
+   :caption: GitHub Repository
+
+   Ouranosinc/figanos <https://github.com/Ouranosinc/figanos>
