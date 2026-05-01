@@ -52,6 +52,12 @@ or if you prefer using `pip` with a system-provided `gdal`, you can install `fig
 Credits
 -------
 
+`fiagnos` development is funded through Ouranos_, a not-for-profit collaborative innovation organization fostering resilient adaptation to climate change, based in Québec, Canada.
+
+.. image:: https://raw.githubusercontent.com/Ouranosinc/.github/refs/heads/main/images/logo-ouranos-horizontal-couleur.svg
+        :target: https://www.ouranos.ca/
+        :align: center
+
 This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pypackage`_ project template.
 
 .. _Cookiecutter: https://github.com/cookiecutter/cookiecutter
