@@ -53,6 +53,7 @@ dependencies:
   - nbsphinx >=0.9.8
   - notebook
   - sphinx >=8.2.0
+  - sphinx-autobuild >=2024.4.16
   - sphinx-book-theme >=1.0.0
   - sphinx-codeautolink >=0.16.2
   - sphinx-copybutton
