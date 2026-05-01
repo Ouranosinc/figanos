@@ -17,7 +17,7 @@ Timeseries Plotting
             :target: notebooks/figanos_timeseries.html#Customizing-plots
 
             Graph Customization
-    
+
         - .. figure:: _static/_gallery/ensemble_timeseries.png
             :target: notebooks/figanos_timeseries.html#Ensembles
 
