@@ -49,8 +49,8 @@ or if you prefer using `pip` with a system-provided `gdal`, you can install `fig
 
     $ python -m pip install figanos
 
-Credits
--------
+Acknowledgements
+----------------
 
 `fiagnos` development is funded through Ouranos_, a not-for-profit collaborative innovation organization fostering resilient adaptation to climate change, based in Québec, Canada.
 

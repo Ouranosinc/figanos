@@ -77,7 +77,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "figanos"
-copyright = f"2022-{datetime.now().year}, Ouranos Inc. Sarah-Claude Bourdeau-Goulet"
+copyright = f"2022-{datetime.now().year}, Ouranos Inc., Sarah-Claude Bourdeau-Goulet"
 author = "Sarah-Claude Bourdeau-Goulet"
 
 # The version info for the project you're documenting, acts as replacement
