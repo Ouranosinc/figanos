@@ -1,90 +1,138 @@
 Gallery
 ========
 
-Here is a gallery of examples of `figanos`.
-Go to the examples to see how to generate these figures.
+Here is a gallery of examples of `figanos`. Use the sidebar to see how to generate these yourself.
 
-Timeseries
-^^^^^^^^^^^
-Full code in the `Timeseries notebook <notebooks/figanos_timeseries.ipynb>`_.
+Timeseries Plotting
+^^^^^^^^^^^^^^^^^^^
 
-.. image:: _static/_gallery/basic_timeseries.png
-    :width: 40%
-    :target: notebooks/figanos_timeseries.html#Basic-timeseries
+.. list-table::
 
-.. image:: _static/_gallery/ensemble_timeseries.png
-    :width: 40%
-    :target: notebooks/figanos_timeseries.html#Ensembles
+    *   - .. figure:: _static/_gallery/basic_timeseries.png
+            :target: notebooks/figanos_timeseries.html#Basic-timeseries
 
-Maps
-^^^^
-Full code in the `Maps notebook <notebooks/figanos_maps.ipynb>`_.
+            Basic Timeseries
 
-.. image:: _static/_gallery/basic_map.png
-    :width: 30%
-    :target: notebooks/figanos_maps.html#Gridded-Data-on-Maps
+        - .. figure:: _static/_gallery/custom_timeseries.png
+            :target: notebooks/figanos_timeseries.html#Customizing-plots
 
-.. image:: _static/_gallery/station_map.png
-    :width: 30%
-    :target: notebooks/figanos_maps.html#Station-Data-on-Maps
+            Graph Customization
+    
+        - .. figure:: _static/_gallery/ensemble_timeseries.png
+            :target: notebooks/figanos_timeseries.html#Ensembles
 
-.. image:: _static/_gallery/station+grid_map.png
-    :width: 30%
-    :target: notebooks/figanos_maps.html#Station-Data-on-Maps
+            Ensemble Timeseries
 
-.. image:: _static/_gallery/hatch_map.png
-    :width: 30%
-    :target: notebooks/figanos_maps.html#Hatching-on-Maps
+Full code example: `Timeseries notebook <notebooks/figanos_timeseries.ipynb>`_.
 
-.. image:: _static/_gallery/gdf_map.png
-    :width: 30%
-    :target: notebooks/figanos_maps.html#GeoDataFrame-on-Maps
+Mapping
+^^^^^^^
 
-.. image:: _static/_gallery/gdf2_map.png
-    :width: 30%
-    :target: notebooks/figanos_maps.html#GeoDataFrame-on-Maps
+.. list-table::
+
+    *   - .. figure:: _static/_gallery/basic_map.png
+            :target: notebooks/figanos_maps.html#Gridded-Data-on-Maps
+
+            Gridded Data
+
+        - .. figure:: _static/_gallery/station_map.png
+            :target: notebooks/figanos_maps.html#Station-Data-on-Maps
+
+            Station Data
+
+        - .. figure:: _static/_gallery/station+grid_map.png
+            :target: notebooks/figanos_maps.html#Station-Data-on-Maps
+
+            Mixed Gridded and Station Data
+
+    *   - .. figure:: _static/_gallery/hatch_map.png
+            :target: notebooks/figanos_maps.html#Hatching-on-Maps
+
+            Hatching
+
+        - .. figure:: _static/_gallery/gdf_map.png
+            :target: notebooks/figanos_maps.html#GeoDataFrame-on-Maps
+
+            Choropleth using GeoDataFrames
+
+        - .. figure:: _static/_gallery/gdf2_map.png
+            :target: notebooks/figanos_maps.html#GeoDataFrame-on-Maps
+
+            Categorized Features using GeoDataFrames
+
+Full code example: `Maps notebook <notebooks/figanos_maps.ipynb>`_.
 
 Miscellaneous
 ^^^^^^^^^^^^^
-Full code in the `Miscellaneous notebook <notebooks/figanos_misc.ipynb>`_.
 
-.. image:: _static/_gallery/stripes.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Climate-Stripes
+.. list-table::
 
-.. image:: _static/_gallery/violin.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Violin-Plots
+    *   - .. figure:: _static/_gallery/stripes.png
+            :target: notebooks/figanos_misc.html#Climate-Stripes
 
-.. image:: _static/_gallery/heatmap.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Heatmaps
+            Climate Stripes
 
-.. image:: _static/_gallery/triangle1.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Triangle-heatmaps
+        - .. figure:: _static/_gallery/violin.png
+            :target: notebooks/figanos_misc.html#Violin-Plots
 
-.. image:: _static/_gallery/triangle2.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Triangle-Heatmaps
+            Violin Plots
 
-.. image:: _static/_gallery/taylor.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Taylor-Diagrams
+        - .. figure:: _static/_gallery/heatmap.png
+            :target: notebooks/figanos_misc.html#Heatmaps
 
-.. image:: _static/_gallery/partition.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Partition-plots
+            Heatmaps
 
-.. image:: _static/_gallery/logo.png
-    :width: 30%
-    :target: notebooks/figanos_misc.html#Logos
+    *   - .. figure:: _static/_gallery/triangle1.png
+            :target: notebooks/figanos_misc.html#Triangle-heatmaps
 
-Multiple plots
-^^^^^^^^^^^^^^
+            Univariate Triangular Heatmaps
 
-Full code in the `Multiple plots notebook <notebooks/figanos_multiplots.ipynb>`_.
+        - .. figure:: _static/_gallery/triangle2.png
+            :target: notebooks/figanos_misc.html#Triangle-Heatmaps
 
-.. image:: _static/_gallery/multiple.png
-    :width: 50%
-    :target: notebooks/figanos_multiplots.html#Maps
+            Bivariate Triangular Heatmaps
+
+        - .. figure:: _static/_gallery/taylor.png
+            :target: notebooks/figanos_misc.html#Taylor-Diagrams
+
+            Taylor Diagrams
+
+    *   - .. figure:: _static/_gallery/partition.png
+            :target: notebooks/figanos_misc.html#Partition-plots
+
+            Partition Plots
+
+        - .. figure:: _static/_gallery/logo.png
+            :target: notebooks/figanos_misc.html#Logos
+
+            Adding Logos
+
+        -
+
+Full code example: `Miscellaneous notebook <notebooks/figanos_misc.ipynb>`_.
+
+Multiplotting
+^^^^^^^^^^^^^
+
+.. list-table::
+
+    *   - .. figure:: _static/_gallery/multiple.png
+            :target: notebooks/figanos_multiplots.html#Maps
+
+            Multiple Map Plotting
+
+    *   - .. figure:: _static/_gallery/multisource.png
+            :target: notebooks/figanos_multiplots.html#Plot-over-each-other
+
+            Multisource Plotting
+
+Full code example: `Multiple plots notebook <notebooks/figanos_multiplots.ipynb>`_.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   notebooks/figanos_timeseries
+   notebooks/figanos_maps
+   notebooks/figanos_misc
+   notebooks/figanos_multiplots
