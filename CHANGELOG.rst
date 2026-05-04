@@ -19,6 +19,12 @@ Changes
     * `pre-commit` has been replaced by `prek`.
     * `Makefile` now handles some dependency installation logic.
     * `tox.toml` has been adjusted to use Makefile .
+* Examples has been collapsed into the gallery; Gallery in documentation has been redesigned to have more descriptive entries (:pull:`400`).
+
+Internal changes
+^^^^^^^^^^^^^^^^
+* The `make servedocs` top-level command now uses `sphinx-autobuild` to allow for live html editing when modifying documentation source files (:pull:`400`).
+* Acknowledgements to Ouranos have been added to the `README.rst` and the documentation landing page (:pull:`400`).
 
 .. _changes_0.6.0:
 
