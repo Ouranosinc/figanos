@@ -20,10 +20,11 @@ The following features are included in the package:
 
 Need help?
 ^^^^^^^^^^
-* Ouranos employees can ask questions on the Ouranos private StackOverflow where you can tag subjects and people. (https://stackoverflow.com/c/ouranos/questions).
-* Potential bugs in figanos can be reported as an issue here: https://github.com/Ouranosinc/figanos/issues .
+
+* Ouranos employees can ask questions on the Ouranos private StackOverflow where you can tag subjects and people. (https://stackoverflow.com/c/ouranos/questions)
+* Potential bugs in figanos can be reported as an issue here: https://github.com/Ouranosinc/figanos/issues
 * Problems with data on Ouranos' servers can be reported as an issue here: https://github.com/Ouranosinc/miranda/issues
-* To be aware of changes in figanos, you can "watch" the github repo. You can customize the watch function to notify you of new releases. (https://github.com/Ouranosinc/figanos)
+* To be aware of changes in figanos, you can "watch" the GitHub repo. You can customize the watch function to notify you of new releases. (https://github.com/Ouranosinc/figanos)
 
 Acknowledgements
 ^^^^^^^^^^^^^^^^
@@ -44,9 +45,12 @@ Figanos development is funded through `Ouranos <https://www.ouranos.ca/en>`_, a 
          :target: https://www.ouranos.ca/en
          :class: only-dark
 
+Contents
+^^^^^^^^
+
 .. toctree::
    :maxdepth: 2
-   :caption: Table of Contents:
+   :caption: Table of Contents
 
    installation
    usage

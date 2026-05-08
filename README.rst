@@ -52,16 +52,17 @@ or if you prefer using `pip` with a system-provided `gdal`, you can install `fig
 Acknowledgements
 ----------------
 
-`fiagnos` development is funded through Ouranos_, a not-for-profit collaborative innovation organization fostering resilient adaptation to climate change, based in Québec, Canada.
+`fiagnos` development is funded through `Ouranos`_, a not-for-profit collaborative innovation organization fostering resilient adaptation to climate change, based in Québec, Canada.
 
 .. image:: https://raw.githubusercontent.com/Ouranosinc/.github/refs/heads/main/images/logo-ouranos-horizontal-couleur.svg
-        :target: https://www.ouranos.ca/
+        :target: https://www.ouranos.ca/en
         :align: center
 
 This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pypackage`_ project template.
 
 .. _Cookiecutter: https://github.com/cookiecutter/cookiecutter
-.. _`Ouranosinc/cookiecutter-pypackage`: https://github.com/Ouranosinc/cookiecutter-pypackage
+.. _Ouranos: https://www.ouranos.ca/en
+.. _Ouranosinc/cookiecutter-pypackage: https://github.com/Ouranosinc/cookiecutter-pypackage
 
 .. |build| image:: https://github.com/Ouranosinc/figanos/actions/workflows/main.yml/badge.svg
         :target: https://github.com/Ouranosinc/figanos/actions
