@@ -1,10 +1,10 @@
 Gallery
 ========
 
-Here is a gallery of examples of `figanos`. Use the sidebar to see how to generate these yourself.
+Here is a gallery of examples of `figanos`. Click on the examples to see how to generate these yourself.
 
-Timeseries Plotting
-^^^^^^^^^^^^^^^^^^^
+Timeseries
+^^^^^^^^^^
 
 .. list-table::
 
@@ -25,8 +25,8 @@ Timeseries Plotting
 
 Full code example: `Timeseries notebook <notebooks/figanos_timeseries.ipynb>`_.
 
-Mapping
-^^^^^^^
+Maps
+^^^^
 
 .. list-table::
 
@@ -85,12 +85,12 @@ Miscellaneous
     *   - .. figure:: _static/_gallery/triangle1.png
             :target: notebooks/figanos_misc.html#Triangle-heatmaps
 
-            Univariate Triangular Heatmaps
+            Triangle Heatmap (4)
 
         - .. figure:: _static/_gallery/triangle2.png
             :target: notebooks/figanos_misc.html#Triangle-Heatmaps
 
-            Bivariate Triangular Heatmaps
+            Triangle Heatmap (2)
 
         - .. figure:: _static/_gallery/taylor.png
             :target: notebooks/figanos_misc.html#Taylor-Diagrams
@@ -111,8 +111,8 @@ Miscellaneous
 
 Full code example: `Miscellaneous notebook <notebooks/figanos_misc.ipynb>`_.
 
-Multiplotting
-^^^^^^^^^^^^^
+Multiple Plots
+^^^^^^^^^^^^^^
 
 .. list-table::
 

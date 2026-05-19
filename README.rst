@@ -52,7 +52,7 @@ or if you prefer using `pip` with a system-provided `gdal`, you can install `fig
 Acknowledgements
 ----------------
 
-`fiagnos` development is funded through `Ouranos`_, a not-for-profit collaborative innovation organization fostering resilient adaptation to climate change, based in Québec, Canada.
+`figanos` development is funded through `Ouranos`_, a not-for-profit collaborative innovation organization fostering resilient adaptation to climate change, based in Québec, Canada.
 
 .. image:: https://raw.githubusercontent.com/Ouranosinc/.github/refs/heads/main/images/logo-ouranos-horizontal-couleur.svg
         :target: https://www.ouranos.ca/en
