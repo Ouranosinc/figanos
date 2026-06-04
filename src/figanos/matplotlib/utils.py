@@ -1,7 +1,6 @@
 """Utility functions for figanos figure-creation."""
 
 from __future__ import annotations
-import importlib.resources
 import json
 import math
 import pathlib
@@ -9,6 +8,7 @@ import re
 import warnings
 from collections.abc import Callable
 from copy import deepcopy
+from importlib.resources import as_file, files
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
@@ -961,7 +961,11 @@ def create_ipcc_cmap(filename: str, reverse: bool = False):
         reverse = True
         filename = filename[:-2]
 
-    with importlib.resources.path('figanos.data.ipcc_colors.continuous_colormaps_rgb_0-255', f'{filename}.txt') as p:
+    resource = (
+        files("figanos.data.ipcc_colors.continuous_colormaps_rgb_0-255")
+        / f"{filename}.txt"
+    )
+    with as_file(resource) as p:
         rgb_data = np.loadtxt(p)
 
     # convert to 0-1 RGB
@@ -975,8 +979,10 @@ def create_ipcc_cmap(filename: str, reverse: bool = False):
 
 
 # Register cmaps
-for name in importlib.resources.contents('figanos.data.ipcc_colors.continuous_colormaps_rgb_0-255'):
-    name = name.replace('.txt', '')
+for resource in files('figanos.data.ipcc_colors.continuous_colormaps_rgb_0-255').iterdir():
+    if resource.suffix != ".txt":
+        continue
+    name = resource.stem
     for reverse in [True, False]:
         mpl.colormaps.register(create_ipcc_cmap(name, reverse))
 
