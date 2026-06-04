@@ -22,9 +22,9 @@ Need help?
 ^^^^^^^^^^
 
 * Ouranos employees can ask questions on the Ouranos private StackOverflow where you can tag subjects and people. (https://stackoverflow.com/c/ouranos/questions)
-* Potential bugs in figanos can be reported as an issue here: https://github.com/Ouranosinc/figanos/issues
 * Problems with data on Ouranos' servers can be reported as an issue here: https://github.com/Ouranosinc/miranda/issues
-* To be aware of changes in figanos, you can "watch" the GitHub repo. You can customize the watch function to notify you of new releases. (https://github.com/Ouranosinc/figanos)
+* If you encounter any errors or problems with `figanos`, please let us know! Open an issue at the `GitHub main repository <https://github.com/Ouranosinc/figanos>`_.
+* To be aware of changes in `figanos`, feel free to “watch” the GitHub repository. You can customize the watch function to notify you of new releases or more.
 
 Acknowledgements
 ^^^^^^^^^^^^^^^^
@@ -45,8 +45,8 @@ Figanos development is funded through `Ouranos <https://www.ouranos.ca/en>`_, a 
          :target: https://www.ouranos.ca/en
          :class: only-dark
 
-Contents
-^^^^^^^^
+Navigation
+==========
 
 .. toctree::
    :maxdepth: 2
