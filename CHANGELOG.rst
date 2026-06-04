@@ -9,22 +9,35 @@ Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juli
 Changes
 ^^^^^^^
 * Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of `matplotlib`-registered cmap to use (:pull:`368`).
-    + IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to `matplotlib`.
+    * IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to `matplotlib`.
 * Fix for ``frame=False`` to work with ``ax`` for ``fg.matplotlib.gridmap`` (:pull:`389`).
-* Pin PROJ <9.8 to avoid a change that causes issues with cartopy (:pull:`398`, :issue:`386`).
-* Updated the `cookiecutter-pypackage` template to the latest version using `cruft`. (:pull:`397`):
-    * Migrated from `optional-dependencies` to `dependency-groups`.
+* Pinned `PROJ` <9.8 to avoid a change that causes issues with `cartopy` (:pull:`398`, :issue:`386`).
+* Examples has been collapsed into the gallery; Gallery in documentation has been redesigned to have more descriptive entries (:pull:`400`).
+* Addressed a small DeprecationWarning emitted by `importlib.resources` when loading `matplotlib` colourmaps (:pull:`404`).
+
+Breaking changes
+^^^^^^^^^^^^^^^^
+* The minimum version of `sphinx` is now v8.2+. (:pull:`404`).
+
+Internal changes
+^^^^^^^^^^^^^^^^
+* Updated the `cookiecutter-pypackage` template to the latest version using `cruft` (:pull:`397`):
+    * Development dependencies have migrated from `optional-dependencies` to `dependency-groups`.
     * Set privileged token-based GitHub workflows to run within an `automation` environment.
     * Updated and synchronized several dependencies.
     * `pre-commit` has been replaced by `prek`.
     * `Makefile` now handles some dependency installation logic.
-    * `tox.toml` has been adjusted to use Makefile .
-* Examples has been collapsed into the gallery; Gallery in documentation has been redesigned to have more descriptive entries (:pull:`400`).
-
-Internal changes
-^^^^^^^^^^^^^^^^
+    * `tox.toml` has been adjusted to use Makefile.
 * The `make servedocs` top-level command now uses `sphinx-autobuild` to allow for live html editing when modifying documentation source files (:pull:`400`).
 * Acknowledgements to Ouranos have been added to the `README.rst` and the documentation landing page (:pull:`400`).
+* `figanos` now has guidance documents on acceptable usages of AI and the expected methods of AI usage disclosure. See the documentation for more details (:pull:`404`).
+* Updated the cookiecutter template to use the latest commit (:pull:`404`):
+    * Adjusted the permissions for some workflows to address security issues.
+    * Added the new "standard" AI disclosure guidance for code contributions.
+    * Updated the ReadTheDocs configuration to use newer OS and conda images.
+    * Added guidance for maintainers on git commit signing and immutable releases.
+    * Adjusted the source distribution inclusion/exclusion list.
+    * Set `bump-my-version` to sign tags by default.
 
 .. _changes_0.6.0:
 
