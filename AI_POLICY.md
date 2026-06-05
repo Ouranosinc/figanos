@@ -14,7 +14,7 @@ AI-generated code must be reviewed by a human maintainer before merging. Keep ch
 
 ## Disclosure
 
-Mark AI involvement in commit messages with a trailer:
+Mark commits written completely by AI with a trailer in the commit message:
 
 ```text
 Assisted-by: <tool name>
