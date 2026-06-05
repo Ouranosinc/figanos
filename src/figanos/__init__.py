@@ -18,8 +18,8 @@
 # limitations under the License.
 ###################################################################################
 
-__author__ = """Sarah-Claude Bourdeau-Goulet"""
-__email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"
+__author__ = """Juliette Lavoie"""
+__email__ = "lavoie.juliette@ouranos.ca"
 __version__ = "0.7.0"
 
 from . import matplotlib
