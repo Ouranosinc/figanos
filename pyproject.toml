@@ -71,7 +71,6 @@ authors = [
   {name = "Alexis Beaupré-Laperrière", email = "Beaupre-Laperriere.Alexis@ouranos.ca"}
 ]
 maintainers = [
-  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"},
   {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
   {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
 ]
@@ -294,7 +293,6 @@ module = [
   "xclim.*",
   "yaml.*"
 ]
-allow_untyped_defs = true
 disable_error_code = "attr-defined"
 ignore_missing_imports = true
 
