@@ -2,8 +2,24 @@
 Changelog
 =========
 
-`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
---------------------------------------------------------------
+..
+    `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+    --------------------------------------------------------------
+
+    Contributors:
+
+    Changes
+    ^^^^^^^
+    * No change.
+
+    Fixes
+    ^^^^^
+    * No change.
+
+.. _changes_0.7.0:
+
+`v0.7.0 <https://github.com/Ouranosinc/figanos/tree/0.7.0>`_ (2026-06-05)
+-------------------------------------------------------------------------
 Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
