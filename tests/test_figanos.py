@@ -39,6 +39,6 @@ def test_package_metadata():
 
     with metadata.open() as f:
         contents = f.read()
-        assert """Sarah-Claude Bourdeau-Goulet""" in contents
-        assert '__email__ = "bourdeau-goulet.sarah-claude@ouranos.ca"' in contents
-        assert '__version__ = "0.6.1-dev.5"' in contents
+        assert """Juliette Lavoie""" in contents
+        assert '__email__ = "lavoie.juliette@ouranos.ca"' in contents
+        assert '__version__ = "0.7.0"' in contents

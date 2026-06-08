@@ -4,15 +4,15 @@
   "checkout": null,
   "context": {
     "cookiecutter": {
-      "full_name": "Sarah-Claude Bourdeau-Goulet",
-      "email": "bourdeau-goulet.sarah-claude@ouranos.ca",
+      "full_name": "Juliette Lavoie",
+      "email": "lavoie.juliette@ouranos.ca",
       "github_username": "Ouranosinc",
       "orcid_id": "0000-0002-6125-2557",
       "project_name": "figanos",
       "project_slug": "figanos",
       "project_short_description": "Outils pour produire des graphiques informatifs sur les impacts des changements climatiques.",
       "pypi_username": "Sarahclaude",
-      "version": "0.6.1-dev.5",
+      "version": "0.7.0",
       "use_pytest": "y",
       "use_conda": "y",
       "make_docs": "y",
