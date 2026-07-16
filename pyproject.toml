@@ -197,7 +197,7 @@ values = [
 ]
 
 [tool.codespell]
-skip = "*docs/_build"
+skip = "*docs/_build,docs/notebooks/*.ipynb"
 ignore-words-list = "ans,astroid,fonction,socio-economic,thirdparty,vas,vie"
 
 [tool.coverage.paths]
