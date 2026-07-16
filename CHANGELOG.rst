@@ -6,7 +6,7 @@ Changelog
     `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
     --------------------------------------------------------------
 
-    Contributors:
+    Contributors: Juliette Lavoie (:user:`juliettelavoie`)
 
     Changes
     ^^^^^^^
@@ -14,7 +14,7 @@ Changelog
 
     Fixes
     ^^^^^
-    * No change.
+    * Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`413`, :issue:`413`).
 
 .. _changes_0.7.0:
 

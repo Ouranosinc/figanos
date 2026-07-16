@@ -2426,14 +2426,21 @@ def hatchmap(
                     plot_kw[v] = plot_kw
     else:
         for k, v in data.items():
-            if k not in plot_kw.keys():
-                plot_kw[k] = plot_kw
             if isinstance(v, xr.Dataset):
                 dattrs = k
                 plot_data[k] = v[list(v.data_vars)[0]]
                 warnings.warn("Only first variable of Dataset is plotted.", stacklevel=2)
             else:
                 plot_data[k] = v
+
+    # if plot_kw doesn't have any of the same key as data,
+    # put plot_kw as a nested dict with the same keys as data
+    if not any(k in plot_kw for k in plot_data.keys()):
+        plot_kw = {k: plot_kw for k in plot_data.keys()}
+    # if plot_kw is only missing some keys, fill them with empty dicts
+    for k in plot_data.keys():
+        if k not in plot_kw:
+            plot_kw[k] = {}
 
     # setup transform from first data entry
     trdata = list(plot_data.values())[0]
