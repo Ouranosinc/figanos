@@ -11,7 +11,7 @@ Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`cox
 Fixes
 ^^^^^
 * Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`414`, :issue:`413`).
-* `transpose` option now works reliably `fg.matplotlib.heatmap` (:pull:`416`).
+* `transpose` option now works reliably in `fg.matplotlib.heatmap` (:pull:`416`).
 
 
 .. _changes_0.7.0:
