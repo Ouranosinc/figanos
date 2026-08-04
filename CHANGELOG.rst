@@ -2,110 +2,9 @@
 Changelog
 =========
 
-..
-    `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
-    --------------------------------------------------------------
-
-    Contributors: Juliette Lavoie (:user:`juliettelavoie`)
-
-    Changes
-    ^^^^^^^
-    * No change.
-
-    Fixes
-    ^^^^^
-    * Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`413`, :issue:`413`).
-
-.. _changes_0.7.0:
-
-`v0.7.0 <https://github.com/Ouranosinc/figanos/tree/0.7.0>`_ (2026-06-08)
--------------------------------------------------------------------------
-Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
-
-Changes
-^^^^^^^
-* Removal of ``create_cmap``, use ``get_ipcc_cmap_name`` instead to get string name of `matplotlib`-registered cmap to use (:pull:`368`).
-    * IPCC cmaps are created upon import of ``figanos.matplotlib`` and registered to `matplotlib`.
-* Fix for ``frame=False`` to work with ``ax`` for ``fg.matplotlib.gridmap`` (:pull:`389`).
-* Pinned `PROJ` <9.8 to avoid a change that causes issues with `cartopy` (:pull:`398`, :issue:`386`).
-* Examples has been collapsed into the gallery; Gallery in documentation has been redesigned to have more descriptive entries (:pull:`400`).
-* Addressed a small DeprecationWarning emitted by `importlib.resources` when loading `matplotlib` colourmaps (:pull:`404`).
-
-Breaking changes
-^^^^^^^^^^^^^^^^
-* The minimum version of `sphinx` is now v8.2+ (:pull:`404`).
-
-Internal changes
-^^^^^^^^^^^^^^^^
-* Updated the `cookiecutter-pypackage` template to the latest version using `cruft` (:pull:`397`):
-    * Development dependencies have migrated from `optional-dependencies` to `dependency-groups`.
-    * Set privileged token-based GitHub workflows to run within an `automation` environment.
-    * Updated and synchronized several dependencies.
-    * `pre-commit` has been replaced by `prek`.
-    * `Makefile` now handles some dependency installation logic.
-    * `tox.toml` has been adjusted to use Makefile.
-* The `make servedocs` top-level command now uses `sphinx-autobuild` to allow for live html editing when modifying documentation source files (:pull:`400`).
-* Acknowledgements to Ouranos have been added to the `README.rst` and the documentation landing page (:pull:`400`).
-* `figanos` now has guidance documents on acceptable usages of AI and the expected methods of AI usage disclosure. See the documentation for more details (:pull:`404`).
-* Updated the cookiecutter template to use the latest commit (:pull:`404`):
-    * Adjusted the permissions for some workflows to address security issues.
-    * Added the new "standard" AI disclosure guidance for code contributions.
-    * Updated the ReadTheDocs configuration to use newer OS and conda images.
-    * Added guidance for maintainers on git commit signing and immutable releases.
-    * Adjusted the source distribution inclusion/exclusion list.
-    * Set `bump-my-version` to sign tags by default.
-
-.. _changes_0.6.0:
-
-`v0.6.0 <https://github.com/Ouranosinc/figanos/tree/0.6.0>`_ (2026-01-30)
--------------------------------------------------------------------------
-Contributors: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
-
-Changes
-^^^^^^^
-* Add possibility to trace the boundary of ``gdfmap`` (:pull:`332`).
-* Updated cookiecutter template to latest version (:pull:`362`, :pull:`367`):
-    * `ruff` has been configured to provide more linting checks and `black`-like formatting.
-    * Removed dependencies and `pre-commit` hooks for `black`, `isort` and `blackdocs`.
-    * Added `CITATION.cff` file for better citation metadata.
-    * `pyproject.toml` is now `PEP 639 <https://peps.python.org/pep-0639/>`_ compliant.
-    * Contributor Covenant agreement is now version 3.0.
-    * Migrate from `tox.ini` to `tox.toml`.
-    * Drop `python-coveralss` for `coverallsapp/github-action`.
-* Make ``get_var_group`` usable externally (:pull:`365`).
-* `figanos` now supports Python 3.14 (:pull:`383`).
-
-Fixes
-^^^^^
-* The `categorical_colors.json` file has been fixed to have the RGB values of IPCC (:pull:`324`, :issue:`239`).
-* Fix cbar argument of ``gdfmap`` (:pull:`332`, :issue:`332`).
-* Allow ``vmin`` and ``vmax`` to be used with ``divergent`` (:pull:`342`).
-* ``fg.matplotlib.hatchmap`` multiplots with colors='none' now works with `xarray` v2025.9.0 (:pull:`360`, :issue:`358`).
-
-.. _changes_0.5.0:
-
-`v0.5.0 <https://github.com/Ouranosinc/figanos/tree/0.5.0>`_ (2025-05-06)
--------------------------------------------------------------------------
-Contributors: Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
-
-Changes
-^^^^^^^
-* `figanos` now supports Python 3.13 and has dropped support for Python 3.9 (:pull:`322`).
-* Several base dependencies have been updated to more modern versions (:pull:`322`):
-  * `numpy` has been updated to `>=1.25.0` (no longer pinned below `2.0.0`).
-  * `pint` has been updated to `>=0.18.0`.
-  * `scikit-image` has been updated to `>=0.21.0`.
-  * `xarray` has been updated to `>=2023.11.0`.
-
-Fixes
-^^^^^
-* The `fg.utils.get_rotpole` function now accepts more general inputs (:pull:`308`).
-
-.. _changes_0.4.0:
-
-`v0.4.0 <https://github.com/Ouranosinc/figanos/tree/0.4.0>`_ (2025-03-10)
--------------------------------------------------------------------------
-Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`).
+`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+--------------------------------------------------------------
+Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`)
 
 New features and enhancements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,9 +18,6 @@ New features and enhancements
 * A new optional way to organize points in a ``fg.taylordiagram``  with  `colors_key`, `markers_key`  : DataArrays with a common dimension value or a common attribute are grouped with the same color/marker (:pull:`214`).
 * Heatmap (``fg.matplotlib.heatmap``) now supports `row,col` arguments in `plot_kw`, allowing to plot a grid of heatmaps. (:issue:`208`, :pull:`219`).
 * New function ``fg.matplotlib.triheatmap`` (:pull:`199`).
-* Reorganized the documentation and add gallery (:issue:`278`, :issue:`274`, :issue:`202`, :pull:`279`).
-* Added a new `pooch`-based mechanism for fetching and caching testing data used in the notebooks (``fg.pitou().fetch()``). (:pull:`279`).
-* No-legend option in ``hatchmap``; use ``edgecolor`` and ``edgecolors`` as aliases (:pull:`195`)
 
 Breaking changes
 ^^^^^^^^^^^^^^^^
@@ -155,23 +51,14 @@ Internal changes
     * Several development dependencies have been updated to their latest versions.
     * Updated the GitHub Actions in Workflows to their latest versions.
 * The documentation has been adapted to use the latest testing data fetching mechanism from `xclim`. (:pull:`273`).
-* Updated the `cookiecutter` template to the latest version. Dependencies and GitHub Actions have been updated. (:pull:`282`).
-* The `bump-version.yml` GitHub Workflow has been updated to use the Ouranos Helper Bot instead of personal access tokens. (:pull:`287`).
-* Updated the `cookiecutter` template to the latest version. (:pull:`295`):
-    * Added a CodeQL Advanced configuration.
-    * Updated versions of many GitHub Actions and Python dependencies.
-    * Removed `coveralls` from the CI dependencies.
-    * Added `pre-commit` hooks for `vulture` (dead code) and `codespell` (typos).
 
 Bug fixes
 ^^^^^^^^^
 * Creating the colormap in `fg.matplotlib.scattermap` is now done like `fg.matplotlib.gridmap` (:pull:`238`, :issue:`239`).
-* Updated the default testing data URL in the `pitou` function to point to the correct branch. (:pull:`282`).
+* `transpose` option now works reliably `fg.matplotlib.heatmap` (:pull:`238`, :issue:`239`).
 
-.. _changes_0.3.0:
-
-v0.3.0 (2024-02-16)
--------------------
+0.3.0 (2024-02-16)
+------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
 
 New features and enhancements
@@ -221,10 +108,8 @@ Bug fixes
 * Fixed an issue with the `divergent` argument getting ignored (:pull:`132`).
 * Some small documentation fixes for working uniquely in a `conda` environment. (:pull:`138`).
 
-.. _changes_0.2.0:
-
-v0.2.0 (2023-06-19)
--------------------
+0.2.0 (2023-06-19)
+------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
@@ -247,10 +132,8 @@ Internal changes
     * Automated testing with `tox` now updated to use v4.0+ conventions.
     * Removed all references to `travis.ci`.
 
-.. _changes_0.1.0:
-
-v0.1.0 (2023-06-08)
--------------------
+0.1.0 (2023-06-08)
+------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Alexis Beaupré-Laperrière (:user:`Beauprel`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 * First release on PyPI.

@@ -33,12 +33,12 @@ from figanos.matplotlib.utils import (  # masknan_sizes_key,
     add_features_map,
     check_timeindex,
     convert_scen_name,
+    create_cmap,
     custom_cmap_norm,
     empty_dict,
     fill_between_label,
     get_array_categ,
     get_attributes,
-    get_ipcc_cmap_name,
     get_localized_term,
     get_rotpole,
     get_scen_color,
@@ -352,7 +352,7 @@ def timeseries(
 
     # check: type
     for arr in data.values():
-        if not isinstance(arr, xr.Dataset | xr.DataArray):
+        if not isinstance(arr, (xr.Dataset, xr.DataArray)):
             raise TypeError(
                 '"data" must be a xr.Dataset, a xr.DataArray or a dictionary of such objects.'
             )
@@ -457,7 +457,7 @@ def timeseries(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_lat_lon, str | tuple | int):
+            elif isinstance(show_lat_lon, (str, tuple, int)):
                 plot_coords(
                     ax,
                     list(data.values())[0],
@@ -482,6 +482,7 @@ def timeseries(
 
         return ax
     else:
+
         if legend is not None:
             if not im.axs[-1, -1].get_legend_handles_labels()[
                 0
@@ -514,7 +515,7 @@ def timeseries(
                     loc="lower right",
                     backgroundalpha=1,
                 )
-            elif isinstance(show_lat_lon, str | tuple | int):
+            elif isinstance(show_lat_lon, (str, tuple, int)):
                 plot_coords(
                     None,
                     list(data.values())[0].isel(lat=0, lon=0),
@@ -535,7 +536,7 @@ def gridmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
+    projection: ccrs.Projection = ccrs.PlateCarree(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
@@ -653,7 +654,8 @@ def gridmap(
         if "lat" in data.dims and "lon" in data.dims:
             transform = ccrs.PlateCarree()
         if "rlat" in data.dims and "rlon" in data.dims:
-            transform = get_rotpole(data)
+            if hasattr(data, "rotated_pole"):
+                transform = get_rotpole(data)
 
     # setup fig, ax
     if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
@@ -687,9 +689,18 @@ def gridmap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     # colormap
-    if cmap is None:
-        cmap = get_ipcc_cmap_name(
-            get_var_group(da=plot_data),
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError as e:
+                logger.error(e)
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=plot_data),
             divergent=divergent,
         )
     plot_kw.setdefault("cmap", cmap)
@@ -709,12 +720,10 @@ def gridmap(
         plot_kw.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
-        vmin = plot_kw.pop("vmin", np.nanmin(plot_data.values))
-        vmax = plot_kw.pop("vmax", np.nanmax(plot_data.values))
         norm = custom_cmap_norm(
             cmap,
-            vmin,
-            vmax,
+            np.nanmin(plot_data.values),
+            np.nanmax(plot_data.values),
             levels=levels,
             divergent=divergent,
         )
@@ -722,7 +731,7 @@ def gridmap(
 
     # set defaults
     if divergent is not False:
-        if isinstance(divergent, int | float):
+        if isinstance(divergent, (int, float)):
             plot_kw.setdefault("center", divergent)
         else:
             plot_kw.setdefault("center", 0)
@@ -781,19 +790,11 @@ def gridmap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    ax,
-                    plot_data,
-                    param="time",
-                    loc="lower right",
-                    backgroundalpha=1,
+                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            elif isinstance(show_time, str | tuple | int):
+            elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    ax,
-                    plot_data,
-                    param="time",
-                    loc=show_time,
-                    backgroundalpha=1,
+                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
                 )
 
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
@@ -805,7 +806,7 @@ def gridmap(
         return ax
 
     else:
-        for _i, fax in enumerate(im.axs.flat):
+        for _, fax in enumerate(im.axs.flat):
             add_features_map(
                 data,
                 fax,
@@ -828,24 +829,17 @@ def gridmap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    None,
-                    plot_data,
-                    param="time",
-                    loc="lower right",
-                    backgroundalpha=1,
+                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            elif isinstance(show_time, str | tuple | int):
+            elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    None,
-                    plot_data,
-                    param="time",
-                    loc=show_time,
-                    backgroundalpha=1,
+                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
                 )
 
         use_attrs.setdefault("suptitle", "long_name")
         im = set_plot_attrs(use_attrs, data, facetgrid=im)
         if enumerate_subplots and isinstance(im, xr.plot.facetgrid.FacetGrid):
+            print("here")
             for idx, ax in enumerate(im.axs.flat):
                 ax.set_title(f"{string.ascii_lowercase[idx]}) {ax.get_title()}")
 
@@ -858,7 +852,7 @@ def gdfmap(
     ax: cartopy.mpl.geoaxes.GeoAxes | cartopy.mpl.geoaxes.GeoAxesSubplot | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
+    projection: ccrs.Projection = ccrs.PlateCarree(),
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     cmap: str | matplotlib.colors.Colormap | None = None,
     levels: int | list[int | float] | None = None,
@@ -875,7 +869,6 @@ def gdfmap(
         Dataframe containing the geometries and the data to plot. Must have a column named 'geometry'.
     df_col : str
         Name of the column of 'df' containing the data to plot using the colorscale.
-        If `boundary`, only the boundary of the geometries is plotted, without colorscale.
     ax : cartopy.mpl.geoaxes.GeoAxes or cartopy.mpl.geoaxes.GeoaxesSubplot, optional
         Matplotlib axis built with a projection, on which to plot.
     fig_kw : dict, optional
@@ -932,55 +925,49 @@ def gdfmap(
     if features:
         add_cartopy_features(ax, features)
 
-    if df_col == "boundary":
-        plot = df.boundary.plot(ax=ax, **plot_kw)
-        if cmap is not None or levels is not None or divergent is not False:
-            warnings.warn("Colomap arguments are ignored when plotting 'boundary'.", stacklevel=2)
-    else:
-
-        # colormap
-        if cmap is None:
-            cmap = get_ipcc_cmap_name(
-                get_var_group(unique_str=df_col),
-                divergent=divergent,
-            )
-        if isinstance(cmap, str):
+    # colormap
+    if isinstance(cmap, str):
+        if cmap in plt.colormaps():
+            cmap = matplotlib.colormaps[cmap]
+        else:
             try:
-                cmap = matplotlib.colormaps[cmap]
-            except KeyError:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
                 warnings.warn("invalid cmap, using default", stacklevel=2)
-                cmap = matplotlib.colormaps["slev_seq"]
+                cmap = create_cmap(filename="slev_seq")
 
-        # create normalization for colormap
-        plot_kw.setdefault("vmin", df[df_col].min())
-        plot_kw.setdefault("vmax", df[df_col].max())
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(unique_str=df_col, path_to_json=cdata),
+            divergent=divergent,
+        )
 
-        if (levels is not None) or (divergent is not False):
-            norm = custom_cmap_norm(
-                cmap,
-                plot_kw["vmin"],
-                plot_kw["vmax"],
-                levels=levels,
-                divergent=divergent,
-            )
-            plot_kw.setdefault("norm", norm)
+    # create normalization for colormap
+    plot_kw.setdefault("vmin", df[df_col].min())
+    plot_kw.setdefault("vmax", df[df_col].max())
 
-        # colorbar
-        if cbar:
-            plot_kw.setdefault("legend", True)
-            plot_kw.setdefault("legend_kwds", {})
-            plot_kw["legend_kwds"].setdefault("label", df_col)
-            plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
-            plot_kw["legend_kwds"].setdefault("pad", 0.02)
+    if (levels is not None) or (divergent is not False):
+        norm = custom_cmap_norm(
+            cmap, plot_kw["vmin"], plot_kw["vmax"], levels=levels, divergent=divergent
+        )
+        plot_kw.setdefault("norm", norm)
 
-        # plot
-        plot = df.plot(column=df_col, ax=ax, cmap=cmap, **plot_kw)
+    # colorbar
+    if cbar:
+        plot_kw.setdefault("legend", True)
+        plot_kw.setdefault("legend_kwds", {})
+        plot_kw["legend_kwds"].setdefault("label", df_col)
+        plot_kw["legend_kwds"].setdefault("orientation", "horizontal")
+        plot_kw["legend_kwds"].setdefault("pad", 0.02)
+
+    # plot
+    plot = df.plot(column=df_col, ax=ax, cmap=cmap, **plot_kw)
 
     if frame is False:
         # cbar
-        if len(plot.figure.axes) > 1 and "outline" in plot.figure.axes[1].spines:  # only if it exists
-            plot.figure.axes[1].spines["outline"].set_visible(False)
-            plot.figure.axes[1].tick_params(size=0)
+        plot.figure.axes[1].spines["outline"].set_visible(False)
+        plot.figure.axes[1].tick_params(size=0)
         # main axes
         ax.spines["geo"].set_visible(False)
 
@@ -1097,15 +1084,15 @@ def violin(
         elif isinstance(color, int):
             try:
                 plot_kw.setdefault("color", style_colors[color])
-            except IndexError as err:
-                raise IndexError("Index out of range of stylesheet colors") from err
+            except IndexError:
+                raise IndexError("Index out of range of stylesheet colors") from None
         elif isinstance(color, list):
-            for c, i in zip(color, np.arange(len(color)), strict=False):
+            for c, i in zip(color, np.arange(len(color)), strict=True):
                 if isinstance(c, int):
                     try:
                         color[i] = style_colors[c]
-                    except IndexError as err:
-                        raise IndexError("Index out of range of stylesheet colors") from err
+                    except IndexError:
+                        raise IndexError("Index out of range of stylesheet colors") from None
             plot_kw.setdefault("palette", color)
 
     # plot
@@ -1264,13 +1251,21 @@ def stripes(
             data_max = max(da.values)
 
     # colormap
-    if cmap is None:
-        cmap = get_ipcc_cmap_name(
-            get_var_group(da=list(data.values())[0]),
-            divergent=True,
-        )
     if isinstance(cmap, str):
-        cmap = matplotlib.colormaps[cmap]
+        if cmap in plt.colormaps():
+            cmap = matplotlib.colormaps[cmap]
+        else:
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError as e:
+                logger.error(e)
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=list(data.values())[0]), divergent=True
+        )
 
     # create cmap norm
     if cmap_center is not None:
@@ -1279,7 +1274,7 @@ def stripes(
         norm = matplotlib.colors.Normalize(data_min, data_max)
 
     # plot
-    for (_name, subax), (key, da) in zip(subaxes.items(), data.items(), strict=False):
+    for (_name, subax), (key, da) in zip(subaxes.items(), data.items(), strict=True):
         subax.bar(da.time.dt.year, height=1, width=dtime, color=cmap(norm(da.values)))
         if divide:
             if key != "_no_label":
@@ -1406,10 +1401,11 @@ def heatmap(
         plot_kw.setdefault("col", None)
         plot_kw.setdefault("row", None)
         plot_kw.setdefault("margin_titles", True)
-        heatmap_dims = list(
-            set(da.dims)
-            - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
-        )
+        heatmap_dims = [d for d in da.dims if d not in [plot_kw["col"], plot_kw["row"]]]
+        # transpose if needed
+        if transpose:
+            heatmap_dims = heatmap_dims[::-1]
+
         if da.name is None:
             da = da.to_dataset(name="data").data
         da_name = da.name
@@ -1429,15 +1425,22 @@ def heatmap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     # colormap
-    if cmap is None:
-        cmap = get_ipcc_cmap_name(
-            get_var_group(da=da),
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError as e:
+                logger.error(e)
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=da),
             divergent=divergent,
         )
 
     # convert data to DataFrame
-    if transpose:
-        da = da.transpose()
     if "col" not in plot_kw and "row" not in plot_kw:
         if len(da.dims) != 2:
             raise ValueError("DataArray must have exactly two dimensions")
@@ -1449,7 +1452,7 @@ def heatmap(
 
     # set defaults
     if divergent is not False:
-        if isinstance(divergent, int | float):
+        if isinstance(divergent, (int, float)):
             plot_kw.setdefault("center", divergent)
         else:
             plot_kw.setdefault("center", 0)
@@ -1463,20 +1466,10 @@ def heatmap(
     # plot
     def draw_heatmap(*args, **kwargs):
         data = kwargs.pop("data")
-        d = (
-            data
-            if len(args) == 0
-            # Any sorting should be performed before sending a DataArray in `fg.heatmap`
-            else data.pivot_table(
-                index=args[1], columns=args[0], values=args[2], sort=False
-            )
-        )
+        d = data.pivot_table(index=args[1], columns=args[0], values=args[2], sort=False)
         ax = sns.heatmap(d, **kwargs)
         ax.set_xticklabels(
-            ax.get_xticklabels(),
-            rotation=45,
-            ha="right",
-            rotation_mode="anchor",
+            ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
         )
         ax.tick_params(axis="both", direction="out")
         set_plot_attrs(
@@ -1489,7 +1482,7 @@ def heatmap(
         return ax
 
     if ax is not None:
-        ax = draw_heatmap(data=df, ax=ax, **plot_kw)
+        ax = draw_heatmap(*heatmap_dims, da_name, data=df, ax=ax, **plot_kw)
         return ax
     elif "col" in plot_kw or "row" in plot_kw:
         # When using xarray's FacetGrid, `plot_kw` can be used in the FacetGrid and in the plotting function
@@ -1512,12 +1505,7 @@ def heatmap(
         g = sns.FacetGrid(df, **plot_kw_fg)
         cax = g.fig.add_axes([0.95, 0.05, 0.02, 0.9])
         g.map_dataframe(
-            draw_heatmap,
-            *heatmap_dims,
-            da_name,
-            **plot_kw_hm,
-            cbar=True,
-            cbar_ax=cax,
+            draw_heatmap, *heatmap_dims, da_name, **plot_kw_hm, cbar=True, cbar_ax=cax
         )
         g.fig.subplots_adjust(right=0.9)
         if "figsize" in fig_kw.keys():
@@ -1531,8 +1519,8 @@ def scattermap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
-    transform: ccrs.Projection | None = None,
+    projection: ccrs.Projection = ccrs.PlateCarree(),
+    transform: ccrs.Projection | None = ccrs.PlateCarree(),
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
     sizes: str | bool | None = None,
@@ -1630,15 +1618,17 @@ def scattermap(
     if "row" not in plot_kw and "col" not in plot_kw:
         use_attrs.setdefault("title", "description")
 
+    plot_kw_pop = copy.deepcopy(plot_kw)  # copy plot_kw to modify and pop info in it
+
     # extract plot_kw from dict if needed
     if isinstance(data, dict) and plot_kw and list(data.keys())[0] in plot_kw.keys():
-        plot_kw = plot_kw[list(data.keys())[0]]
+        plot_kw_pop = plot_kw_pop[list(data.keys())[0]]
 
     # figanos does not use xr.plot.scatter default markersize
     if "markersize" in plot_kw.keys():
         if not sizes:
             sizes = plot_kw["markersize"]
-        plot_kw.pop("markersize")
+        plot_kw_pop.pop("markersize")
 
     # if data is dict, extract
     if isinstance(data, dict):
@@ -1666,12 +1656,11 @@ def scattermap(
 
     # setup transform
     if transform is None:
-        if "rlat" in data.dims and "rlon" in data.dims:
-            transform = get_rotpole(data)
-        elif (
-            "lat" in data.coords and "lon" in data.coords
-        ):  # need to work with station dims
+        if "lat" in data.dims and "lon" in data.dims:
             transform = ccrs.PlateCarree()
+        elif "rlat" in data.dims and "rlon" in data.dims:
+            if hasattr(data, "rotated_pole"):
+                transform = get_rotpole(data)
 
     # setup fig, ax
     if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
@@ -1679,13 +1668,13 @@ def scattermap(
     elif ax is not None and ("col" in plot_kw or "row" in plot_kw):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+        plot_kw_pop = {"subplot_kws": {"projection": projection}} | plot_kw_pop
         cfig_kw = fig_kw.copy()
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
-            plot_kw.setdefault("figsize", fig_kw["figsize"])
+            plot_kw_pop.setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
         if len(cfig_kw) >= 1:
-            plot_kw = {"subplot_kws": {"projection": projection}} | plot_kw
+            plot_kw_pop = {"subplot_kws": {"projection": projection}} | plot_kw_pop
             warnings.warn(
                 "Only figsize and figure.add_subplot() arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
@@ -1705,14 +1694,23 @@ def scattermap(
         cbar_label = get_attributes(use_attrs["cbar_label"], data)
 
     if "add_colorbar" not in plot_kw or plot_kw["add_colorbar"] is not False:
-        plot_kw.setdefault("cbar_kwargs", {})
-        plot_kw["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
-        plot_kw["cbar_kwargs"].setdefault("pad", 0.015)
+        plot_kw_pop.setdefault("cbar_kwargs", {})
+        plot_kw_pop["cbar_kwargs"].setdefault("label", wrap_text(cbar_label))
+        plot_kw_pop["cbar_kwargs"].setdefault("pad", 0.015)
 
     # colormap
-    if cmap is None:
-        cmap = get_ipcc_cmap_name(
-            get_var_group(da=plot_data),
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError as e:
+                logger.error(e)
+                pass
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=plot_data),
             divergent=divergent,
         )
 
@@ -1742,8 +1740,7 @@ def scattermap(
         smask = ~np.isnan(sdata.values) & mask
         if np.sum(smask) < np.sum(mask):
             warnings.warn(
-                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size", stacklevel=2
-            )
+                f"{np.sum(mask) - np.sum(smask)} nan values were dropped when setting the point size", stacklevel=2)
             mask = smask
 
         pt_sizes = norm2range(
@@ -1751,15 +1748,12 @@ def scattermap(
             target_range=size_range,
             data_range=None,
         )
-        plot_kw.setdefault("add_legend", False)
+        plot_kw_pop.setdefault("add_legend", False)
         if ax:
-            plot_kw.setdefault("s", pt_sizes)
+            plot_kw_pop.setdefault("s", pt_sizes)
         else:
-            plot_kw.setdefault("s", pt_sizes[0])
+            plot_kw_pop.setdefault("s", pt_sizes[0])
 
-    # norm
-    plot_kw.setdefault("vmin", np.nanmin(plot_data.values[mask]))
-    plot_kw.setdefault("vmax", np.nanmax(plot_data.values[mask]))
     if levels is not None:
         if isinstance(levels, Iterable):
             lin = levels
@@ -1772,41 +1766,34 @@ def scattermap(
                 divergent=divergent,
                 linspace_out=True,
             )
-        plot_kw.setdefault("levels", lin)
+        plot_kw_pop.setdefault("levels", lin)
 
     elif (divergent is not False) and ("levels" not in plot_kw):
-        vmin = plot_kw.pop("vmin", np.nanmin(plot_data.values[mask]))
-        vmax = plot_kw.pop("vmax", np.nanmax(plot_data.values[mask]))
         norm = custom_cmap_norm(
             cmap,
-            vmin,
-            vmax,
+            np.nanmin(plot_data.values[mask]),
+            np.nanmax(plot_data.values[mask]),
             levels=levels,
             divergent=divergent,
         )
-        plot_kw.setdefault("norm", norm)
+        plot_kw_pop.setdefault("norm", norm)
 
-    # matplotlib.pyplot.scatter treats "edgecolor" and "edgecolors" as aliases so we accept "edgecolor" and convert it
-    if "edgecolor" in plot_kw and "edgecolors" not in plot_kw:
-        plot_kw["edgecolors"] = plot_kw["edgecolor"]
-        plot_kw.pop("edgecolor")
-
-    # set defaults and create copy without vmin, vmax (conflicts with norm)
-    plot_kw = {
+    # set defaults and
+    plot_kw_pop = {
         "cmap": cmap,
         "transform": transform,
         "zorder": 8,
         "marker": "o",
-    } | plot_kw
+    } | plot_kw_pop
 
     # check if edgecolors in plot_kw and match len of plot_data
     if "edgecolors" in plot_kw:
         if matplotlib.colors.is_color_like(plot_kw["edgecolors"]):
-            plot_kw["edgecolors"] = np.repeat(
+            plot_kw_pop["edgecolors"] = np.repeat(
                 plot_kw["edgecolors"], len(plot_data.where(mask).values)
             )
         elif len(plot_kw["edgecolors"]) != len(plot_data.values):
-            plot_kw["edgecolors"] = np.repeat(
+            plot_kw_pop["edgecolors"] = np.repeat(
                 plot_kw["edgecolors"][0], len(plot_data.where(mask).values)
             )
             warnings.warn(
@@ -1814,20 +1801,17 @@ def scattermap(
             )
         else:
             if isinstance(plot_kw["edgecolors"], list):
-                plot_kw["edgecolors"] = np.array(plot_kw["edgecolors"])
-            plot_kw["edgecolors"] = plot_kw["edgecolors"][mask]
+                plot_kw_pop["edgecolors"] = np.array(plot_kw["edgecolors"])
+            plot_kw_pop["edgecolors"] = plot_kw_pop["edgecolors"][mask]
     else:
-        plot_kw.setdefault("edgecolors", "none")
+        plot_kw_pop.setdefault("edgecolor", "none")
 
-    for key in ["vmin", "vmax"]:
-        plot_kw.pop(key, None)
     # plot
-    plot_kw = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw
+    plot_kw_pop = {"x": "lon", "y": "lat", "hue": plot_data.name} | plot_kw_pop
     if ax:
-        plot_kw.setdefault("ax", ax)
-
-    plot_data_masked = plot_data.where(mask).to_dataset()
-    im = plot_data_masked.plot.scatter(**plot_kw)
+        plot_kw_pop.setdefault("ax", ax)
+    v = plot_data.where(mask).to_dataset()
+    im = v.plot.scatter(**plot_kw_pop)
 
     # add features
     if ax:
@@ -1844,19 +1828,11 @@ def scattermap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    ax,
-                    plot_data,
-                    param="time",
-                    loc="lower right",
-                    backgroundalpha=1,
+                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            elif isinstance(show_time, str | tuple | int):
+            elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    ax,
-                    plot_data,
-                    param="time",
-                    loc=show_time,
-                    backgroundalpha=1,
+                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
                 )
 
         if (frame is False) and (im.colorbar is not None):
@@ -1885,19 +1861,11 @@ def scattermap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    None,
-                    plot_data,
-                    param="time",
-                    loc="lower right",
-                    backgroundalpha=1,
+                    None, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            elif isinstance(show_time, str | tuple | int):
+            elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    None,
-                    plot_data,
-                    param="time",
-                    loc=show_time,
-                    backgroundalpha=1,
+                    None, plot_data, param="time", loc=show_time, backgroundalpha=1
                 )
 
     # size legend
@@ -1906,7 +1874,7 @@ def scattermap(
             np.resize(sdata.values[mask], (sdata.values[mask].size, 1)),
             np.resize(pt_sizes[mask], (pt_sizes[mask].size, 1)),
             max_entries=6,
-            marker=plot_kw["marker"],
+            marker=plot_kw_pop["marker"],
         )
         # legend spacing
         if size_range[1] > 200:
@@ -1967,6 +1935,8 @@ def taylordiagram(
     corr_label: str | None = None,
     colors_key: str | None = None,
     markers_key: str | None = None,
+    fig: matplotlib.figure.Figure | None = None,
+    subplot_num: int = 111,
 ):
     """
     Build a Taylor diagram.
@@ -1976,7 +1946,7 @@ def taylordiagram(
     Parameters
     ----------
     data : xr.DataArray or dict
-        DataArray or dictionary of DataArrays created by xsdba.measures.taylordiagram, each corresponding
+        DataArray or dictionary of DataArrays created by xclim.sdba.measures.taylordiagram, each corresponding
         to a point on the diagram. The dictionary keys will become their labels.
     plot_kw : dict, optional
         Arguments to pass to the `plot()` function. Changes how the markers look.
@@ -2097,15 +2067,15 @@ def taylordiagram(
 
     # get highest std for axis limits
     max_std = [ref_std]
-    for da in data.values():
-        max_std.extend(
-            [
-                max(
-                    da.sel(taylor_param="ref_std").values,
-                    da.sel(taylor_param="sim_std").values,
-                ).astype(float)
-            ]
+    max_std.extend([
+        float(
+            max(
+                da.sel(taylor_param="ref_std").values,
+                da.sel(taylor_param="sim_std").values,
+            )
         )
+        for da in data.values()
+    ])
 
     # make labels
     if not std_label:
@@ -2133,7 +2103,7 @@ def taylordiagram(
     rlocs = np.array([0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1])
     tlocs = np.arccos(rlocs)  # Conversion to polar angles
     gl1 = gf.FixedLocator(tlocs)  # Positions
-    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs), strict=False)))
+    tf1 = gf.DictFormatter(dict(zip(tlocs, map(str, rlocs), strict=True)))
     # Standard deviation axis extent
     radius_min = std_range[0] * max(max_std)
     radius_max = std_range[1] * max(max_std)
@@ -2146,8 +2116,10 @@ def taylordiagram(
         tick_formatter1=tf1,
     )
 
-    fig = plt.figure(**fig_kw)
-    floating_ax = FloatingSubplot(fig, 111, grid_helper=ghelper)
+    if fig is None:
+        fig = plt.figure(**fig_kw)
+
+    floating_ax = FloatingSubplot(fig, subplot_num, grid_helper=ghelper)
     fig.add_subplot(floating_ax)
 
     # Adjust axes
@@ -2263,7 +2235,7 @@ def taylordiagram(
                 plot_kw[key]["marker"] = markersd[da.attrs[markers_key]]
 
     # plot scatter
-    for (key, da), i in zip(data.items(), range(len(data)), strict=False):
+    for (key, da), i in zip(data.items(), range(len(data)), strict=True):
         # look for SSP, RCP, CMIP model color
         if colors_key is None:
             plot_kw[key].setdefault(
@@ -2309,12 +2281,12 @@ def hatchmap(
     use_attrs: dict[str, Any] | None = None,
     fig_kw: dict[str, Any] | None = None,
     plot_kw: dict[str, Any] | None = None,
-    projection: ccrs.Projection = ccrs.LambertConformal(),
+    projection: ccrs.Projection = ccrs.PlateCarree(),
     transform: ccrs.Projection | None = None,
     features: list[str] | dict[str, dict[str, Any]] | None = None,
     geometries_kw: dict[str, Any] | None = None,
     levels: int | None = None,
-    legend_kw: dict[str, Any] | bool = True,
+    legend_kw: dict[str, Any] | None = None,
     show_time: bool | str | int | tuple[float, float] = False,
     frame: bool = False,
     enumerate_subplots: bool = False,
@@ -2347,8 +2319,8 @@ def hatchmap(
         cartopy.feature: ['coastline', 'borders', 'lakes', 'land', 'ocean', 'rivers', 'states'].
     geometries_kw : dict, optional
         Arguments passed to cartopy ax.add_geometry() which adds given geometries (GeoDataFrame geometry) to axis.
-    legend_kw : dict or boolean, optional
-        Arguments to pass to `ax.legend()`. No legend is added if legend_kw == False.
+    legend_kw : dict, optional
+        Arguments to pass to `ax.legend()`.
     show_time : bool, tuple, string or int.
         If True, show time (as date) at the bottom right of the figure.
         Can be a tuple of axis coordinates (0 to 1, as a fraction of the axis length) representing the location
@@ -2411,21 +2383,24 @@ def hatchmap(
 
     dattrs = None
     plot_data = {}
+    dc = plot_kw.copy()
 
     # convert data to dict (if not one)
     if not isinstance(data, dict):
         if isinstance(data, xr.DataArray):
             plot_data = {data.name: data}
-            if data.name not in plot_kw.keys():
-                plot_kw = {data.name: plot_kw}
+            if list(data.keys())[0] not in plot_kw.keys():
+                plot_kw = {list(plot_data.keys())[0]: dc}
         elif isinstance(data, xr.Dataset):
             dattrs = data
             plot_data = {var: data[var] for var in data.data_vars}
             for v in plot_data.keys():
                 if v not in plot_kw.keys():
-                    plot_kw[v] = plot_kw
+                    plot_kw[v] = dc
     else:
         for k, v in data.items():
+            if k not in plot_kw.keys():
+                plot_kw[k] = dc
             if isinstance(v, xr.Dataset):
                 dattrs = k
                 plot_data[k] = v[list(v.data_vars)[0]]
@@ -2433,47 +2408,42 @@ def hatchmap(
             else:
                 plot_data[k] = v
 
-    # if plot_kw doesn't have any of the same key as data,
-    # put plot_kw as a nested dict with the same keys as data
-    if not any(k in plot_kw for k in plot_data.keys()):
-        plot_kw = {k: plot_kw for k in plot_data.keys()}
-    # if plot_kw is only missing some keys, fill them with empty dicts
-    for k in plot_data.keys():
-        if k not in plot_kw:
-            plot_kw[k] = {}
-
     # setup transform from first data entry
     trdata = list(plot_data.values())[0]
     if transform is None:
         if "lat" in trdata.dims and "lon" in trdata.dims:
             transform = ccrs.PlateCarree()
         elif "rlat" in trdata.dims and "rlon" in trdata.dims:
-            transform = get_rotpole(list(plot_data.values())[0])
+            if hasattr(list(plot_data.values())[0], "rotated_pole"):
+                transform = get_rotpole(list(plot_data.values())[0])
 
     # bug xlim / ylim + transform in facetgrids
     # (see https://github.com/pydata/xarray/issues/8562#issuecomment-1865189766)
     if transform and (
         "xlim" in list(plot_kw.values())[0] and "ylim" in list(plot_kw.values())[0]
     ):
-        extent = [
+        extend = [
             list(plot_kw.values())[0]["xlim"][0],
             list(plot_kw.values())[0]["xlim"][1],
             list(plot_kw.values())[0]["ylim"][0],
             list(plot_kw.values())[0]["ylim"][1],
         ]
-        [v.pop(lim) for lim in ["xlim", "ylim"] for v in plot_kw.values() if lim in v]
+        {v.pop("xlim") for v in plot_kw.values()}
+        {v.pop("ylim") for v in plot_kw.values()}
 
     elif transform and (
         "xlim" in list(plot_kw.values())[0] or "ylim" in list(plot_kw.values())[0]
     ):
-        extent = None
+        extend = None
         warnings.warn(
             "Requires both xlim and ylim with 'transform'. Xlim or ylim was dropped", stacklevel=2
         )
-        [v.pop(lim) for lim in ["xlim", "ylim"] for v in plot_kw.values() if lim in v]
-
+        if "xlim" in list(plot_kw.values())[0].keys():
+            {v.pop("xlim") for v in plot_kw.values()}
+        if "ylim" in list(plot_kw.values())[0].keys():
+            {v.pop("ylim") for v in plot_kw.values()}
     else:
-        extent = None
+        extend = None
 
     # setup fig, ax
     if ax is None and (
@@ -2487,11 +2457,11 @@ def hatchmap(
     ):
         raise ValueError("Cannot use 'ax' and 'col'/'row' at the same time.")
     elif ax is None:
-        [
+        {
             v.setdefault("subplot_kws", {}).setdefault("projection", projection)
             for v in plot_kw.values()
-        ]
-        cfig_kw = copy.deepcopy(fig_kw)
+        }
+        cfig_kw = fig_kw.copy()
         if "figsize" in fig_kw:  # add figsize to plot_kw for facetgrid
             plot_kw[0].setdefault("figsize", fig_kw["figsize"])
             cfig_kw.pop("figsize")
@@ -2539,9 +2509,9 @@ def hatchmap(
             im = v.where(mask is not True).plot.contourf(**plot_kw[k])
             artists, labels = im.legend_elements(str_format="{:2.1f}".format)
 
-            if ax and legend_kw:
+            if ax:
                 ax.legend(artists, labels, **legend_kw)
-            elif legend_kw:
+            else:
                 im.figlegend = im.fig.legend(**legend_kw)
 
         elif len(plot_data) > 1 and "levels" in plot_kw[k]:
@@ -2555,13 +2525,6 @@ def hatchmap(
             if "hatches" not in plot_kw[k].keys():
                 plot_kw[k]["hatches"] = dfh[n]
                 n += 1
-            elif isinstance(
-                plot_kw[k]["hatches"], str
-            ):  # make sure the hatches are in a list
-                warnings.warn(
-                    "Hatches argument must be of type 'list'. Wrapping string argument as list.", stacklevel=2
-                )
-                plot_kw[k]["hatches"] = [plot_kw[k]["hatches"]]
 
             plot_kw[k].setdefault("transform", transform)
             if ax:
@@ -2569,19 +2532,10 @@ def hatchmap(
 
             if not ax:
                 if k == list(plot_data.keys())[0]:
-                    c_pkw = plot_kw[k].copy()
-                    if "col" in plot_kw[k].keys() or "row" in plot_kw[k].keys():
-                        if c_pkw["colors"] == "none":
-                            c_pkw.pop("colors")
-                        im = v.plot.contourf(**c_pkw)
+                    im = v.plot.contourf(**plot_kw[k])
 
                 for i, fax in enumerate(im.axs.flat):
-                    if (
-                        k == list(plot_data.keys())[0]
-                        and plot_kw[k]["colors"] == "none"
-                    ):
-                        fax.clear()
-                    if len(plot_data) > 1:
+                    if len(plot_data) > 1 and k != list(plot_data.keys())[0]:
                         # select data to plot from DataSet in loop to plot on facetgrids axis
                         c_pkw = plot_kw[k].copy()
                         c_pkw.pop("subplot_kws")
@@ -2604,31 +2558,31 @@ def hatchmap(
                             geometries_kw,
                             frame,
                         )
-                        if extent:
-                            fax.set_extent(extent)
+                        if extend:
+                            fax.set_extent(extend)
 
             pat_leg.append(
                 matplotlib.patches.Patch(
-                    hatch=plot_kw[k]["hatches"][0], fill=False, label=k
+                    hatch=plot_kw[k]["hatches"], fill=False, label=k
                 )
             )
 
-    if pat_leg and legend_kw:
+    if pat_leg:
         legend_kw = {
             "loc": "lower right",
             "handleheight": 2,
             "handlelength": 4,
         } | legend_kw
 
-        if ax and legend_kw:
+        if ax:
             ax.legend(handles=pat_leg, **legend_kw)
-        elif legend_kw:
+        else:
             im.figlegend = im.fig.legend(handles=pat_leg, **legend_kw)
 
     # add features
     if ax:
-        if extent:
-            ax.set_extent(extent)
+        if extend:
+            ax.set_extend(extend)
         if dattrs:
             use_attrs.setdefault("title", "description")
 
@@ -2645,19 +2599,11 @@ def hatchmap(
         if show_time:
             if isinstance(show_time, bool):
                 plot_coords(
-                    ax,
-                    plot_data,
-                    param="time",
-                    loc="lower right",
-                    backgroundalpha=1,
+                    ax, plot_data, param="time", loc="lower right", backgroundalpha=1
                 )
-            elif isinstance(show_time, str | tuple | int):
+            elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
-                    ax,
-                    plot_data,
-                    param="time",
-                    loc=show_time,
-                    backgroundalpha=1,
+                    ax, plot_data, param="time", loc=show_time, backgroundalpha=1
                 )
 
         # when im is an ax, it has a colorbar attribute. If it is a facetgrid, it has a cbar attribute.
@@ -2681,13 +2627,9 @@ def hatchmap(
         if show_time:
             if show_time is True:
                 plot_coords(
-                    None,
-                    dattrs,
-                    param="time",
-                    loc="lower right",
-                    backgroundalpha=1,
+                    None, dattrs, param="time", loc="lower right", backgroundalpha=1
                 )
-            elif isinstance(show_time, str | tuple | int):
+            elif isinstance(show_time, (str, tuple, int)):
                 plot_coords(
                     None, dattrs, param="time", loc=show_time, backgroundalpha=1
                 )
@@ -2808,20 +2750,12 @@ def partition(
             num = len(data.attrs.get(u, []))  # compatible with pre PR PR #1529
             label = f"{u} ({num})" if show_num and num else u
             ax.fill_between(
-                time,
-                past_y,
-                present_y,
-                label=label,
-                **fill_kw.get(u, fk_direct),
+                time, past_y, present_y, label=label, **fill_kw.get(u, fk_direct)
             )
             black_lines.append(present_y)
             past_y = present_y
     ax.fill_between(
-        time,
-        past_y,
-        100,
-        label="variability",
-        **fill_kw.get("variability", fk_direct),
+        time, past_y, 100, label="variability", **fill_kw.get("variability", fk_direct)
     )
 
     # Draw black lines
@@ -2920,9 +2854,18 @@ def triheatmap(
         fig, ax = plt.subplots(**fig_kw)
 
     # colormap
-    if cmap is None:
-        cmap = get_ipcc_cmap_name(
-            get_var_group(da=da),
+    if isinstance(cmap, str):
+        if cmap not in plt.colormaps():
+            try:
+                cmap = create_cmap(filename=cmap)
+            except FileNotFoundError:
+                pass
+                logging.log("Colormap not found. Using default.")
+
+    elif cmap is None:
+        cdata = Path(__file__).parents[1] / "data/ipcc_colors/variable_groups.json"
+        cmap = create_cmap(
+            get_var_group(path_to_json=cdata, da=da),
             divergent=divergent,
         )
 
@@ -2958,21 +2901,18 @@ def triheatmap(
 
     # plot
     if len(d) == 2:
+
         x = np.arange(m + 1)
         y = np.arange(n + 1)
         xss, ys = np.meshgrid(x, y)
-        (xss * ys) % 10
+        # zs = (xss * ys) % 10 # this is unused
         triangles1 = [
             (i + j * (m + 1), i + 1 + j * (m + 1), i + (j + 1) * (m + 1))
             for j in range(n)
             for i in range(m)
         ]
         triangles2 = [
-            (
-                i + 1 + j * (m + 1),
-                i + 1 + (j + 1) * (m + 1),
-                i + (j + 1) * (m + 1),
-            )
+            (i + 1 + j * (m + 1), i + 1 + (j + 1) * (m + 1), i + (j + 1) * (m + 1))
             for j in range(n)
             for i in range(m)
         ]
@@ -2982,13 +2922,14 @@ def triheatmap(
 
         imgs = [
             ax.tripcolor(t, np.ravel(val), **plotkw)
-            for t, val, plotkw in zip(triangul, d, plot_kw, strict=False)
+            for t, val, plotkw in zip(triangul, d, plot_kw, strict=True)
         ]
 
         ax.set_xticks(np.array(range(m)) + 0.5, labels=labels_x, rotation=45)
         ax.set_yticks(np.array(range(n)) + 0.5, labels=labels_y, rotation=90)
 
     elif len(d) == 4:
+
         xv, yv = np.meshgrid(
             np.arange(-0.5, m), np.arange(-0.5, n)
         )  # vertices of the little squares
@@ -3010,11 +2951,7 @@ def triheatmap(
             for i in range(m)
         ]
         triangles_s = [
-            (
-                i + 1 + (j + 1) * (m + 1),
-                i + (j + 1) * (m + 1),
-                cstart + i + j * m,
-            )
+            (i + 1 + (j + 1) * (m + 1), i + (j + 1) * (m + 1), cstart + i + j * m)
             for j in range(n)
             for i in range(m)
         ]
@@ -3025,17 +2962,12 @@ def triheatmap(
         ]
         triangul = [
             Triangulation(x, y, triangles)
-            for triangles in [
-                triangles_n,
-                triangles_e,
-                triangles_s,
-                triangles_w,
-            ]
+            for triangles in [triangles_n, triangles_e, triangles_s, triangles_w]
         ]
 
         imgs = [
             ax.tripcolor(t, np.ravel(val), **plotkw)
-            for t, val, plotkw in zip(triangul, d, plot_kw, strict=False)
+            for t, val, plotkw in zip(triangul, d, plot_kw, strict=True)
         ]
         ax.set_xticks(np.array(range(m)), labels=labels_x, rotation=45)
         ax.set_yticks(np.array(range(n)), labels=labels_y, rotation=90)
@@ -3082,7 +3014,7 @@ def triheatmap(
         plt.colorbar(imgs[0], ax=ax, **cbar_kw[0])
 
     elif (cbar == "each") or (cbar is True):
-        for i in reversed(range(len(d))):  # switch order of colour bars
+        for i in reversed(range(len(d))):  # switch order of colorbars
             plt.colorbar(imgs[i], ax=ax, **cbar_kw[i])
 
     return ax
