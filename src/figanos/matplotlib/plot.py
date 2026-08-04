@@ -1406,10 +1406,10 @@ def heatmap(
         plot_kw.setdefault("col", None)
         plot_kw.setdefault("row", None)
         plot_kw.setdefault("margin_titles", True)
-        heatmap_dims = list(
-            set(da.dims)
-            - {d for d in [plot_kw["col"], plot_kw["row"]] if d is not None}
-        )
+        heatmap_dims = [d for d in da.dims if d not in [plot_kw["col"], plot_kw["row"]]]
+        # transpose if needed
+        if transpose:
+            heatmap_dims = heatmap_dims[::-1]
         if da.name is None:
             da = da.to_dataset(name="data").data
         da_name = da.name
@@ -1436,8 +1436,6 @@ def heatmap(
         )
 
     # convert data to DataFrame
-    if transpose:
-        da = da.transpose()
     if "col" not in plot_kw and "row" not in plot_kw:
         if len(da.dims) != 2:
             raise ValueError("DataArray must have exactly two dimensions")
@@ -1463,20 +1461,10 @@ def heatmap(
     # plot
     def draw_heatmap(*args, **kwargs):
         data = kwargs.pop("data")
-        d = (
-            data
-            if len(args) == 0
-            # Any sorting should be performed before sending a DataArray in `fg.heatmap`
-            else data.pivot_table(
-                index=args[1], columns=args[0], values=args[2], sort=False
-            )
-        )
+        d = data.pivot_table(index=args[1], columns=args[0], values=args[2], sort=False)
         ax = sns.heatmap(d, **kwargs)
         ax.set_xticklabels(
-            ax.get_xticklabels(),
-            rotation=45,
-            ha="right",
-            rotation_mode="anchor",
+            ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
         )
         ax.tick_params(axis="both", direction="out")
         set_plot_attrs(
@@ -1489,7 +1477,7 @@ def heatmap(
         return ax
 
     if ax is not None:
-        ax = draw_heatmap(data=df, ax=ax, **plot_kw)
+        ax = draw_heatmap(*heatmap_dims, da_name, data=df, ax=ax, **plot_kw)
         return ax
     elif "col" in plot_kw or "row" in plot_kw:
         # When using xarray's FacetGrid, `plot_kw` can be used in the FacetGrid and in the plotting function
