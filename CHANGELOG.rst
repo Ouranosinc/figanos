@@ -2,25 +2,23 @@
 Changelog
 =========
 
-..
-    `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
-    --------------------------------------------------------------
 
-    Contributors: Juliette Lavoie (:user:`juliettelavoie`)
+`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+--------------------------------------------------------------
 
-    Changes
-    ^^^^^^^
-    * No change.
+Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`coxipi`).
 
-    Fixes
-    ^^^^^
-    * Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`413`, :issue:`413`).
+Fixes
+^^^^^
+* Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`414`, :issue:`413`).
+* `transpose` option now works reliably `fg.matplotlib.heatmap` (:pull:`416`).
+
 
 .. _changes_0.7.0:
 
 `v0.7.0 <https://github.com/Ouranosinc/figanos/tree/0.7.0>`_ (2026-06-08)
 -------------------------------------------------------------------------
-Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`), Éric Dupuis (:user:`coxipi`).
+Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
 ^^^^^^^
@@ -54,10 +52,6 @@ Internal changes
     * Added guidance for maintainers on git commit signing and immutable releases.
     * Adjusted the source distribution inclusion/exclusion list.
     * Set `bump-my-version` to sign tags by default.
-
-Fixes
-^^^^^
-* `transpose` option now works reliably `fg.matplotlib.heatmap` (:pull:`238`, :issue:`239`).
 
 .. _changes_0.6.0:
 
