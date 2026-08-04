@@ -1407,7 +1407,6 @@ def heatmap(
         plot_kw.setdefault("row", None)
         plot_kw.setdefault("margin_titles", True)
         heatmap_dims = [d for d in da.dims if d not in [plot_kw["col"], plot_kw["row"]]]
-        # transpose if needed
         if transpose:
             heatmap_dims = heatmap_dims[::-1]
         if da.name is None:
