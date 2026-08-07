@@ -1393,6 +1393,14 @@ def heatmap(
     else:
         raise TypeError("`data` must contain a xr.DataArray or xr.Dataset")
 
+    # get heatmap_dims
+    plot_kw.setdefault("col", None)
+    plot_kw.setdefault("row", None)
+    plot_kw.setdefault("margin_titles", True)
+    heatmap_dims = [d for d in da.dims if d not in [plot_kw["col"], plot_kw["row"]]]
+    if transpose:
+        heatmap_dims = heatmap_dims[::-1]
+
     # setup fig, axis
     if ax is None and ("row" not in plot_kw.keys() and "col" not in plot_kw.keys()):
         fig, ax = plt.subplots(**fig_kw)
@@ -1403,12 +1411,6 @@ def heatmap(
             warnings.warn(
                 "Only figsize arguments can be passed to fig_kw when using facetgrid.", stacklevel=2
             )
-        plot_kw.setdefault("col", None)
-        plot_kw.setdefault("row", None)
-        plot_kw.setdefault("margin_titles", True)
-        heatmap_dims = [d for d in da.dims if d not in [plot_kw["col"], plot_kw["row"]]]
-        if transpose:
-            heatmap_dims = heatmap_dims[::-1]
         if da.name is None:
             da = da.to_dataset(name="data").data
         da_name = da.name
