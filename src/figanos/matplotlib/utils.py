@@ -878,7 +878,9 @@ def get_var_group(
                 matches.append(var_dict[v])
 
     else:
+        ds = None
         if isinstance(da, xr.Dataset):
+            ds = da
             da = da[list(da.data_vars)[0]]
         # look in DataArray name
         if hasattr(da, "name") and isinstance(da.name, str):
@@ -895,7 +897,7 @@ def get_var_group(
                     matches.append(var_dict[v])
 
         # look in ds history (probability of a meaningful match decreases here, do it last)
-        if hasattr(ds, "history") and len(matches) == 0:
+        if ds is not None and hasattr(ds, "history") and len(matches) == 0:
             for v in var_dict:
                 regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"
                 if re.search(regex, ds.history):
