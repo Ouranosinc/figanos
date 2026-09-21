@@ -894,7 +894,6 @@ def get_var_group(
                 if re.search(regex, da.history):
                     matches.append(var_dict[v])
 
-    
         # look in ds history (probability of a meaningful match decreases here, do it last)
         if hasattr(ds, "history") and len(matches) == 0:
             for v in var_dict:
