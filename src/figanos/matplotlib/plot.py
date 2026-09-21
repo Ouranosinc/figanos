@@ -579,7 +579,7 @@ def gridmap(
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray,
-        its 'history' attribute or one from the dataset, and use corresponding colormap, aligned with the IPCC visual
+        its 'xclim_description' attribute or its 'history' attribute, and use corresponding colormap, aligned with the IPCC visual
         style guide 2022 (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, list, np.ndarray, optional
         Number of levels to divide the colormap into or list of level boundaries (in data units).
@@ -1145,7 +1145,7 @@ def stripes(
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray,
-        its 'history' attribute or one from the dataset, and use corresponding diverging colormap, aligned with the
+        its 'xclim_description' attribute or its 'history' attribute, and use corresponding diverging colormap, aligned with the
         IPCC visual style guide 2022
         (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     cmap_center : int or float
@@ -1356,7 +1356,7 @@ def heatmap(
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray,
-        its 'history' attribute or one from the dataset, and use corresponding colormap, aligned with the IPCC visual
+        its 'xclim_description' attribute or its 'history' attribute, and use corresponding colormap, aligned with the IPCC visual
         style guide 2022 (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
@@ -1581,7 +1581,7 @@ def scattermap(
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray,
-        its 'history' attribute or one from the dataset, and use corresponding colormap, aligned with the IPCC visual
+        its 'xclim_description' attribute or its 'history' attribute, and use corresponding colormap, aligned with the IPCC visual
         style guide 2022 (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     levels : int, optional
         Number of levels to divide the colormap into.
@@ -2882,7 +2882,7 @@ def triheatmap(
     cmap : matplotlib.colors.Colormap or str, optional
         Colormap to use. If str, can be a matplotlib or name of the file of an IPCC colormap (see data/ipcc_colors).
         If None, look for common variables (from data/ipcc_colors/variables_groups.json) in the name of the DataArray,
-        its 'history' attribute or one from the dataset, and use corresponding colormap, aligned with the IPCC visual
+        its 'xclim_description' attribute or its 'history' attribute, and use corresponding colormap, aligned with the IPCC visual
         style guide 2022 (https://www.ipcc.ch/site/assets/uploads/2022/09/IPCC_AR6_WGI_VisualStyleGuide_2022.pdf).
     divergent : bool or int or float
         If int or float, becomes center of cmap. Default center is 0.
