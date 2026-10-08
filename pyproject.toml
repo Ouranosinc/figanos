@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core >=3.12.0,<4"]
+requires = ["flit_core >=4.0,<5.0"]
 build-backend = "flit_core.buildapi"
 
 [dependency-groups]
@@ -46,7 +46,7 @@ docs = [
   "sphinx-codeautolink >=0.16.2",
   "sphinx-copybutton >=0.5.2",
   "sphinx-intl",
-  {include-group = "notebooks"}
+  { include-group = "notebooks" }
 ]
 tox = [
   "tox >=4.52.0",
@@ -55,27 +55,28 @@ tox = [
 dev = [
   # Development and testing tools
   "bump-my-version >=1.3.0",
+  "flit >=4.0,<5.0",
   "pip >=26.0.1",
   "prek >=0.3.0",
   "watchdog >=6.0.0",
-  {include-group = "docs"},
-  {include-group = "lint"},
-  {include-group = "test"},
-  {include-group = "tox"}
+  { include-group = "docs" },
+  { include-group = "lint" },
+  { include-group = "test" },
+  { include-group = "tox" }
 ]
 
 [project]
 name = "figanos"
 authors = [
-  {name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca"},
-  {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
-  {name = "Alexis Beaupré-Laperrière", email = "Beaupre-Laperriere.Alexis@ouranos.ca"}
+  { name = "Sarah-Claude Bourdeau-Goulet", email = "bourdeau-goulet.sarah-claude@ouranos.ca" },
+  { name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca" },
+  { name = "Alexis Beaupré-Laperrière", email = "Beaupre-Laperriere.Alexis@ouranos.ca" }
 ]
 maintainers = [
-  {name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca"},
-  {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
+  { name = "Juliette Lavoie", email = "lavoie.juliette@ouranos.ca" },
+  { name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca" }
 ]
-readme = {file = "README.rst", content-type = "text/x-rst"}
+readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.10.0"
 keywords = ["figanos"]
 license = "Apache-2.0"
