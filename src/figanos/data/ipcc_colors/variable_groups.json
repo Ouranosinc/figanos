@@ -17,6 +17,7 @@
   "precipitation": "prec",
   "liquidprcptot": "prec",
   "solidprcptot": "prec",
+  "prcptot": "prec",
   "evapotranspiration": "prec",
   "sfcWind": "wind",
   "ua": "wind",

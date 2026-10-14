@@ -10,7 +10,7 @@ Changelog
 
     Changes
     ^^^^^^^
-    * No change.
+    * Search variable groups in dataset's history attribute when possible (:pull:`419`).
 
     Fixes
     ^^^^^
