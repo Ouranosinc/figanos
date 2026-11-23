@@ -39,13 +39,13 @@ dependencies = [
   "cairosvg >=2.6.0",
   "geopandas >=1.0",
   "matplotlib >=3.8.0",
-  "numpy >=1.25.0",
+  "numpy >=2.2.0",
   "pandas >=2.2.0",
   "platformdirs >=4.0",
   "pyyaml >=6.0.1",
   "seaborn >=0.13.0",
-  "scikit-image >=0.21.0",
-  "xarray >=2023.11.0",
+  "scikit-image >=0.23.0",
+  "xarray >=2024.11.0",
   "xclim >=1.0.0"
 ]
 

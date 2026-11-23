@@ -15,8 +15,8 @@ dependencies:
   - platformdirs >=4.0
   - pint >=0.18
   - pyyaml >=6.0.1
-  - scikit-image >=0.21.0
-  - xarray >=2023.11.0
+  - scikit-image >=0.23.0
+  - xarray >=2024.11.0
   - xclim >=1.0.0
   - xsdba >=0.8.0
   - proj <9.8 #FIXME: tmp pin until cartopy fixes issue. See https://github.com/Ouranosinc/figanos/issues/386
