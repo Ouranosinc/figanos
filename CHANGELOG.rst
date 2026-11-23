@@ -9,7 +9,7 @@ Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`cox
 Changes
 ^^^^^^^
 * Search variable groups in `da.name`, `da.xclim_description` and `da.history`, in this order (:pull:`419`).
- 
+
 Breaking changes
 ^^^^^^^^^^^^^^^^
 * Python 3.10 support has been dropped (:pull:`419`).
