@@ -887,7 +887,14 @@ def get_var_group(
                 if re.search(regex, da.name):
                     matches.append(var_dict[v])
 
-        # look in history
+        # look in variable xclim_description (similar to old version of variable history)
+        if hasattr(da, "xclim_description") and len(matches) == 0:
+            for v in var_dict:
+                regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"
+                if re.search(regex, da.xclim_description):
+                    matches.append(var_dict[v])
+
+        # look in history (only makes sense with indicator datasets created with xclim < 1)
         if hasattr(da, "history") and len(matches) == 0:
             for v in var_dict:
                 regex = rf"(?:^|[^a-zA-Z])({v})(?:[^a-zA-Z]|$)"

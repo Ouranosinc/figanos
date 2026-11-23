@@ -30,7 +30,7 @@ notebooks = [
   "matplotlib >=3.8.0",
   "netcdf4",
   "pooch >=1.8.0", # for local and xclim-testdata
-  "xsdba >=0.5.0",
+  "xsdba >=0.8.0",
   "zarr >=2.13.0"
 ]
 docs = [
@@ -77,18 +77,17 @@ maintainers = [
   { name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca" }
 ]
 readme = { file = "README.rst", content-type = "text/x-rst" }
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 keywords = ["figanos"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -109,7 +108,7 @@ dependencies = [
   "seaborn >=0.13.0",
   "scikit-image >=0.21.0",
   "xarray >=2023.11.0",
-  "xclim >=0.52.2"
+  "xclim >=1.0.0"
 ]
 
 [project.optional-dependencies]
@@ -269,7 +268,7 @@ exclude = [
 
 [tool.mypy]
 files = "."
-python_version = "3.10"
+python_version = "3.11"
 show_error_codes = true
 strict = true
 warn_no_return = true

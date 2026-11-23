@@ -5,14 +5,16 @@ Changelog
 
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
+Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`coxipi`), Pascal Bourgault (:user:`aulemahal`).
 
-Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`coxipi`).
+Changes
+^^^^^^^
+* Search variable groups in `da.name`, `da.xclim_description` and `da.history`, in this order. (:pull:`419`).
 
 Fixes
 ^^^^^
 * Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`414`, :issue:`413`).
 * `transpose` option now works reliably in `fg.matplotlib.heatmap` (:pull:`416`).
-
 
 .. _changes_0.7.0:
 
