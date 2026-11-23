@@ -13,13 +13,14 @@
     - any-glob-to-any-file:
       - '.editorconfig'
       - '.flake8'
+      - '.github/*.in'
+      - '.github/*.txt'
       - '.pre-commit-config.yaml'
       - '.readthedocs.yml'
       - '.yamllint.yml'
       - '.github/workflows/*'
       - 'docs/Makefile'
       - 'tox.toml'
-      - 'CI/**/*'
       - 'Makefile'
 # label 'docs' all documentation-related steps and files
 'docs':
