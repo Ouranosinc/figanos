@@ -2,19 +2,30 @@
 Changelog
 =========
 
-
 `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
 --------------------------------------------------------------
-Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`coxipi`), Pascal Bourgault (:user:`aulemahal`).
+Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`coxipi`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
 ^^^^^^^
-* Search variable groups in `da.name`, `da.xclim_description` and `da.history`, in this order. (:pull:`419`).
+* Search variable groups in `da.name`, `da.xclim_description` and `da.history`, in this order (:pull:`419`).
+ 
+Breaking changes
+^^^^^^^^^^^^^^^^
+* Python 3.10 support has been dropped (:pull:`419`).
+* `figanos` now requires `numpy >=2.2.0`, `xarray >=2024.11.0`, `xclim >=1.0.0`, and `xsdba >=0.8.0` (:pull:`419`).
 
 Fixes
 ^^^^^
 * Fix handling of plot_kw in ``fg.matplotlib.hatchmap`` (:pull:`414`, :issue:`413`).
 * `transpose` option now works reliably in `fg.matplotlib.heatmap` (:pull:`416`).
+
+Internal changes
+^^^^^^^^^^^^^^^^
+* Updated the cookiecutter template to use the latest commit (:pull:`433`):
+    * CI workflow triggers, logic, and concurrency fixes.
+    * AI policy guidance updates.
+    * Documentation formatting fixes.
 
 .. _changes_0.7.0:
 
