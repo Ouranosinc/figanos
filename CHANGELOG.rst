@@ -2,8 +2,24 @@
 Changelog
 =========
 
-`Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
---------------------------------------------------------------
+..
+    `Unreleased <https://github.com/Ouranosinc/figanos>`_ (latest)
+    --------------------------------------------------------------
+
+    Contributors:
+
+    Changes
+    ^^^^^^^
+    * No change.
+
+    Fixes
+    ^^^^^
+    * No change.
+
+.. _changes_0.8.0:
+
+`v0.8.0 <https://github.com/Ouranosinc/figanos/tree/v0.8.0>`_ (2026-11-23)
+--------------------------------------------------------------------------
 Contributors: Juliette Lavoie (:user:`juliettelavoie`), Éric Dupuis (:user:`coxipi`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
@@ -29,8 +45,8 @@ Internal changes
 
 .. _changes_0.7.0:
 
-`v0.7.0 <https://github.com/Ouranosinc/figanos/tree/0.7.0>`_ (2026-06-08)
--------------------------------------------------------------------------
+`v0.7.0 <https://github.com/Ouranosinc/figanos/tree/v0.7.0>`_ (2026-06-08)
+--------------------------------------------------------------------------
 Contributors: Pascal Bourgault (:user:`aulemahal`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
@@ -68,8 +84,8 @@ Internal changes
 
 .. _changes_0.6.0:
 
-`v0.6.0 <https://github.com/Ouranosinc/figanos/tree/0.6.0>`_ (2026-01-30)
--------------------------------------------------------------------------
+`v0.6.0 <https://github.com/Ouranosinc/figanos/tree/v0.6.0>`_ (2026-01-30)
+--------------------------------------------------------------------------
 Contributors: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Juliette Lavoie (:user:`juliettelavoie`), Trevor James Smith (:user:`Zeitsperre`).
 
 Changes
@@ -114,8 +130,8 @@ Fixes
 
 .. _changes_0.4.0:
 
-`v0.4.0 <https://github.com/Ouranosinc/figanos/tree/0.4.0>`_ (2025-03-10)
--------------------------------------------------------------------------
+`v0.4.0 <https://github.com/Ouranosinc/figanos/tree/v0.4.0>`_ (2025-03-10)
+--------------------------------------------------------------------------
 Contributors to this version: Trevor James Smith (:user:`Zeitsperre`), Marco Braun (:user:`vindelico`), Pascal Bourgault (:user:`aulemahal`), Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Éric Dupuis (:user:`coxipi`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
@@ -181,8 +197,8 @@ Bug fixes
 
 .. _changes_0.3.0:
 
-v0.3.0 (2024-02-16)
--------------------
+`v0.3.0 <https://github.com/Ouranosinc/figanos/tree/v0.3.0>`_ (2024-02-16)
+--------------------------------------------------------------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Pascal Bourgault (:user:`aulemahal`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`), Gabriel Rondeau-Genesse (:user:`RondeauG`).
 
 New features and enhancements
@@ -234,8 +250,8 @@ Bug fixes
 
 .. _changes_0.2.0:
 
-v0.2.0 (2023-06-19)
--------------------
+`v0.2.0 <https://github.com/Ouranosinc/figanos/tree/v0.2.0>`_ (2023-06-19)
+--------------------------------------------------------------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 New features and enhancements
@@ -260,8 +276,8 @@ Internal changes
 
 .. _changes_0.1.0:
 
-v0.1.0 (2023-06-08)
--------------------
+`v0.1.0 <https://github.com/Ouranosinc/figanos/tree/v0.1.0>`_ (2023-06-08)
+--------------------------------------------------------------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Alexis Beaupré-Laperrière (:user:`Beauprel`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 * First release on PyPI.
