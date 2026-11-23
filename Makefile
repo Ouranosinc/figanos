@@ -72,7 +72,7 @@ lint: install-lint ## check style
 	python -m numpydoc lint src/figanos/**.py
 	python -m vulture src/figanos tests
 	codespell src/figanos tests docs
-	python -m deptry src
+	python -m deptry src/figanos
 	python -m yamllint --config-file=.yamllint.yaml src/figanos
 
 test: install-test ## run tests quickly with the default Python
@@ -122,7 +122,7 @@ release: dist ## package and upload a release
 install: clean ## install the package to the active Python's site-packages
 	python -m pip install --no-user .
 
-development: clean ## install the package to the active Python's site-packages
+dev: clean ## install the package to the active Python's site-packages for development
 	python -m pip install --group dev
 	python -m pip install --no-user --editable .[extras]
 	prek install

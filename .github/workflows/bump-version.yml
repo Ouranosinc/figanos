@@ -7,7 +7,10 @@ on:
     paths-ignore:
       - .cruft.json
       - .editorconfig
-      - .github/**.yml
+      - .github/**/*.yml
+      - .github/*.in
+      - .github/*.md
+      - .github/*.txt
       - .gitignore
       - .pre-commit-config.yaml
       - .readthedocs.yml
@@ -15,9 +18,6 @@ on:
       - .zenodo.json
       - AUTHORS.rst
       - CHANGELOG.rst
-      - CI/**/*.in
-      - CI/**/*.py
-      - CI/**/*.txt
       - CITATION.cff
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.rst
@@ -87,7 +87,7 @@ jobs:
 
       - name: Install CI libraries
         run: |
-          python -m pip install --require-hashes -r CI/requirements_ci.txt
+          python -m pip install --require-hashes -r .github/requirements_ci.txt
 
       - name: Conditional Bump
         run: |

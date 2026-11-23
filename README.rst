@@ -9,7 +9,7 @@ figanos
 +----------------------------+-----------------------------------------------------+
 | Open Source                | |license| |ossf-score|                              |
 +----------------------------+-----------------------------------------------------+
-| Coding Standards           | |ruff| |prek| |ossf-bp| |pre-commit-ci|             |
+| Coding Standards           | |ruff| |prek| |ossf-bp| |pre-commit-ci| |zizmor|    |
 +----------------------------+-----------------------------------------------------+
 | Development Status         | |status| |build| |coveralls|                        |
 +----------------------------+-----------------------------------------------------+
@@ -84,6 +84,11 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
         :target: https://github.com/Ouranosinc/figanos/blob/main/LICENSE
         :alt: License
 
+..
+        .. |mypy| image:: https://www.mypy-lang.org/static/mypy_badge.svg
+                :target: https://mypy-lang.org/
+                :alt: mypy
+
 .. |ossf-bp| image:: https://bestpractices.coreinfrastructure.org/projects/9945/badge
         :target: https://bestpractices.coreinfrastructure.org/projects/9945
         :alt: Open Source Security Foundation Best Practices
@@ -115,3 +120,7 @@ This package was created with Cookiecutter_ and the `Ouranosinc/cookiecutter-pyp
 .. |versions| image:: https://img.shields.io/pypi/pyversions/figanos.svg
         :target: https://pypi.python.org/pypi/figanos
         :alt: Supported Python Versions
+
+.. |zizmor| image:: https://img.shields.io/badge/%F0%9F%8C%88-zizmor-white?labelColor=white
+        :target: https://zizmor.sh/
+        :alt: zizmor
