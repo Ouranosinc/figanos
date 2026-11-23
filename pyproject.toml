@@ -30,7 +30,7 @@ notebooks = [
   "matplotlib >=3.8.0",
   "netcdf4",
   "pooch >=1.8.0", # for local and xclim-testdata
-  "xsdba >=0.5.0",
+  "xsdba >=0.8.0",
   "zarr >=2.13.0"
 ]
 docs = [
@@ -82,7 +82,7 @@ keywords = ["figanos"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 3 - Beta",
   "Intended Audience :: Developers",
   "Natural Language :: English",
   "Operating System :: OS Independent",
