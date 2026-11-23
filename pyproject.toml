@@ -212,6 +212,7 @@ skip = []
 
 [tool.deptry]
 extend_exclude = ["extras"]
+known_first_party = ["xscen"]
 
 [tool.deptry.package_module_name_map]
 prek = "prek"

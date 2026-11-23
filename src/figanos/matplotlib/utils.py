@@ -1139,7 +1139,7 @@ def get_scen_color(name: str, path_to_dict: str | pathlib.Path) -> str:
 
 def process_keys(dct: dict[str, Any], func: Callable) -> dict[str, Any]:
     """Apply function to dictionary keys."""
-    old_keys = [key for key in dct]
+    old_keys = [*dct]
     for old_key in old_keys:
         new_key = func(old_key)
         dct[new_key] = dct.pop(old_key)

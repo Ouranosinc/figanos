@@ -6,4 +6,5 @@ pip==26.2.2
 pydantic==2.13.5
 pylint==4.0.9
 tox-gh==1.8.0
-tox==4.56.4
+tox==4.64.1
+virtualenv==21.15.2
