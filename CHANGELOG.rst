@@ -277,7 +277,7 @@ Internal changes
 .. _changes_0.1.0:
 
 `v0.1.0 <https://github.com/Ouranosinc/figanos/tree/v0.1.0>`_ (2023-06-08)
--------------------------------------------------------------------------
+--------------------------------------------------------------------------
 Contributors to this version: Sarah-Claude Bourdeau-Goulet (:user:`Sarahclaude`), Alexis Beaupré-Laperrière (:user:`Beauprel`), Trevor James Smith (:user:`Zeitsperre`), Juliette Lavoie (:user:`juliettelavoie`).
 
 * First release on PyPI.
